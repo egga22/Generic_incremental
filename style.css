@@ -63,51 +63,66 @@ body.light-matter-screen .dark-upgrade button:not(:disabled):hover { background:
 body.light-matter-screen .dark-upgrade button:disabled { background: #f7f7f7; color: #666; }
 
 #deep-settings {
-  width: min(440px, calc(100% - 32px));
+  --settings-border: #e2e2e2;
+  --settings-muted: #666;
+  --settings-hover: #f2f2f2;
+  width: min(420px, calc(100% - 32px));
   max-height: calc(100% - 32px);
   margin: auto;
-  padding: 20px;
+  padding: 0;
+  overflow: auto;
   color: CanvasText;
   background: Canvas;
-  border: 1px solid #767676;
-  border-radius: 8px;
-  box-shadow: 0 12px 36px #0003;
-  overflow: auto;
+  border: 1px solid var(--settings-border);
+  border-radius: 12px;
+  box-shadow: 0 16px 48px #0003;
 }
+
+body.dark-screen #deep-settings {
+  --settings-border: #383838;
+  --settings-muted: #aaa;
+  --settings-hover: #292929;
+  background: #151515;
+}
+
 #deep-settings::backdrop { background: #0008; }
-.settings-heading, .settings-row {
+
+.deep-settings-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  padding: 12px 12px 12px 20px;
+  border-bottom: 1px solid var(--settings-border);
 }
-.settings-heading h2 { margin: 0; font-size: 18px; }
-.settings-section {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #76767666;
+
+.deep-settings-header h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
 }
-.settings-section h3 { margin: 0 0 10px; font-size: 14px; }
-.settings-section p {
-  margin: 4px 0 0;
-  color: #666;
-  font-size: 13px;
-  line-height: 1.4;
+
+#deep-settings .deep-settings-close {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--settings-muted);
+  font-size: 24px;
+  line-height: 1;
 }
-body.dark-screen .settings-section p { color: #bbb; }
-.settings-row { flex-wrap: wrap; }
-.settings-row + .settings-row { margin-top: 12px; }
-.settings-row label { font-weight: 600; }
-.settings-row select {
-  max-width: 100%;
-  padding: 8px;
-  font: inherit;
-  color: CanvasText;
-  background: Canvas;
-  border: 1px solid #767676;
-  border-radius: 3px;
+
+#deep-settings .deep-settings-close:hover { background: var(--settings-hover); }
+#deep-settings .deep-settings-close:focus-visible { outline: 2px solid currentColor; outline-offset: -4px; }
+
+.deep-settings-empty {
+  margin: 0;
+  padding: 44px 20px;
+  text-align: center;
+  line-height: 1.5;
+  color: var(--settings-muted);
 }
-.settings-row input { width: 20px; height: 20px; margin: 0; cursor: pointer; }
-.settings-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-#save-status:not(:empty) { margin-top: 12px; }
-.reduce-motion .toast { transition: none; }

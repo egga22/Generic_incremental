@@ -26,16 +26,6 @@ state.cyanSquareCounts = Array.from({ length: 3 }, (_, i) => Math.max(0, Number(
 state.priceOrigins ||= {};
 let toastTimer;
 let activeTab = 'run';
-const DISPLAY_SETTINGS_KEY = 'generic-incremental-display-settings';
-let displaySettings = {};
-try {
-  displaySettings = JSON.parse(localStorage.getItem(DISPLAY_SETTINGS_KEY)) || {};
-} catch {
-  // Display controls can still work for this page.
-}
-let numberNotation = displaySettings.numberNotation === 'scientific' ? 'scientific' : 'compact';
-let reduceMotion = typeof displaySettings.reduceMotion === 'boolean'
-  ? displaySettings.reduceMotion : window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function loadState() {
   try {
@@ -249,7 +239,7 @@ function fmt(value) {
     const small = number.toNumber();
     return Number.isInteger(small) ? String(small) : small.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
   }
-  if (numberNotation === 'compact' && magnitude.lt('1e36')) {
+  if (magnitude.lt('1e36')) {
     const group = Math.floor(magnitude.e / 3);
     const scaled = Number(number.div(D(10).pow(group * 3)).toNumber().toPrecision(3));
     if (Math.abs(scaled) < 1000) return `${scaled}${NUMBER_SUFFIXES[group - 1]}`;
@@ -1141,44 +1131,7 @@ setInterval(() => {
 }, 250);
 render();
 
-const settings = document.querySelector('#deep-settings');
-const notationSelect = document.querySelector('#number-notation');
-const motionToggle = document.querySelector('#reduce-motion');
-const saveStatus = document.querySelector('#save-status');
-
-notationSelect.value = numberNotation;
-motionToggle.checked = reduceMotion;
-document.body.classList.toggle('reduce-motion', reduceMotion);
-
-document.querySelector('#open-deep-settings').addEventListener('click', () => {
-  saveStatus.textContent = '';
-  settings.showModal();
-});
-
-function saveDisplaySettings() {
-  try {
-    localStorage.setItem(DISPLAY_SETTINGS_KEY, JSON.stringify({ numberNotation, reduceMotion }));
-  } catch {
-    // Keep the selected values for this page.
-  }
-}
-
-notationSelect.addEventListener('change', () => {
-  numberNotation = notationSelect.value;
-  saveDisplaySettings();
-  render();
-});
-
-motionToggle.addEventListener('change', () => {
-  reduceMotion = motionToggle.checked;
-  document.body.classList.toggle('reduce-motion', reduceMotion);
-  saveDisplaySettings();
-});
-
-function reportSaveStatus(message) {
-  if (settings.open) saveStatus.textContent = message;
-  else toast(message);
-}
+const saveTools = document.querySelector('#more-menu');
 
 function isSaveObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -1210,7 +1163,7 @@ function isValidSave(snapshot) {
   });
 }
 
-settings.querySelector('#export-save').addEventListener('click', () => {
+saveTools.querySelector('#export-save').addEventListener('click', () => {
   const backup = JSON.stringify({ format: SAVE_KEY, state: JSON.parse(serializeState()) });
   const url = URL.createObjectURL(new Blob([backup], { type: 'application/json' }));
   const link = document.createElement('a');
@@ -1219,11 +1172,8 @@ settings.querySelector('#export-save').addEventListener('click', () => {
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
-const importFile = settings.querySelector('input[type=file]');
-settings.querySelector('#import-save').addEventListener('click', () => {
-  saveStatus.textContent = '';
-  importFile.click();
-});
+const importFile = saveTools.querySelector('input[type=file]');
+saveTools.querySelector('#import-save').addEventListener('click', () => importFile.click());
 importFile.addEventListener('change', async () => {
   const [file] = importFile.files;
   importFile.value = '';
@@ -1234,19 +1184,22 @@ importFile.addEventListener('change', async () => {
     backup = JSON.parse(await file.text());
     if (backup?.format !== SAVE_KEY || !isValidSave(backup.state)) throw new Error('Invalid save');
   } catch {
-    reportSaveStatus('Choose a valid Generic Incremental save file.');
+    toast('Choose a valid Generic Incremental save file.');
     return;
   }
   if (!window.confirm('Replace your current progress with this save?')) return;
   try {
     if (saveConflict || localStorage.getItem(SAVE_KEY) !== savedSnapshot) {
-      reportSaveStatus('Another tab updated this save. Close it and reload before importing.');
+      toast('Another tab updated this save. Close it and reload before importing.');
       return;
     }
     localStorage.setItem(SAVE_KEY, JSON.stringify(backup.state));
   } catch {
-    reportSaveStatus('Could not write the save to browser storage.');
+    toast('Could not write the save to browser storage.');
     return;
   }
   window.location.reload();
 });
+
+const deepSettings = document.querySelector('#deep-settings');
+document.querySelector('#open-deep-settings').addEventListener('click', () => deepSettings.showModal());
