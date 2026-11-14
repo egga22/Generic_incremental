@@ -23,8 +23,8 @@ input, textarea, select {
     <meta name="theme-color" content="#ffffff" w-tid="9"/>
     <link rel="icon" href="data:," w-tid="11"/>
     <title w-tid="13">Generic Incremental</title>
-    <link rel="stylesheet" href="./style.css" w-tid="15"/>
-    <script type="module" src="./game.js" w-tid="17"></script>
+    <link rel="stylesheet" href="./style.css?v=theme-switch" w-tid="15"/>
+    <script type="module" src="./game.js?v=theme-switch" w-tid="17"></script>
   </head>
   <body w-tid="19">
     <main class="game-shell" w-tid="21">
@@ -239,7 +239,13 @@ input, textarea, select {
         <div w-tid="1103"><h2 w-tid="1105">Prestige</h2><p w-tid="1107">Start over and keep a permanent +50% income boost.</p><span w-tid="1109">Tokens: <b id="prestige-tokens" w-tid="1111">0</b> · Credits: <b id="credit-balance" w-tid="1113">0</b> · ᛥ: <b id="ascendance-balance" w-tid="1115">0</b></span></div>
         <div class="prestige-actions" w-tid="1117"><button id="prestige-button" type="button" disabled w-tid="1119"><span id="prestige-button-label" w-tid="1121">P$ 500 to prestige</span></button><button id="credit-prestige-button" type="button" disabled w-tid="1123"><span id="credit-prestige-label" w-tid="1125">1De tokens for 1 C$</span></button><button id="data-prestige-button" type="button" disabled w-tid="1127"><span id="data-prestige-label" w-tid="1129">P$ 1e200 for 1 𝔻 · resets P$ only</span></button><button id="ascendance-prestige-button" type="button" disabled w-tid="1131"><span id="ascendance-prestige-label" w-tid="1133">C$ 1e250 for 1 ᛥ</span></button><button id="spark-prestige-button" type="button" disabled w-tid="1135"><span id="spark-prestige-label" w-tid="1137">P$ 1e300 for Spark ⊹ · resets P$ only</span></button></div>
       </section>
-      <footer class="theme-controls"><button id="theme-toggle" type="button" aria-pressed="false">Dark mode</button></footer>
+      <details id="more-menu">
+        <summary>More</summary>
+        <label class="theme-switch"><input id="theme-toggle" type="checkbox" role="switch"> Dark mode</label>
+        <button type="button" id="export-save">Export save</button>
+        <button type="button" id="import-save">Import save</button>
+        <input type="file" accept=".json,application/json" hidden>
+      </details>
     </main>
     <div class="toast" id="toast" role="status" aria-live="polite" w-tid="1139"></div>
   </body>

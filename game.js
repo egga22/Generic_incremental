@@ -347,28 +347,46 @@ function renderLevelUpgrades() {
 
 const THEME_KEY = 'generic-incremental-dark-mode';
 const themeToggle = document.querySelector('#theme-toggle');
-let darkMode = localStorage.getItem(THEME_KEY) === 'true';
+let darkMode = false;
+try {
+  darkMode = localStorage.getItem(THEME_KEY) === 'true';
+} catch {
+  // The switch can still work for this page when storage is unavailable.
+}
+themeToggle.checked = darkMode;
 
 function matterName() {
   return darkMode ? 'Light Matter' : 'Dark Matter';
 }
 
 function applyThemePreference() {
-  themeToggle.setAttribute('aria-pressed', String(darkMode));
   document.querySelectorAll('[data-matter-name]').forEach(label => {
     label.textContent = matterName();
   });
 }
 
-themeToggle.addEventListener('click', () => {
-  darkMode = !darkMode;
-  localStorage.setItem(THEME_KEY, String(darkMode));
+themeToggle.addEventListener('change', () => {
+  darkMode = themeToggle.checked;
   applyThemePreference();
-  render();
+  renderTheme();
+  try {
+    localStorage.setItem(THEME_KEY, String(darkMode));
+  } catch {
+    // Keep the current theme even if the preference cannot be saved.
+  }
 });
 applyThemePreference();
 
+function renderTheme() {
+  const matterTab = activeTab === 'darkmatter';
+  const darkScreen = darkMode !== matterTab;
+  document.body.classList.toggle('dark-screen', darkScreen);
+  document.body.classList.toggle('light-matter-screen', darkMode && matterTab);
+  document.querySelector('meta[name="theme-color"]').content = darkScreen ? '#000000' : '#ffffff';
+}
+
 function render() {
+  renderTheme();
   if (applyCyanAutomation()) save();
   const balance = document.querySelector('#balance');
   const balanceLabel = document.querySelector('#balance-label');
@@ -552,11 +570,6 @@ function render() {
   document.querySelector('#pyramid-panel').hidden = activeTab !== 'pyramid';
   document.querySelector('#alpha-upgrades').hidden = activeTab !== 'alpha';
   document.querySelector('#darkmatter-upgrades').hidden = activeTab !== 'darkmatter';
-  const matterTab = activeTab === 'darkmatter';
-  const darkScreen = darkMode !== matterTab;
-  document.body.classList.toggle('dark-screen', darkScreen);
-  document.body.classList.toggle('light-matter-screen', darkMode && matterTab);
-  document.querySelector('meta[name="theme-color"]').content = darkScreen ? '#000000' : '#ffffff';
   document.querySelector('#darkmatter-tab').classList.toggle('active', activeTab === 'darkmatter');
   document.querySelector('#ascendance-upgrades').hidden = activeTab !== 'ascendance';
   document.querySelector('#run-tab').classList.toggle('active', activeTab === 'run');
@@ -1118,16 +1131,7 @@ setInterval(() => {
 }, 250);
 render();
 
-// Keep save transfer out of the upgrade and prestige controls.
-const saveTools = document.createElement('details');
-saveTools.style.cssText = 'margin-top:24px;font-size:12px;color:#767676';
-saveTools.innerHTML = `
-  <summary style="cursor:pointer;width:fit-content;padding:8px 0">More</summary>
-  <button type="button" id="export-save">Export save</button>
-  <button type="button" id="import-save">Import save</button>
-  <input type="file" accept=".json,application/json" hidden>
-`;
-document.querySelector('.game-shell').append(saveTools);
+const saveTools = document.querySelector('#more-menu');
 
 function isSaveObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -1168,7 +1172,7 @@ saveTools.querySelector('#export-save').addEventListener('click', () => {
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
-const importFile = saveTools.querySelector('input');
+const importFile = saveTools.querySelector('input[type=file]');
 saveTools.querySelector('#import-save').addEventListener('click', () => importFile.click());
 importFile.addEventListener('change', async () => {
   const [file] = importFile.files;
