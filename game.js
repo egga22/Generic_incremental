@@ -12,6 +12,8 @@ const gte = (a, b) => D(a).gte(b);
 const plus = (a, b) => D(a).plus(b);
 const minus = (a, b) => D(a).minus(b);
 const initialState = { balance: 0, runEarned: 0, lifetime: 0, printer: false, press: false, multiplierLevel: 0, incomeLevel: 0, powerLevel: 0, clickLevel: 0, logLevel: 0, exponentLevel: 0, exponentCapLevel: 0, capLevel: 0, tokens: 0, totalPrestiges: 0, tokenResetCount: 0, tokenMultiplierLevel: 0, discountLevel: 0, tokenBoostLevel: 0, expansionUnlocked: false, tokenCreditLevel: 0, tokenDiscountLevel: 0, credits: 0, totalCreditPrestiges: 0, data: 0, totalDataPrestiges: 0, dataLore: Array(5).fill(false), gainZeroBought: false, gainZeroActive: false, priceOrigins: {}, creditEngine: false, creditExponentLevel: 0, heavyMint: false, cubeUnlocked: false, cubeLevel: 0, cubeClicks: 0, cubeTarget: 'points', freeRunUpgrades: false, passiveTokens: false, alphaUnlocked: false, alpha: 0, alphaGainPurchases: 0, alphaBoostLevel: 0, alphaCapLevel: 0, alphaNeutralBought: false, alphaGeneratorBought: false, darkMatterUnlocked: false, darkMatter: 0, darkMatter1Bought: false, darkMatter2Bought: false, darkMatter2Level: 0, darkMatter3Bought: false, darkMatter4Bought: false, darkMatterCoinBoost: 1, darkMatterFlipTimer: 0, darkMatterFlipDuration: 1, pyramidUnlocked: false, activeChallenge: '', challengeEndsAt: 0, completedChallenges: [], creditChallengeBoost: false, automationsUnlocked: false, automationBought: Array(12).fill(false), automationActive: Array(12).fill(false), ascendance: 0, totalAscendances: 0, ascCurrencyBoost: false, ascCreditExponent: false, ascCubePowerLevel: 0, ascCubeAutoclicker: false, ascCubeAscendance: false, ascCubeAlpha: false, ascPointDiscountLevel: 0, ascTotalLevelBoost: false, ascAllCurrencyLevel: 0, ascMainlinePowerLevel: 0, spark: 0, sparkPrestiges: 0, sparkUpgrade1Level: 0, sparkUpgrade2Level: 0, sparkUpgrade3Level: 0, pointUpgrade16Bought: false, pointUpgrade17Bought: false, pointUpgrade18Bought: false, pointUpgrade19Bought: false, pointUpgrade20Bought: false, cyan13Bought: false, cyan14Level: 0, cyan15Bought: false, cyanSquareCounts: [0, 0, 0] };
+let savedSnapshot;
+let saveConflict = false;
 const savedState = loadState();
 let state = { ...initialState, ...savedState, totalPrestiges: savedState.totalPrestiges ?? savedState.tokens ?? 0, tokenResetCount: savedState.tokenResetCount ?? savedState.totalPrestiges ?? savedState.tokens ?? 0 };
 for (const key of CURRENCY_KEYS) state[key] = normalizeSavedCurrency(Object.hasOwn(savedState, key) ? savedState[key] : initialState[key]);
@@ -27,17 +29,27 @@ let activeTab = 'run';
 
 function loadState() {
   try {
-    return JSON.parse(localStorage.getItem(SAVE_KEY)) || {};
+    savedSnapshot = localStorage.getItem(SAVE_KEY);
+    return JSON.parse(savedSnapshot) || {};
   } catch { return {}; }
 }
 function normalizeSavedCurrency(value) {
   if (value === null || value === Infinity || value?.__numericValue === 'Infinity' || value === 'Infinity') return D(1);
-  try { const result = D(value); return result.isNaN() ? D(0) : result; } catch { return D(0); }
+  try { const result = D(value); return result.isNan() ? D(0) : result; } catch { return D(0); }
 }
 function save() {
+  if (saveConflict) return;
+  if (localStorage.getItem(SAVE_KEY) !== savedSnapshot) {
+    saveConflict = true;
+    window.alert('Another tab updated this save. Close the other tab, then reload this one to continue from the latest save.');
+    return;
+  }
   const snapshot = { ...state };
   for (const key of CURRENCY_KEYS) snapshot[key] = state[key].toString();
-  localStorage.setItem(SAVE_KEY, JSON.stringify(snapshot));
+  const serialized = JSON.stringify(snapshot);
+  if (serialized === savedSnapshot) return;
+  localStorage.setItem(SAVE_KEY, serialized);
+  savedSnapshot = serialized;
 }
 function incomeBase() { return (state.printer ? 1 : 0) + (state.press ? 1 : 0) + state.incomeLevel * (state.incomeLevel + 1) / 2; }
 function currencyGainMultiplier() { return state.gainZeroActive ? 0 : D(100).pow(state.ascCurrencyBoost ? 1 : 0).times(D(2).pow(state.ascAllCurrencyLevel)); }
@@ -75,6 +87,9 @@ function rate() {
   return applyCurrencyGain(challenged.times(sparkRateMultiplier()));
 }
 const challengeNames = { deduction1: 'Deduction I', deduction2: 'Deduction II', deduction3: 'Deduction III', time1: 'Time Limit I', time2: 'Time Limit II', time3: 'Time Limit III' };
+function saleGain() {
+  return applyCurrencyGain(D(1 + state.clickLevel * 2).times(pointMultiplier()).pow(challengeExponent()));
+}
 function challengeExponent() { return ({ deduction1: .9, deduction2: .8, deduction3: .7 })[state.activeChallenge] || 1; }
 function challengeDuration(id) { const base = ({ time1: 7, time2: 6, time3: 5 })[id] || 0; return base ? base + state.cyan14Level : 0; }
 function resetCreditRun() {
@@ -194,7 +209,7 @@ function cubeNextCost() { return D(2).pow(priceLevel('cubeLevel', state.cubeLeve
 function cubeClicksToNext() { return cubeNextCost().minus(state.cubeClicks).max(0); }
 function alphaBoostPrice() { return D(25).times(D(1.5).pow(priceLevel('alphaBoostLevel', state.alphaBoostLevel))).ceil(); }
 function alphaCapPrice() { return D(100).times(D(1.5).pow(priceLevel('alphaCapLevel', state.alphaCapLevel))).ceil(); }
-function darkMatterRate() { return state.darkMatter1Bought ? D(0.1).times(D(2).pow(state.darkMatter2Level)).times(state.darkMatter3Bought ? state.darkMatterCoinBoost : 1) : D(0); }
+function darkMatterRate() { return !state.gainZeroActive && state.darkMatter1Bought ? D(0.1).times(D(2).pow(state.darkMatter2Level)).times(state.darkMatter3Bought ? state.darkMatterCoinBoost : 1) : D(0); }
 function automationCost(index) { return 1e30 * (index + 1); }
 function automationPrerequisite(index) {
   return [true, state.printer, state.press, state.press, state.multiplierLevel > 0, state.incomeLevel > 0, state.expansionUnlocked, state.expansionUnlocked, state.expansionUnlocked, state.expansionUnlocked && state.creditExponentLevel > 0, true, state.tokenBoostLevel > 0][index];
@@ -266,7 +281,7 @@ function render() {
   balance.textContent = fmt(counter.value);
   balance.className = `balance currency-${counter.color}`;
   rateLine.textContent = counter.detail;
-  document.querySelector('#work-button').textContent = state.gainZeroActive ? 'Restore currency gains ×1' : `Make a sale · +P$${fmt(applyCurrencyGain(D(1 + state.clickLevel * 2).times(pointMultiplier())))}`;
+  document.querySelector('#work-button').textContent = state.gainZeroActive ? 'Restore currency gains ×1' : `Make a sale · +P$${fmt(saleGain())}`;
   document.querySelector('#run-earned').textContent = fmt(state.runEarned);
   document.querySelector('#prestige-tokens').textContent = fmt(state.tokens);
   document.querySelector('#credit-balance').textContent = fmt(state.credits);
@@ -646,9 +661,9 @@ function render() {
   prestige.disabled = lt(state.balance, goal);
   document.querySelector('#prestige-button-label').textContent = gte(state.balance, goal) ? `Prestige · +${fmt(tokenReward())} tokens` : `P$ ${fmt(goal)} to prestige`;
   const creditPrestige = document.querySelector('#credit-prestige-button');
-  const creditsEarned = creditPrestigeReward();
+  const creditsEarned = state.activeChallenge ? D(0) : creditPrestigeReward();
   creditPrestige.disabled = lt(state.tokens, '1e33');
-  document.querySelector('#credit-prestige-label').textContent = gte(state.tokens, '1e33') ? `Credit prestige · +${fmt(creditsEarned)} C$` : '1De tokens for 1 C$';
+  document.querySelector('#credit-prestige-label').textContent = gte(state.tokens, '1e33') ? (state.activeChallenge ? 'Finish challenge · No credits' : `Credit prestige · +${fmt(creditsEarned)} C$`) : '1De tokens for 1 C$';
   const dataPrestige = document.querySelector('#data-prestige-button');
   const dataCost = pointCost(DATA_PRESTIGE_COST);
   const dataEarned = state.balance.div(dataCost).floor();
@@ -956,7 +971,7 @@ document.querySelector('#work-button').addEventListener('click', () => {
     restoreCurrencyGain();
     return;
   }
-  const amount = applyCurrencyGain(D((1 + state.clickLevel * 2)).times(pointMultiplier()).pow(challengeExponent()));
+  const amount = saleGain();
   state.balance = plus(state.balance, amount);
   state.runEarned = plus(state.runEarned, amount);
   state.lifetime = plus(state.lifetime, amount);
@@ -1120,7 +1135,7 @@ function runAutomations() {
 }
 setInterval(() => {
   const now = Date.now();
-  const elapsed = Math.min(2, (now - lastTick) / 1000);
+  const elapsed = Math.max(0, (now - lastTick) / 1000);
   lastTick = now;
   runAutomations();
   if (state.cubeUnlocked && state.ascCubeAutoclicker) addCubeClicks(cubeClickGain().times(elapsed));
