@@ -345,6 +345,29 @@ function renderLevelUpgrades() {
   }
 }
 
+const THEME_KEY = 'generic-incremental-dark-mode';
+const themeToggle = document.querySelector('#theme-toggle');
+let darkMode = localStorage.getItem(THEME_KEY) === 'true';
+
+function matterName() {
+  return darkMode ? 'Light Matter' : 'Dark Matter';
+}
+
+function applyThemePreference() {
+  themeToggle.setAttribute('aria-pressed', String(darkMode));
+  document.querySelectorAll('[data-matter-name]').forEach(label => {
+    label.textContent = matterName();
+  });
+}
+
+themeToggle.addEventListener('click', () => {
+  darkMode = !darkMode;
+  localStorage.setItem(THEME_KEY, String(darkMode));
+  applyThemePreference();
+  render();
+});
+applyThemePreference();
+
 function render() {
   if (applyCyanAutomation()) save();
   const balance = document.querySelector('#balance');
@@ -529,7 +552,11 @@ function render() {
   document.querySelector('#pyramid-panel').hidden = activeTab !== 'pyramid';
   document.querySelector('#alpha-upgrades').hidden = activeTab !== 'alpha';
   document.querySelector('#darkmatter-upgrades').hidden = activeTab !== 'darkmatter';
-  document.body.classList.toggle('dark-matter-mode', activeTab === 'darkmatter');
+  const matterTab = activeTab === 'darkmatter';
+  const darkScreen = darkMode !== matterTab;
+  document.body.classList.toggle('dark-screen', darkScreen);
+  document.body.classList.toggle('light-matter-screen', darkMode && matterTab);
+  document.querySelector('meta[name="theme-color"]').content = darkScreen ? '#000000' : '#ffffff';
   document.querySelector('#darkmatter-tab').classList.toggle('active', activeTab === 'darkmatter');
   document.querySelector('#ascendance-upgrades').hidden = activeTab !== 'ascendance';
   document.querySelector('#run-tab').classList.toggle('active', activeTab === 'run');
@@ -874,9 +901,9 @@ document.querySelector('#cube-tab').addEventListener('click', () => { if (state.
 document.querySelector('#pyramid-tab').addEventListener('click', () => { if (state.pyramidUnlocked) chooseTab('pyramid'); });
 document.querySelector('#alpha-tab').addEventListener('click', () => { if (state.alphaUnlocked) chooseTab('alpha'); });
 document.querySelector('#darkmatter-tab').addEventListener('click', () => { if (state.darkMatterUnlocked) chooseTab('darkmatter'); });
-document.querySelector('#buy-darkmatter-unlock').addEventListener('click', () => { if (!state.alphaUnlocked || state.darkMatterUnlocked || lt(state.alpha, 1000)) return; state.alpha = minus(state.alpha, 1000); state.darkMatterUnlocked = true; activeTab = 'darkmatter'; toast('Dark Matter unlocked'); render(); save(); });
-document.querySelector('#buy-darkmatter-1').addEventListener('click', () => { if (!state.darkMatterUnlocked || state.darkMatter1Bought) return; state.darkMatter1Bought = true; toast('Dark Matter generation started'); render(); save(); });
-document.querySelector('#buy-darkmatter-2').addEventListener('click', () => { if (!state.darkMatter1Bought || state.darkMatter2Level >= 1000 || lt(state.darkMatter, 2)) return; state.darkMatter = D(0); state.darkMatter2Level += 1; toast('Dark Matter gain doubled'); render(); save(); });
+document.querySelector('#buy-darkmatter-unlock').addEventListener('click', () => { if (!state.alphaUnlocked || state.darkMatterUnlocked || lt(state.alpha, 1000)) return; state.alpha = minus(state.alpha, 1000); state.darkMatterUnlocked = true; activeTab = 'darkmatter'; toast(`${matterName()} unlocked`); render(); save(); });
+document.querySelector('#buy-darkmatter-1').addEventListener('click', () => { if (!state.darkMatterUnlocked || state.darkMatter1Bought) return; state.darkMatter1Bought = true; toast(`${matterName()} generation started`); render(); save(); });
+document.querySelector('#buy-darkmatter-2').addEventListener('click', () => { if (!state.darkMatter1Bought || state.darkMatter2Level >= 1000 || lt(state.darkMatter, 2)) return; state.darkMatter = D(0); state.darkMatter2Level += 1; toast(`${matterName()} gain doubled`); render(); save(); });
 document.querySelector('#buy-darkmatter-3').addEventListener('click', () => { if (!state.darkMatter1Bought || state.darkMatter3Bought) return; state.darkMatter3Bought = true; state.darkMatterCoinBoost = D(1); state.darkMatterFlipTimer = 0; state.darkMatterFlipDuration = 1; toast('Coin flip activated'); render(); save(); });
 document.querySelector('#buy-darkmatter-4').addEventListener('click', () => { if (!state.darkMatter3Bought || state.darkMatter4Bought) return; state.darkMatter4Bought = true; toast('Heads now last longer'); render(); save(); });
 document.querySelector('#ascendance-tab').addEventListener('click', () => { if (state.totalAscendances || gt(state.ascendance, 0)) chooseTab('ascendance'); });
