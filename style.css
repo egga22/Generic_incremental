@@ -126,3 +126,10 @@ body.dark-screen #deep-settings {
   line-height: 1.5;
   color: var(--settings-muted);
 }
+
+#fishing-status { margin: 6px 0 0; }
+#fishing-pond[data-bite] #fishing-action {
+  background: #145d12;
+  border-color: #145d12;
+  color: #fff;
+}

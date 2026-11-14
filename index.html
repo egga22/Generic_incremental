@@ -113,6 +113,22 @@ input, textarea, select {
           <article class="upgrade alpha-upgrade" id="upgrade-alpha-joke" w-tid="441"><div w-tid="443"><h3 w-tid="445">5α. Totally reasonable</h3><p w-tid="447">Raises P$ to the power of 1000. Its price is 1.5× your current α (minimum 1 α), so it can never be bought.</p><div class="effect" w-tid="449">P$<sup w-tid="451">1000</sup> · Unbuyable</div></div><button id="buy-alpha-joke" type="button" disabled w-tid="453">1 α</button></article>
           <article class="upgrade alpha-upgrade locked" id="upgrade-alpha-generator" w-tid="455"><div w-tid="457"><h3 w-tid="459">6α. Alpha generator</h3><p w-tid="461">Generates α automatically.</p><div class="effect" w-tid="463">+1 α every 10 seconds</div></div><button id="buy-alpha-generator" type="button" disabled w-tid="465">10 α</button></article>
           <article class="upgrade alpha-upgrade locked" id="upgrade-darkmatter-unlock" w-tid="467"><div w-tid="469"><h3 w-tid="471">7α. <span data-matter-name>Dark Matter</span></h3><p w-tid="473">Unlocks the <span data-matter-name>Dark Matter</span> currency and its upgrades.</p><div class="effect" w-tid="475">Unlock <span data-matter-name>Dark Matter</span> ⊠</div></div><button id="buy-darkmatter-unlock" type="button" disabled w-tid="477">1000 α</button></article>
+          <article class="upgrade alpha-upgrade" id="upgrade-fishing">
+            <div>
+              <h3>8α. Fishing</h3>
+              <p>Unlocks fishing to earn 🐟 Fish Points.</p>
+            </div>
+            <button id="buy-fishing" type="button" disabled>100 α</button>
+          </article>
+          <article class="upgrade alpha-upgrade" id="fishing-pond" hidden>
+            <div>
+              <h3>Fishing pond</h3>
+              <p>Cast your line, wait for a bite, then reel in.</p>
+              <div class="effect">🐟 Fish Points <strong id="fish-points">0</strong></div>
+              <p id="fishing-status" role="status">Ready to cast.</p>
+            </div>
+            <button id="fishing-action" type="button" aria-describedby="fishing-status">Cast line</button>
+          </article>
         </div>
         <div id="darkmatter-upgrades" hidden w-tid="479">
           <article class="upgrade dark-upgrade locked" id="upgrade-darkmatter-1" w-tid="481"><div w-tid="483"><h3 w-tid="485">−1. First contact</h3><p w-tid="487">Begin generating <span data-matter-name>Dark Matter</span>.</p><div class="effect" w-tid="489">+0.1 ⊠ / sec</div></div><button id="buy-darkmatter-1" type="button" disabled w-tid="491">Free</button></article>

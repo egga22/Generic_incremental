@@ -1,6 +1,6 @@
 # Repository instructions
 
-Alpha (α) is an experimental feature. Leave its mechanics, upgrades, and progression alone, including known bugs, unless a fix is necessary to address a critical issue.
+Alpha (α) is experimental. Fix Alpha bugs only when they are critical, including bugs in Expanded Potential Charges Alpha. Implement requested Alpha features as you would any other feature.
 
 ## Publishing changes
 

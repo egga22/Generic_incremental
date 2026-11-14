@@ -2,7 +2,9 @@ import Decimal from './break_eternity.js';
 
 const SAVE_KEY = 'pocket-foundry-save-v2';
 const BASE_MAX_UPGRADE_LEVEL = 1000;
-const CURRENCY_KEYS = ['balance', 'runEarned', 'lifetime', 'tokens', 'credits', 'data', 'cubeClicks', 'alpha', 'ascendance', 'darkMatter', 'darkMatterCoinBoost', 'spark'];
+const FISHING_COST = 100;
+const FISHING_REEL_WINDOW = 1600;
+const CURRENCY_KEYS = ['balance', 'runEarned', 'lifetime', 'tokens', 'credits', 'data', 'cubeClicks', 'alpha', 'ascendance', 'darkMatter', 'darkMatterCoinBoost', 'spark', 'fishPoints'];
 const D = value => value instanceof Decimal ? value : new Decimal(value ?? 0);
 function upgradeLevelMax() { return BASE_MAX_UPGRADE_LEVEL + (state?.cyan15Bought ? 250 : 0); }
 const lt = (a, b) => D(a).lt(b);
@@ -11,7 +13,7 @@ const gt = (a, b) => D(a).gt(b);
 const gte = (a, b) => D(a).gte(b);
 const plus = (a, b) => D(a).plus(b);
 const minus = (a, b) => D(a).minus(b);
-const initialState = { balance: 0, runEarned: 0, lifetime: 0, printer: false, press: false, multiplierLevel: 0, incomeLevel: 0, powerLevel: 0, clickLevel: 0, logLevel: 0, exponentLevel: 0, exponentCapLevel: 0, capLevel: 0, tokens: 0, totalPrestiges: 0, tokenResetCount: 0, tokenMultiplierLevel: 0, discountLevel: 0, tokenBoostLevel: 0, expansionUnlocked: false, maxBuyUnlocked: false, maxBuyActive: false, tokenCreditLevel: 0, tokenDiscountLevel: 0, credits: 0, totalCreditPrestiges: 0, data: 0, totalDataPrestiges: 0, dataLore: Array(5).fill(false), gainZeroBought: false, gainZeroActive: false, priceOrigins: {}, creditEngine: false, creditExponentLevel: 0, heavyMint: false, cubeUnlocked: false, cubeLevel: 0, cubeClicks: 0, cubeTarget: 'points', freeRunUpgrades: false, passiveTokens: false, alphaUnlocked: false, alpha: 0, alphaGainPurchases: 0, alphaBoostLevel: 0, alphaCapLevel: 0, alphaNeutralBought: false, alphaGeneratorBought: false, darkMatterUnlocked: false, darkMatter: 0, darkMatter1Bought: false, darkMatter2Bought: false, darkMatter2Level: 0, darkMatter3Bought: false, darkMatter4Bought: false, darkMatterCoinBoost: 1, darkMatterFlipTimer: 0, darkMatterFlipDuration: 1, pyramidUnlocked: false, activeChallenge: '', challengeEndsAt: 0, completedChallenges: [], creditChallengeBoost: false, automationsUnlocked: false, automationBought: Array(12).fill(false), automationActive: Array(12).fill(false), ascendance: 0, totalAscendances: 0, ascCurrencyBoost: false, ascCreditExponent: false, ascCubePowerLevel: 0, ascCubeAutoclicker: false, ascCubeAscendance: false, ascCubeAlpha: false, ascPointDiscountLevel: 0, ascTotalLevelBoost: false, ascAllCurrencyLevel: 0, ascMainlinePowerLevel: 0, spark: 0, sparkPrestiges: 0, sparkUpgrade1Level: 0, sparkUpgrade2Level: 0, sparkUpgrade3Level: 0, pointUpgrade16Bought: false, pointUpgrade17Bought: false, pointUpgrade18Bought: false, pointUpgrade19Bought: false, pointUpgrade20Bought: false, cyan13Bought: false, cyan14Level: 0, cyan15Bought: false, cyanSquareCounts: [0, 0, 0] };
+const initialState = { balance: 0, runEarned: 0, lifetime: 0, printer: false, press: false, multiplierLevel: 0, incomeLevel: 0, powerLevel: 0, clickLevel: 0, logLevel: 0, exponentLevel: 0, exponentCapLevel: 0, capLevel: 0, tokens: 0, totalPrestiges: 0, tokenResetCount: 0, tokenMultiplierLevel: 0, discountLevel: 0, tokenBoostLevel: 0, expansionUnlocked: false, maxBuyUnlocked: false, maxBuyActive: false, tokenCreditLevel: 0, tokenDiscountLevel: 0, credits: 0, totalCreditPrestiges: 0, data: 0, totalDataPrestiges: 0, dataLore: Array(5).fill(false), gainZeroBought: false, gainZeroActive: false, priceOrigins: {}, creditEngine: false, creditExponentLevel: 0, heavyMint: false, cubeUnlocked: false, cubeLevel: 0, cubeClicks: 0, cubeTarget: 'points', freeRunUpgrades: false, passiveTokens: false, alphaUnlocked: false, alpha: 0, alphaGainPurchases: 0, alphaBoostLevel: 0, alphaCapLevel: 0, alphaNeutralBought: false, alphaGeneratorBought: false, fishingUnlocked: false, fishPoints: 0, darkMatterUnlocked: false, darkMatter: 0, darkMatter1Bought: false, darkMatter2Bought: false, darkMatter2Level: 0, darkMatter3Bought: false, darkMatter4Bought: false, darkMatterCoinBoost: 1, darkMatterFlipTimer: 0, darkMatterFlipDuration: 1, pyramidUnlocked: false, activeChallenge: '', challengeEndsAt: 0, completedChallenges: [], creditChallengeBoost: false, automationsUnlocked: false, automationBought: Array(12).fill(false), automationActive: Array(12).fill(false), ascendance: 0, totalAscendances: 0, ascCurrencyBoost: false, ascCreditExponent: false, ascCubePowerLevel: 0, ascCubeAutoclicker: false, ascCubeAscendance: false, ascCubeAlpha: false, ascPointDiscountLevel: 0, ascTotalLevelBoost: false, ascAllCurrencyLevel: 0, ascMainlinePowerLevel: 0, spark: 0, sparkPrestiges: 0, sparkUpgrade1Level: 0, sparkUpgrade2Level: 0, sparkUpgrade3Level: 0, pointUpgrade16Bought: false, pointUpgrade17Bought: false, pointUpgrade18Bought: false, pointUpgrade19Bought: false, pointUpgrade20Bought: false, cyan13Bought: false, cyan14Level: 0, cyan15Bought: false, cyanSquareCounts: [0, 0, 0] };
 let savedSnapshot;
 let saveConflict = false;
 const savedState = loadState();
@@ -26,6 +28,8 @@ state.cyanSquareCounts = Array.from({ length: 3 }, (_, i) => Math.max(0, Number(
 state.priceOrigins ||= {};
 let toastTimer;
 let activeTab = 'run';
+let fishingBiteAt = null;
+let fishingResult = 'Ready to cast.';
 
 function loadState() {
   try {
@@ -405,8 +409,46 @@ function renderTheme() {
   document.querySelector('meta[name="theme-color"]').content = darkScreen ? '#000000' : '#ffffff';
 }
 
+function fishingPhase(now) {
+  if (fishingBiteAt === null) return 'idle';
+  if (now < fishingBiteAt) return 'waiting';
+  if (now < fishingBiteAt + FISHING_REEL_WINDOW) return 'bite';
+  return 'escaped';
+}
+
+function renderFishing() {
+  const unlocked = state.alphaUnlocked && state.fishingUnlocked;
+  const unlockCard = document.querySelector('#upgrade-fishing');
+  const pond = document.querySelector('#fishing-pond');
+  unlockCard.hidden = !state.alphaUnlocked || unlocked;
+  document.querySelector('#buy-fishing').disabled = !state.alphaUnlocked || unlocked || lt(state.alpha, FISHING_COST);
+  pond.hidden = !unlocked;
+  if (!unlocked) return;
+
+  if (state.gainZeroActive) fishingBiteAt = null;
+  let phase = fishingPhase(performance.now());
+  if (phase === 'escaped') {
+    fishingBiteAt = null;
+    fishingResult = 'Too late. The fish got away.';
+    phase = 'idle';
+  }
+  const status = document.querySelector('#fishing-status');
+  const message = state.gainZeroActive ? 'Fishing is paused during Null gain.'
+    : phase === 'waiting' ? 'Waiting for a bite…'
+    : phase === 'bite' ? 'Bite! Reel in now!'
+    : fishingResult;
+  if (status.textContent !== message) status.textContent = message;
+  pond.toggleAttribute('data-bite', phase === 'bite');
+  const action = document.querySelector('#fishing-action');
+  action.disabled = state.gainZeroActive;
+  const label = phase === 'idle' ? 'Cast line' : 'Reel in';
+  if (action.textContent !== label) action.textContent = label;
+  document.querySelector('#fish-points').textContent = fmt(state.fishPoints);
+}
+
 function render() {
   renderTheme();
+  renderFishing();
   if (applyCyanAutomation()) save();
   const balance = document.querySelector('#balance');
   const balanceLabel = document.querySelector('#balance-label');
@@ -876,6 +918,31 @@ document.querySelector('#buy-alpha-generator').addEventListener('click', () => {
 document.querySelector('#buy-alpha-boost').addEventListener('click', () => { const cost = alphaBoostPrice(); if (!state.alphaUnlocked || state.alphaBoostLevel >= 50 || lt(state.alpha, cost)) return; state.alpha = minus(state.alpha, cost); state.alphaBoostLevel += 1; toast('Alpha gain increased'); render(); save(); });
 document.querySelector('#buy-alpha-neutral').addEventListener('click', () => { if (!state.alphaUnlocked || state.alphaBoostLevel < 1 || state.alphaNeutralBought) return; const gain = applyAlphaGain(5).times(cubeMultiplier('alpha')); state.alpha = plus(state.alpha, gain); state.alphaNeutralBought = true; toast(`+${fmt(gain)} α · Neutral multiplier bought`); render(); save(); });
 document.querySelector('#buy-alpha-cap').addEventListener('click', () => { const cost = alphaCapPrice(); if (!state.alphaUnlocked || state.alphaBoostLevel < 1 || lt(state.alpha, cost)) return; state.alpha = minus(state.alpha, cost); state.alphaCapLevel += 1; toast('2α max level increased by 2'); render(); save(); });
+document.querySelector('#buy-fishing').addEventListener('click', () => {
+  if (!state.alphaUnlocked || state.fishingUnlocked || lt(state.alpha, FISHING_COST)) return;
+  state.alpha = minus(state.alpha, FISHING_COST);
+  state.fishingUnlocked = true;
+  render();
+  save();
+});
+document.querySelector('#fishing-action').addEventListener('click', () => {
+  if (!state.alphaUnlocked || !state.fishingUnlocked || state.gainZeroActive) return;
+  const now = performance.now();
+  const phase = fishingPhase(now);
+  if (phase === 'idle') {
+    fishingBiteAt = now + 1500 + Math.random() * 2000;
+  } else {
+    fishingBiteAt = null;
+    if (phase === 'bite') {
+      state.fishPoints = plus(state.fishPoints, 1);
+      fishingResult = 'Fish caught! +1 🐟';
+      save();
+    } else {
+      fishingResult = phase === 'waiting' ? 'Too early. The fish got away.' : 'Too late. The fish got away.';
+    }
+  }
+  renderFishing();
+});
 document.querySelector('#buy-gain-zero').addEventListener('click', () => {
   if (!state.gainZeroActive) clampUpgradeLevels();
   if (!state.gainZeroBought) {
