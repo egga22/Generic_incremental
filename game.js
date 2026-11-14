@@ -183,7 +183,7 @@ function exponentCost(level = state.exponentLevel) { return pointCost(D('5e10').
 function capCost(level = state.capLevel) { return pointCost(D('5e8').times(D(1.5).pow(priceLevel('capLevel', level)))); }
 function ascPointDiscountCost(level = state.ascPointDiscountLevel) { return D('1e300').times(D(1.5).pow(level)); }
 function ascAllCurrencyCost(level = state.ascAllCurrencyLevel) { return D('1e12').times(D(10).pow(level)); }
-function ascMainlinePowerCost(level = state.ascMainlinePowerLevel) { return D('1e400').times(D(1e6).pow(level)); }
+function ascMainlinePowerCost(level = state.ascMainlinePowerLevel) { return D('1e600').times(D(1e6).pow(level)); }
 function highPointUpgradeCost(index) { return pointCost(D(['1e180','1e200','1e220','1e240','1e260'][index - 16])); }
 function sparkPrestigeCost() { return pointCost(SPARK_PRESTIGE_COST); }
 function sparkReward(balance) { const ratio = D(balance).div(sparkPrestigeCost()); return ratio.lt(1) ? D(0) : ratio.log10().floor().plus(1); }
@@ -295,7 +295,7 @@ const levelUpgrades = {
   ascendance: {
     'asc-3': { key: 'ascCubePowerLevel', max: () => 5, cost: () => D(10), ready: () => state.ascCurrencyBoost && state.cubeUnlocked, message: 'Cube click power doubled' },
     'asc-8': { key: 'ascAllCurrencyLevel', max: () => 50, cost: ascAllCurrencyCost, message: 'All previous currency gains doubled' },
-    'asc-9': { key: 'ascMainlinePowerLevel', max: () => 50, cost: ascMainlinePowerCost, message: 'Mainline currency gains raised to a higher power' }
+    'asc-9': { key: 'ascMainlinePowerLevel', max: () => 10, cost: ascMainlinePowerCost, message: 'Mainline currency gains raised to a higher power' }
   }
 };
 const upgradeCurrencies = { run: 'balance', token: 'tokens', credit: 'credits', spark: 'spark', ascendance: 'ascendance' };
