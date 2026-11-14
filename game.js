@@ -168,26 +168,26 @@ function creditMultiplier() { return applyCurrencyGain(cubeMultiplier('credits')
 function tokenCostMultiplier() { return D(state.heavyMint ? 7.5 : 1).div(state.priceOrigins?.tokenCostMultiplier || 1); }
 function tokenAmplifierCost() { return D(3).times(tokenCostMultiplier()); }
 function discountTokenCost() { return D(3).times(tokenCostMultiplier()); }
-function multiplierCost() { return pointCost(D(100).times(D(1.5).pow(priceLevel('multiplierLevel', state.multiplierLevel))).times(D(0.7).pow(priceLevel('discountLevel', state.discountLevel))).max(1).ceil()); }
-function incomeCost() { return pointCost(D(50).times(D(1.5).pow(priceLevel('incomeLevel', state.incomeLevel))).ceil()); }
-function powerCost() { return pointCost(D(250).times(D(1.5).pow(priceLevel('powerLevel', state.powerLevel))).ceil()); }
-function clickCost() { return pointCost(D(100).times(D(1.5).pow(priceLevel('clickLevel', state.clickLevel))).ceil()); }
-function tokenBoostCost() { return D(5).times(D(1.5).pow(priceLevel('tokenBoostLevel', state.tokenBoostLevel))).times(tokenCostMultiplier()); }
+function multiplierCost(level = state.multiplierLevel) { return pointCost(D(100).times(D(1.5).pow(priceLevel('multiplierLevel', level))).times(D(0.7).pow(priceLevel('discountLevel', state.discountLevel))).max(1).ceil()); }
+function incomeCost(level = state.incomeLevel) { return pointCost(D(50).times(D(1.5).pow(priceLevel('incomeLevel', level))).ceil()); }
+function powerCost(level = state.powerLevel) { return pointCost(D(250).times(D(1.5).pow(priceLevel('powerLevel', level))).ceil()); }
+function clickCost(level = state.clickLevel) { return pointCost(D(100).times(D(1.5).pow(priceLevel('clickLevel', level))).ceil()); }
+function tokenBoostCost(level = state.tokenBoostLevel) { return D(5).times(D(1.5).pow(priceLevel('tokenBoostLevel', level))).times(tokenCostMultiplier()); }
 function expansionCost() { return D(10).times(tokenCostMultiplier()); }
 function maxBuyCost() { return D(25).times(tokenCostMultiplier()); }
-function creditPowerCost() { return D('1e15').times(D(2.5).pow(priceLevel('tokenCreditLevel', state.tokenCreditLevel))).times(D(0.99).pow(priceLevel('tokenDiscountLevel', state.tokenDiscountLevel))).times(tokenCostMultiplier()); }
-function tokenDiscountCost() { return D('5e8').times(D(1.5).pow(priceLevel('tokenDiscountLevel', state.tokenDiscountLevel))).times(tokenCostMultiplier()); }
-function exponentCapCost() { return pointCost(D('1e29').times(D(2).pow(priceLevel('exponentCapLevel', state.exponentCapLevel)))); }
-function logCost() { return pointCost(D('1e9').times(D(1.5).pow(priceLevel('logLevel', state.logLevel)))); }
-function exponentCost() { return pointCost(D('5e10').times(D(1.5).pow(priceLevel('exponentLevel', state.exponentLevel)))); }
-function capCost() { return pointCost(D('5e8').times(D(1.5).pow(priceLevel('capLevel', state.capLevel)))); }
-function ascPointDiscountCost() { return D('1e300').times(D(1.5).pow(state.ascPointDiscountLevel)); }
-function ascAllCurrencyCost() { return D('1e12').times(D(10).pow(state.ascAllCurrencyLevel)); }
-function ascMainlinePowerCost() { return D('1e175').times(D(1000).pow(state.ascMainlinePowerLevel)); }
+function creditPowerCost(level = state.tokenCreditLevel) { return D('1e15').times(D(2.5).pow(priceLevel('tokenCreditLevel', level))).times(D(0.99).pow(priceLevel('tokenDiscountLevel', state.tokenDiscountLevel))).times(tokenCostMultiplier()); }
+function tokenDiscountCost(level = state.tokenDiscountLevel) { return D('5e8').times(D(1.5).pow(priceLevel('tokenDiscountLevel', level))).times(tokenCostMultiplier()); }
+function exponentCapCost(level = state.exponentCapLevel) { return pointCost(D('1e29').times(D(2).pow(priceLevel('exponentCapLevel', level)))); }
+function logCost(level = state.logLevel) { return pointCost(D('1e9').times(D(1.5).pow(priceLevel('logLevel', level)))); }
+function exponentCost(level = state.exponentLevel) { return pointCost(D('5e10').times(D(1.5).pow(priceLevel('exponentLevel', level)))); }
+function capCost(level = state.capLevel) { return pointCost(D('5e8').times(D(1.5).pow(priceLevel('capLevel', level)))); }
+function ascPointDiscountCost(level = state.ascPointDiscountLevel) { return D('1e300').times(D(1.5).pow(level)); }
+function ascAllCurrencyCost(level = state.ascAllCurrencyLevel) { return D('1e12').times(D(10).pow(level)); }
+function ascMainlinePowerCost(level = state.ascMainlinePowerLevel) { return D('1e175').times(D(1000).pow(level)); }
 function highPointUpgradeCost(index) { return pointCost(D(['1e180','1e200','1e220','1e240','1e260'][index - 16])); }
 function sparkPrestigeCost() { return pointCost(SPARK_PRESTIGE_COST); }
 function sparkReward(balance) { const ratio = D(balance).div(sparkPrestigeCost()); return ratio.lt(1) ? D(0) : ratio.log10().floor().plus(1); }
-function sparkUpgradeCost(index) { const level = state[`sparkUpgrade${index}Level`]; const base = [0, 1, 10, 100][index]; const growth = [0, 1.5, 2, 3][index]; return D(base).times(D(growth).pow(level)); }
+function sparkUpgradeCost(index, level = state[`sparkUpgrade${index}Level`]) { const base = [0, 1, 10, 100][index]; const growth = [0, 1.5, 2, 3][index]; return D(base).times(D(growth).pow(level)); }
 function cyanUpgradeCost(index) { return pointCost(D(10).pow([150, 160, 170][index] * (2 ** state.cyanSquareCounts[index]))); }
 function cyanUpgradeReady(index) { return index === 0 ? state.automationsUnlocked : index === 1 ? state.pyramidUnlocked : true; }
 function applyCyanAutomation() { if (state.cyan13Bought && state.creditChallengeBoost && !state.automationsUnlocked) { state.automationsUnlocked = true; return true; } return false; }
@@ -210,7 +210,7 @@ function creditPrestigeReward() {
 }
 function powerMax() { return 100 + state.capLevel * 2; }
 function exponentMax() { return 1 + state.exponentCapLevel; }
-function creditExponentCost() { return D(2).times(D(2).pow(priceLevel('creditExponentLevel', state.creditExponentLevel))); }
+function creditExponentCost(level = state.creditExponentLevel) { return D(2).times(D(2).pow(priceLevel('creditExponentLevel', level))); }
 function cubeNextCost() { return D(2).pow(priceLevel('cubeLevel', state.cubeLevel)); }
 function cubeClicksToNext() { return cubeNextCost().minus(state.cubeClicks).max(0); }
 function alphaBoostPrice() { return D(25).times(D(1.5).pow(priceLevel('alphaBoostLevel', state.alphaBoostLevel))).ceil(); }
@@ -261,21 +261,90 @@ function purchase(cost, action, message, spend = true) {
   toast(message);
   render();
 }
-function buyLevels(currency, key, max, cost, message, spend = true) {
-  const startLevel = state[key];
-  const maxBuy = state.maxBuyUnlocked && state.maxBuyActive;
-  while (state[key] < max) {
-    const price = cost();
-    if (lt(state[currency], price)) break;
-    if (spend) state[currency] = minus(state[currency], price);
-    state[key] += 1;
-    if (!maxBuy) break;
+const levelUpgrades = {
+  run: {
+    multiplier: { key: 'multiplierLevel', max: upgradeLevelMax, cost: multiplierCost, ready: () => state.press, kept: true, message: 'Compounding level added' },
+    income: { key: 'incomeLevel', max: upgradeLevelMax, cost: incomeCost, ready: () => state.press, kept: true, message: 'Output level added' },
+    power: { key: 'powerLevel', max: powerMax, cost: powerCost, ready: () => state.multiplierLevel > 0, message: 'Compounding II level added' },
+    click: { key: 'clickLevel', max: upgradeLevelMax, cost: clickCost, ready: () => state.incomeLevel > 0, message: 'Click power increased' },
+    log: { key: 'logLevel', max: () => 3, cost: logCost, ready: () => state.expansionUnlocked, message: 'Logarithmic output increased' },
+    exponent: { key: 'exponentLevel', max: exponentMax, cost: exponentCost, ready: () => state.expansionUnlocked, message: 'Gain exponent increased' },
+    cap: { key: 'capLevel', max: upgradeLevelMax, cost: capCost, ready: () => state.expansionUnlocked, kept: true, message: 'Upgrade 5 capacity increased' },
+    'exponent-cap': { key: 'exponentCapLevel', max: () => 5, cost: exponentCapCost, ready: () => state.expansionUnlocked && state.creditExponentLevel >= 1, message: 'Upgrade 8 max level increased' },
+    'point-discount': { key: 'ascPointDiscountLevel', max: () => 20, cost: ascPointDiscountCost, ready: () => state.ascCreditExponent, message: 'All P$ costs halved' }
+  },
+  token: {
+    'token-multiplier': { key: 'tokenMultiplierLevel', max: () => 10, cost: tokenAmplifierCost, message: 'Token amplifier level added' },
+    discount: { key: 'discountLevel', max: upgradeLevelMax, cost: discountTokenCost, ready: () => state.tokenMultiplierLevel > 0, message: 'Bulk pricing level added' },
+    'token-boost': { key: 'tokenBoostLevel', max: () => 10, cost: tokenBoostCost, ready: () => state.tokenMultiplierLevel > 0, message: 'Token foundry level added' },
+    'credit-power': { key: 'tokenCreditLevel', max: () => 50, cost: creditPowerCost, ready: () => state.expansionUnlocked, message: 'Factorial Power increased' },
+    'token-discount': { key: 'tokenDiscountLevel', max: () => 25, cost: tokenDiscountCost, ready: () => state.tokenCreditLevel > 0, message: 'Factorial cost reduced' }
+  },
+  credit: {
+    'credit-exponent': { key: 'creditExponentLevel', max: () => 3, cost: creditExponentCost, ready: () => state.creditEngine, message: 'Token exponent increased' }
+  },
+  spark: Object.fromEntries([1000, 100, 50].map((max, index) => {
+    const number = index + 1;
+    return [`spark-${number}`, {
+      key: `sparkUpgrade${number}Level`,
+      max: () => max,
+      cost: level => sparkUpgradeCost(number, level),
+      message: `Spark upgrade ${number} accelerated P$ production`
+    }];
+  })),
+  ascendance: {
+    'asc-3': { key: 'ascCubePowerLevel', max: () => 5, cost: () => D(10), ready: () => state.ascCurrencyBoost && state.cubeUnlocked, message: 'Cube click power doubled' },
+    'asc-8': { key: 'ascAllCurrencyLevel', max: () => 50, cost: ascAllCurrencyCost, message: 'All previous currency gains doubled' },
+    'asc-9': { key: 'ascMainlinePowerLevel', max: () => 50, cost: ascMainlinePowerCost, message: 'Mainline currency gains raised to a higher power' }
   }
-  const levels = state[key] - startLevel;
-  if (!levels) return;
-  toast(levels === 1 ? message : `Bought ${levels} levels`);
-  render(); save();
+};
+const upgradeCurrencies = { run: 'balance', token: 'tokens', credit: 'credits', spark: 'spark', ascendance: 'ascendance' };
+
+function levelPurchase(upgrade, balance, maxBuy) {
+  const start = state[upgrade.key];
+  const max = Math.min(upgrade.max(), maxBuy ? Infinity : start + 1);
+  const spend = !(upgrade.kept && state.freeRunUpgrades);
+  let total = D(0);
+  let level = start;
+  for (; level < max; level += 1) {
+    const price = upgrade.cost(level);
+    if (lt(balance, price)) break;
+    if (spend) {
+      balance = minus(balance, price);
+      total = plus(total, price);
+    }
+  }
+  return { count: level - start, balance, total };
 }
+
+function levelPrice(currency, amount) {
+  const unit = { tokens: 'tokens', credits: 'C$', spark: '⊹', ascendance: 'ᛥ' };
+  return currency === 'balance' ? `P$ ${amount}` : `${amount} ${unit[currency]}`;
+}
+
+function renderLevelUpgrades() {
+  const currency = upgradeCurrencies[activeTab];
+  const maxBuy = state.maxBuyUnlocked && state.maxBuyActive;
+  for (const [id, upgrade] of Object.entries(levelUpgrades[activeTab] ?? {})) {
+    const button = document.querySelector(`#buy-${id}`);
+    const level = state[upgrade.key];
+    const capped = level >= upgrade.max();
+    const ready = upgrade.ready?.() ?? true;
+    const price = upgrade.cost(level);
+    button.disabled = capped || !ready || lt(state[currency], price);
+    document.querySelector(`#upgrade-${id}`).classList.toggle('locked', !ready);
+    if (maxBuy && !button.disabled) {
+      const { count, total } = levelPurchase(upgrade, state[currency], true);
+      button.textContent = `${levelPrice(currency, fmt(total))} · ×${count}`;
+      button.title = levelPrice(currency, total.toString());
+    } else {
+      const kept = upgrade.kept && state.freeRunUpgrades ? ' · kept' : '';
+      button.textContent = capped ? 'MAX LEVEL' : levelPrice(currency, fmt(price)) + kept;
+      button.removeAttribute('title');
+    }
+  }
+}
+
 function render() {
   if (applyCyanAutomation()) save();
   const balance = document.querySelector('#balance');
@@ -367,11 +436,6 @@ function render() {
   asc2.disabled = !asc2Ready || state.ascCreditExponent;
   asc2.textContent = state.ascCreditExponent ? 'Bought' : 'Free';
   document.querySelector('#upgrade-asc-2').classList.toggle('locked', !asc2Ready);
-  const asc3Ready = state.ascCurrencyBoost && state.cubeUnlocked;
-  const asc3 = document.querySelector('#buy-asc-3');
-  asc3.disabled = !asc3Ready || state.ascCubePowerLevel >= 5 || lt(state.ascendance, 10);
-  asc3.textContent = state.ascCubePowerLevel >= 5 ? 'MAX LEVEL' : '10 ᛥ';
-  document.querySelector('#upgrade-asc-3').classList.toggle('locked', !asc3Ready);
   document.querySelector('#asc-cube-power').textContent = cubeClickPower();
   document.querySelector('#asc-cube-power-level').textContent = state.ascCubePowerLevel;
   const asc7 = document.querySelector('#buy-asc-7');
@@ -379,20 +443,10 @@ function render() {
   asc7.textContent = state.ascTotalLevelBoost ? 'Bought' : '1e10 ᛥ';
   document.querySelector('#upgrade-asc-7').classList.toggle('locked', !state.ascCreditExponent);
   document.querySelector('#asc-total-level-multiplier').textContent = fmt(D(totalUpgradeLevels()).max(1));
-  const asc8 = document.querySelector('#buy-asc-8');
-  const asc8Cost = ascAllCurrencyCost();
-  asc8.disabled = state.ascAllCurrencyLevel >= 50 || lt(state.ascendance, asc8Cost);
-  asc8.textContent = state.ascAllCurrencyLevel >= 50 ? 'MAX LEVEL' : `${fmt(asc8Cost)} ᛥ`;
   document.querySelector('#asc-all-currency-level').textContent = state.ascAllCurrencyLevel;
   document.querySelector('#asc-all-currency-multiplier').textContent = fmt(D(2).pow(state.ascAllCurrencyLevel));
-  document.querySelector('#upgrade-asc-8').classList.remove('locked');
-  const asc9 = document.querySelector('#buy-asc-9');
-  const asc9Cost = ascMainlinePowerCost();
-  asc9.disabled = state.ascMainlinePowerLevel >= 50 || lt(state.ascendance, asc9Cost);
-  asc9.textContent = state.ascMainlinePowerLevel >= 50 ? 'MAX LEVEL' : `${fmt(asc9Cost)} ᛥ`;
   document.querySelector('#asc-mainline-power-level').textContent = state.ascMainlinePowerLevel;
   document.querySelector('#asc-mainline-power').textContent = fmt(D(1.3).pow(state.ascMainlinePowerLevel));
-  document.querySelector('#upgrade-asc-9').classList.remove('locked');
   for (const [id, available, bought] of [
     ['4', state.ascCubePowerLevel > 0, state.ascCubeAutoclicker],
     ['5', state.ascCubePowerLevel > 0, state.ascCubeAscendance],
@@ -403,11 +457,6 @@ function render() {
     button.textContent = bought ? 'Bought' : 'Free';
     document.querySelector(`#upgrade-asc-${id}`).classList.toggle('locked', !available);
   }
-  const asc12Ready = state.ascCreditExponent;
-  const pointDiscount = document.querySelector('#buy-point-discount');
-  pointDiscount.disabled = !asc12Ready || state.ascPointDiscountLevel >= 20 || lt(state.balance, ascPointDiscountCost());
-  pointDiscount.textContent = state.ascPointDiscountLevel >= 20 ? 'MAX LEVEL' : `P$ ${fmt(ascPointDiscountCost())}`;
-  document.querySelector('#upgrade-point-discount').classList.toggle('locked', !asc12Ready);
   document.querySelector('#asc-point-discount-level').textContent = state.ascPointDiscountLevel;
   for (let i = 16; i <= 20; i += 1) {
     const bought = state[`pointUpgrade${i}Bought`];
@@ -439,74 +488,16 @@ function render() {
   press.textContent = state.press ? 'Bought' : `P$ ${fmt(pointCost(10))}`;
   document.querySelector('#upgrade-press').classList.toggle('locked', !state.printer);
 
-  const multCost = multiplierCost();
-  const mult = document.querySelector('#buy-multiplier');
-  mult.disabled = !state.press || state.multiplierLevel >= upgradeLevelMax() || lt(state.balance, multCost);
-  mult.textContent = state.multiplierLevel >= upgradeLevelMax() ? 'MAX LEVEL' : state.freeRunUpgrades ? `P$ ${fmt(multCost)} · kept` : `P$ ${fmt(multCost)}`;
-  document.querySelector('#upgrade-multiplier').classList.toggle('locked', !state.press);
-
-  const addCost = incomeCost();
-  const income = document.querySelector('#buy-income');
-  income.disabled = !state.press || state.incomeLevel >= upgradeLevelMax() || lt(state.balance, addCost);
-  income.textContent = state.incomeLevel >= upgradeLevelMax() ? 'MAX LEVEL' : state.freeRunUpgrades ? `P$ ${fmt(addCost)} · kept` : `P$ ${fmt(addCost)}`;
-  document.querySelector('#upgrade-income').classList.toggle('locked', !state.press);
-
-  const powerCostNow = powerCost();
-  const power = document.querySelector('#buy-power');
-  power.disabled = state.multiplierLevel < 1 || state.powerLevel >= powerMax() || lt(state.balance, powerCostNow);
-  power.textContent = state.powerLevel >= powerMax() ? 'MAX LEVEL' : `P$ ${fmt(powerCostNow)}`;
-  document.querySelector('#upgrade-power').classList.toggle('locked', state.multiplierLevel < 1);
-
-  const clickCostNow = clickCost();
-  const click = document.querySelector('#buy-click');
-  click.disabled = state.incomeLevel < 1 || state.clickLevel >= upgradeLevelMax() || lt(state.balance, clickCostNow);
-  click.textContent = state.clickLevel >= upgradeLevelMax() ? 'MAX LEVEL' : `P$ ${fmt(clickCostNow)}`;
-  document.querySelector('#upgrade-click').classList.toggle('locked', state.incomeLevel < 1);
-
-  const tokenMultiplier = document.querySelector('#buy-token-multiplier');
-  tokenMultiplier.disabled = state.tokenMultiplierLevel >= 10 || lt(state.tokens, tokenAmplifierCost());
-  tokenMultiplier.textContent = state.tokenMultiplierLevel >= 10 ? 'MAX LEVEL' : `${fmt(tokenAmplifierCost())} tokens`;
-  const discount = document.querySelector('#buy-discount');
-  discount.disabled = state.tokenMultiplierLevel < 1 || state.discountLevel >= upgradeLevelMax() || lt(state.tokens, discountTokenCost());
-  discount.textContent = state.discountLevel >= upgradeLevelMax() ? 'MAX LEVEL' : `${fmt(discountTokenCost())} tokens`;
-  document.querySelector('#upgrade-discount').classList.toggle('locked', state.tokenMultiplierLevel < 1);
-  const tokenBoost = document.querySelector('#buy-token-boost');
-  tokenBoost.disabled = state.tokenMultiplierLevel < 1 || state.tokenBoostLevel >= 10 || lt(state.tokens, tokenBoostCost());
-  tokenBoost.textContent = state.tokenBoostLevel >= 10 ? 'MAX LEVEL' : `${fmt(tokenBoostCost())} tokens`;
-  document.querySelector('#upgrade-token-boost').classList.toggle('locked', state.tokenMultiplierLevel < 1);
-  const expansionReady = state.expansionUnlocked;
-  for (const id of ['log', 'exponent', 'cap']) {
-    const cost = id === 'log' ? logCost() : id === 'exponent' ? exponentCost() : capCost();
-    const level = id === 'log' ? state.logLevel : id === 'exponent' ? state.exponentLevel : state.capLevel;
-    const maxLevel = id === 'log' ? 3 : id === 'exponent' ? exponentMax() : upgradeLevelMax();
-    const button = document.querySelector(`#buy-${id}`);
-    button.disabled = !expansionReady || level >= maxLevel || lt(state.balance, cost);
-    button.textContent = level >= maxLevel ? 'MAX LEVEL' : id === 'cap' && state.freeRunUpgrades ? `P$ ${fmt(cost)} · kept` : `P$ ${fmt(cost)}`;
-    document.querySelector(`#upgrade-${id}`).classList.toggle('locked', !expansionReady);
-  }
-  const exponentCap = document.querySelector('#buy-exponent-cap');
-  const exponentCapReady = state.expansionUnlocked && state.creditExponentLevel >= 1;
-  exponentCap.disabled = !exponentCapReady || state.exponentCapLevel >= 5 || lt(state.balance, exponentCapCost());
-  exponentCap.textContent = state.exponentCapLevel >= 5 ? 'MAX LEVEL' : `P$ ${fmt(exponentCapCost())}`;
-  document.querySelector('#upgrade-exponent-cap').classList.toggle('locked', !exponentCapReady);
   const unlock = document.querySelector('#buy-unlock');
   unlock.disabled = state.tokenBoostLevel < 1 || lt(state.tokens, expansionCost()) || state.expansionUnlocked;
   unlock.textContent = state.expansionUnlocked ? 'Unlocked' : `${fmt(expansionCost())} tokens`;
   document.querySelector('#upgrade-unlock').classList.toggle('locked', state.tokenBoostLevel < 1 || state.expansionUnlocked);
   const maxBuyUnlock = document.querySelector('#buy-max-buy');
-  maxBuyUnlock.disabled = !expansionReady || state.maxBuyUnlocked || lt(state.tokens, maxBuyCost());
+  maxBuyUnlock.disabled = !state.expansionUnlocked || state.maxBuyUnlocked || lt(state.tokens, maxBuyCost());
   maxBuyUnlock.textContent = state.maxBuyUnlocked ? 'Unlocked' : `${fmt(maxBuyCost())} tokens`;
   const maxBuyToggle = document.querySelector('#max-buy-toggle');
   maxBuyToggle.hidden = !state.maxBuyUnlocked || !['run', 'token', 'credit', 'spark', 'ascendance'].includes(activeTab);
   maxBuyToggle.setAttribute('aria-pressed', String(state.maxBuyActive));
-  const creditPower = document.querySelector('#buy-credit-power');
-  creditPower.disabled = !state.expansionUnlocked || state.tokenCreditLevel >= 50 || lt(state.tokens, creditPowerCost());
-  creditPower.textContent = state.tokenCreditLevel >= 50 ? 'MAX LEVEL' : `${fmt(creditPowerCost())} tokens`;
-  document.querySelector('#upgrade-credit-power').classList.toggle('locked', !state.expansionUnlocked);
-  const tokenDiscount = document.querySelector('#buy-token-discount');
-  tokenDiscount.disabled = state.tokenCreditLevel < 1 || state.tokenDiscountLevel >= 25 || lt(state.tokens, tokenDiscountCost());
-  tokenDiscount.textContent = state.tokenDiscountLevel >= 25 ? 'MAX LEVEL' : `${fmt(tokenDiscountCost())} tokens`;
-  document.querySelector('#upgrade-token-discount').classList.toggle('locked', state.tokenCreditLevel < 1);
   const challengeBoost = document.querySelector('#buy-credit-challenge-boost');
   challengeBoost.disabled = !state.pyramidUnlocked || state.creditChallengeBoost || lt(state.credits, 1e7);
   challengeBoost.textContent = state.creditChallengeBoost ? 'Bought' : '10M C$';
@@ -607,14 +598,14 @@ function render() {
   showUpgrade('log', state.expansionUnlocked || state.logLevel > 0);
   showUpgrade('exponent', state.expansionUnlocked || state.exponentLevel > 0);
   showUpgrade('cap', state.expansionUnlocked || state.capLevel > 0);
-  showUpgrade('exponent-cap', exponentCapReady || state.exponentCapLevel > 0);
+  showUpgrade('exponent-cap', levelUpgrades.run['exponent-cap'].ready() || state.exponentCapLevel > 0);
   showUpgrade('alpha-unlock', state.printer || state.alphaUnlocked);
   showUpgrade('alpha-gain', state.alphaUnlocked);
   showUpgrade('alpha-boost', state.alphaUnlocked && state.alphaGainPurchases > 0);
   showUpgrade('alpha-neutral', state.alphaUnlocked && state.alphaBoostLevel > 0);
   showUpgrade('alpha-cap', state.alphaUnlocked && state.alphaBoostLevel > 0);
   showUpgrade('alpha-joke', state.alphaUnlocked);
-  showUpgrade('point-discount', asc12Ready || state.ascPointDiscountLevel > 0);
+  showUpgrade('point-discount', state.ascCreditExponent || state.ascPointDiscountLevel > 0);
   showUpgrade('cyan-13', state.automationsUnlocked || state.cyan13Bought);
   showUpgrade('cyan-14', state.pyramidUnlocked || state.cyan14Level > 0);
   showUpgrade('cyan-15', true);
@@ -640,11 +631,7 @@ function render() {
   const creditMultiplierButton = document.querySelector('#buy-credit-multiplier');
   creditMultiplierButton.disabled = lt(state.credits, 1) || state.creditEngine;
   creditMultiplierButton.textContent = state.creditEngine ? 'Bought' : '1 C$';
-  const creditExponent = document.querySelector('#buy-credit-exponent');
-  creditExponent.disabled = !state.creditEngine || state.creditExponentLevel >= 3 || lt(state.credits, creditExponentCost());
-  creditExponent.textContent = state.creditExponentLevel >= 3 ? 'MAX LEVEL' : `${fmt(creditExponentCost())} C$`;
   document.querySelector('#credit-exponent-level').textContent = state.creditExponentLevel;
-  document.querySelector('#upgrade-credit-exponent').classList.toggle('locked', !state.creditEngine);
   const heavyMint = document.querySelector('#buy-credit-cost');
   heavyMint.disabled = !state.creditEngine || state.heavyMint || lt(state.credits, 5);
   heavyMint.textContent = state.heavyMint ? 'Bought' : '5 C$';
@@ -698,14 +685,9 @@ function render() {
   dataPrestige.disabled = lt(state.balance, dataCost);
   document.querySelector('#data-prestige-label').textContent = gte(state.balance, dataCost) ? `Data reset · +${fmt(applyCurrencyGain(dataEarned))} 𝔻 · resets P$ only` : `P$ ${fmt(dataCost)} for 1 𝔻 · resets P$ only`;
   for (let i = 1; i <= 3; i += 1) {
-    const level = state[`sparkUpgrade${i}Level`];
-    const max = [0, 1000, 100, 50][i];
-    const button = document.querySelector(`#buy-spark-${i}`);
-    const cost = sparkUpgradeCost(i);
-    button.disabled = level >= max || lt(state.spark, cost);
-    button.textContent = level >= max ? 'MAX LEVEL' : `${fmt(cost)} ⊹`;
-    document.querySelector(`#spark-${i}-level`).textContent = level;
+    document.querySelector(`#spark-${i}-level`).textContent = state[`sparkUpgrade${i}Level`];
   }
+  renderLevelUpgrades();
   const sparkCost = sparkPrestigeCost();
   const sparkEarned = sparkReward(state.balance);
   const sparkPrestige = document.querySelector('#spark-prestige-button');
@@ -716,6 +698,21 @@ function render() {
   const ascendancePrestige = document.querySelector('#ascendance-prestige-button');
   ascendancePrestige.disabled = lt(state.credits, ascendanceCost);
   document.querySelector('#ascendance-prestige-label').textContent = gte(state.credits, ascendanceCost) ? `Ascend · +${fmt(ascendanceGain(ascendanceEarned))} ᛥ` : 'C$ 1e250 for 1 ᛥ';
+}
+
+for (const [tab, upgrades] of Object.entries(levelUpgrades)) {
+  const currency = upgradeCurrencies[tab];
+  for (const [id, upgrade] of Object.entries(upgrades)) {
+    document.querySelector(`#buy-${id}`).addEventListener('click', () => {
+      if (upgrade.ready && !upgrade.ready()) return;
+      const { count, balance } = levelPurchase(upgrade, state[currency], state.maxBuyUnlocked && state.maxBuyActive);
+      if (!count) return;
+      state[upgrade.key] += count;
+      state[currency] = balance;
+      toast(count === 1 ? upgrade.message : `Bought ${count} levels`);
+      render(); save();
+    });
+  }
 }
 
 setupAutomationCards();
@@ -755,10 +752,6 @@ document.querySelector('#buy-asc-2').addEventListener('click', () => {
   toast('Credit gains raised to 1.5');
   render(); save();
 });
-document.querySelector('#buy-asc-3').addEventListener('click', () => {
-  if (!state.ascCurrencyBoost || !state.cubeUnlocked) return;
-  buyLevels('ascendance', 'ascCubePowerLevel', 5, () => D(10), 'Cube click power doubled');
-});
 document.querySelector('#buy-asc-4').addEventListener('click', () => {
   if (!state.ascCubePowerLevel || state.ascCubeAutoclicker) return;
   state.ascCubeAutoclicker = true;
@@ -781,16 +774,6 @@ document.querySelector('#buy-asc-7').addEventListener('click', () => {
   if (!state.ascCreditExponent || state.ascTotalLevelBoost || lt(state.ascendance, '1e10')) return;
   state.ascendance = minus(state.ascendance, '1e10'); state.ascTotalLevelBoost = true;
   toast('P$ gain linked to upgrade levels'); render(); save();
-});
-document.querySelector('#buy-asc-8').addEventListener('click', () => {
-  buyLevels('ascendance', 'ascAllCurrencyLevel', 50, ascAllCurrencyCost, 'All previous currency gains doubled');
-});
-document.querySelector('#buy-asc-9').addEventListener('click', () => {
-  buyLevels('ascendance', 'ascMainlinePowerLevel', 50, ascMainlinePowerCost, 'Mainline currency gains raised to a higher power');
-});
-document.querySelector('#buy-point-discount').addEventListener('click', () => {
-  if (!state.ascCreditExponent) return;
-  buyLevels('balance', 'ascPointDiscountLevel', 20, ascPointDiscountCost, 'All P$ costs halved');
 });
 document.querySelector('#buy-automation-unlock').addEventListener('click', () => {
   if (!state.creditChallengeBoost || state.automationsUnlocked) return;
@@ -858,49 +841,6 @@ document.querySelector('#buy-press').addEventListener('click', () => {
   if (state.press || !state.printer) return;
   purchase(pointCost(10), () => { state.press = true; }, 'Upgrade 2 bought');
 });
-document.querySelector('#buy-multiplier').addEventListener('click', () => {
-  if (!state.press) return;
-  buyLevels('balance', 'multiplierLevel', upgradeLevelMax(), multiplierCost, 'Compounding level added', !state.freeRunUpgrades);
-});
-document.querySelector('#buy-income').addEventListener('click', () => {
-  if (!state.press) return;
-  buyLevels('balance', 'incomeLevel', upgradeLevelMax(), incomeCost, 'Output level added', !state.freeRunUpgrades);
-});
-document.querySelector('#buy-power').addEventListener('click', () => {
-  if (state.multiplierLevel < 1) return;
-  buyLevels('balance', 'powerLevel', powerMax(), powerCost, 'Compounding II level added');
-});
-document.querySelector('#buy-click').addEventListener('click', () => {
-  if (state.incomeLevel < 1) return;
-  buyLevels('balance', 'clickLevel', upgradeLevelMax(), clickCost, 'Click power increased');
-});
-document.querySelector('#buy-log').addEventListener('click', () => {
-  if (!state.expansionUnlocked) return;
-  buyLevels('balance', 'logLevel', 3, logCost, 'Logarithmic output increased');
-});
-document.querySelector('#buy-exponent').addEventListener('click', () => {
-  if (!state.expansionUnlocked) return;
-  buyLevels('balance', 'exponentLevel', exponentMax(), exponentCost, 'Gain exponent increased');
-});
-document.querySelector('#buy-cap').addEventListener('click', () => {
-  if (!state.expansionUnlocked) return;
-  buyLevels('balance', 'capLevel', upgradeLevelMax(), capCost, 'Upgrade 5 capacity increased', !state.freeRunUpgrades);
-});
-document.querySelector('#buy-exponent-cap').addEventListener('click', () => {
-  if (!state.expansionUnlocked || !state.creditExponentLevel) return;
-  buyLevels('balance', 'exponentCapLevel', 5, exponentCapCost, 'Upgrade 8 max level increased');
-});
-document.querySelector('#buy-token-multiplier').addEventListener('click', () => {
-  buyLevels('tokens', 'tokenMultiplierLevel', 10, tokenAmplifierCost, 'Token amplifier level added');
-});
-document.querySelector('#buy-discount').addEventListener('click', () => {
-  if (state.tokenMultiplierLevel < 1) return;
-  buyLevels('tokens', 'discountLevel', upgradeLevelMax(), discountTokenCost, 'Bulk pricing level added');
-});
-document.querySelector('#buy-token-boost').addEventListener('click', () => {
-  if (state.tokenMultiplierLevel < 1) return;
-  buyLevels('tokens', 'tokenBoostLevel', 10, tokenBoostCost, 'Token foundry level added');
-});
 document.querySelector('#buy-unlock').addEventListener('click', () => {
   const cost = expansionCost();
   if (state.tokenBoostLevel < 1 || lt(state.tokens, cost) || state.expansionUnlocked) return;
@@ -921,14 +861,6 @@ document.querySelector('#max-buy-toggle').addEventListener('click', () => {
   state.maxBuyActive = !state.maxBuyActive;
   toast(state.maxBuyActive ? 'Max Buy on' : 'Max Buy off'); render(); save();
 });
-document.querySelector('#buy-credit-power').addEventListener('click', () => {
-  if (!state.expansionUnlocked) return;
-  buyLevels('tokens', 'tokenCreditLevel', 50, creditPowerCost, 'Factorial Power increased');
-});
-document.querySelector('#buy-token-discount').addEventListener('click', () => {
-  if (state.tokenCreditLevel < 1) return;
-  buyLevels('tokens', 'tokenDiscountLevel', 25, tokenDiscountCost, 'Factorial cost reduced');
-});
 document.querySelector('#sections-toggle').addEventListener('click', () => { const tabs = document.querySelector('#upgrade-tabs'); tabs.hidden = !tabs.hidden; document.querySelector('#sections-toggle').setAttribute('aria-expanded', String(!tabs.hidden)); });
 function chooseTab(tab) { activeTab = tab; document.querySelector('#upgrade-tabs').hidden = true; document.querySelector('#sections-toggle').setAttribute('aria-expanded', 'false'); render(); }
 document.querySelector('#run-tab').addEventListener('click', () => chooseTab('run'));
@@ -936,9 +868,6 @@ document.querySelector('#token-tab').addEventListener('click', () => { if (state
 document.querySelector('#credit-tab').addEventListener('click', () => { if (state.totalCreditPrestiges || gt(state.credits, 0)) chooseTab('credit'); });
 document.querySelector('#data-tab').addEventListener('click', () => { if (state.totalDataPrestiges || gt(state.data, 0) || state.dataLore.some(Boolean)) chooseTab('data'); });
 document.querySelector('#spark-tab').addEventListener('click', () => { if (state.sparkPrestiges || gt(state.spark, 0)) chooseTab('spark'); });
-for (let i = 1; i <= 3; i += 1) document.querySelector(`#buy-spark-${i}`).addEventListener('click', () => {
-  buyLevels('spark', `sparkUpgrade${i}Level`, [0, 1000, 100, 50][i], () => sparkUpgradeCost(i), `Spark upgrade ${i} accelerated P$ production`);
-});
 document.querySelector('#cube-tab').addEventListener('click', () => { if (state.cubeUnlocked) chooseTab('cube'); });
 document.querySelector('#pyramid-tab').addEventListener('click', () => { if (state.pyramidUnlocked) chooseTab('pyramid'); });
 document.querySelector('#alpha-tab').addEventListener('click', () => { if (state.alphaUnlocked) chooseTab('alpha'); });
@@ -1061,10 +990,6 @@ document.querySelector('#buy-credit-multiplier').addEventListener('click', () =>
   toast('Credit engine bought');
   render();
   save();
-});
-document.querySelector('#buy-credit-exponent').addEventListener('click', () => {
-  if (!state.creditEngine) return;
-  buyLevels('credits', 'creditExponentLevel', 3, creditExponentCost, 'Token exponent increased');
 });
 document.querySelector('#buy-credit-cost').addEventListener('click', () => {
   if (!state.creditEngine || state.heavyMint || lt(state.credits, 5)) return;
