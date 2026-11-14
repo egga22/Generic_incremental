@@ -61,3 +61,53 @@ body.light-matter-screen .dark-upgrade :is(h3, p, .effect) { color: #171717; }
 body.light-matter-screen .dark-upgrade button { background: #fff; color: #171717; }
 body.light-matter-screen .dark-upgrade button:not(:disabled):hover { background: #eee; }
 body.light-matter-screen .dark-upgrade button:disabled { background: #f7f7f7; color: #666; }
+
+#deep-settings {
+  width: min(440px, calc(100% - 32px));
+  max-height: calc(100% - 32px);
+  margin: auto;
+  padding: 20px;
+  color: CanvasText;
+  background: Canvas;
+  border: 1px solid #767676;
+  border-radius: 8px;
+  box-shadow: 0 12px 36px #0003;
+  overflow: auto;
+}
+#deep-settings::backdrop { background: #0008; }
+.settings-heading, .settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.settings-heading h2 { margin: 0; font-size: 18px; }
+.settings-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #76767666;
+}
+.settings-section h3 { margin: 0 0 10px; font-size: 14px; }
+.settings-section p {
+  margin: 4px 0 0;
+  color: #666;
+  font-size: 13px;
+  line-height: 1.4;
+}
+body.dark-screen .settings-section p { color: #bbb; }
+.settings-row { flex-wrap: wrap; }
+.settings-row + .settings-row { margin-top: 12px; }
+.settings-row label { font-weight: 600; }
+.settings-row select {
+  max-width: 100%;
+  padding: 8px;
+  font: inherit;
+  color: CanvasText;
+  background: Canvas;
+  border: 1px solid #767676;
+  border-radius: 3px;
+}
+.settings-row input { width: 20px; height: 20px; margin: 0; cursor: pointer; }
+.settings-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+#save-status:not(:empty) { margin-top: 12px; }
+.reduce-motion .toast { transition: none; }

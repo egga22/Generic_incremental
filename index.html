@@ -23,8 +23,8 @@ input, textarea, select {
     <meta name="theme-color" content="#ffffff" w-tid="9"/>
     <link rel="icon" href="data:," w-tid="11"/>
     <title w-tid="13">Generic Incremental</title>
-    <link rel="stylesheet" href="./style.css?v=theme-switch" w-tid="15"/>
-    <script type="module" src="./game.js?v=theme-switch" w-tid="17"></script>
+    <link rel="stylesheet" href="./style.css?v=deep-settings" w-tid="15"/>
+    <script type="module" src="./game.js?v=deep-settings" w-tid="17"></script>
   </head>
   <body w-tid="19">
     <main class="game-shell" w-tid="21">
@@ -242,18 +242,45 @@ input, textarea, select {
       <details id="more-menu">
         <summary>More</summary>
         <label class="theme-switch"><input id="theme-toggle" type="checkbox" role="switch"> Dark mode</label>
-        <button type="button" id="export-save">Export save</button>
-        <button type="button" id="import-save">Import save</button>
-        <button type="button" popovertarget="deep-settings">Deep settings</button>
-        <div id="deep-settings" popover aria-labelledby="deep-settings-title"
-             style="background: Canvas; color: CanvasText;">
-          <h2 id="deep-settings-title">Deep settings</h2>
-          <p>No settings yet.</p>
-          <button type="button" popovertarget="deep-settings" popovertargetaction="hide">Close</button>
-        </div>
-        <input type="file" accept=".json,application/json" hidden>
+        <button type="button" id="open-deep-settings" aria-haspopup="dialog">Deep settings</button>
       </details>
     </main>
+    <dialog id="deep-settings" aria-labelledby="deep-settings-title">
+      <form method="dialog" class="settings-heading">
+        <h2 id="deep-settings-title">Deep settings</h2>
+        <button type="submit" autofocus>Close</button>
+      </form>
+      <section class="settings-section" aria-labelledby="display-settings-title">
+        <h3 id="display-settings-title">Display</h3>
+        <div class="settings-row">
+          <div>
+            <label for="number-notation">Number notation</label>
+            <p id="notation-help">Choose how large numbers are displayed.</p>
+          </div>
+          <select id="number-notation" aria-describedby="notation-help">
+            <option value="compact">Compact (1.25M)</option>
+            <option value="scientific">Scientific (1.25e6)</option>
+          </select>
+        </div>
+        <div class="settings-row">
+          <div>
+            <label for="reduce-motion">Reduce motion</label>
+            <p id="motion-help">Show notifications without sliding or fading.</p>
+          </div>
+          <input id="reduce-motion" type="checkbox" role="switch" aria-describedby="motion-help">
+        </div>
+      </section>
+      <section class="settings-section" aria-labelledby="save-settings-title">
+        <h3 id="save-settings-title">Save data</h3>
+        <p>Download a backup or restore progress from a save file.</p>
+        <div class="settings-actions">
+          <button type="button" id="export-save">Export save</button>
+          <button type="button" id="import-save">Import save</button>
+        </div>
+        <input type="file" accept=".json,application/json" hidden>
+        <p id="save-status" role="status"></p>
+      </section>
+    </dialog>
     <div class="toast" id="toast" role="status" aria-live="polite" w-tid="1139"></div>
   </body>
 </html>
