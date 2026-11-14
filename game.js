@@ -404,7 +404,9 @@ function render() {
   document.querySelector('#exponent-cap-level').textContent = state.exponentCapLevel;
   document.querySelector('#passive-token-rate').textContent = fmt(tokenIncomeRate());
   document.querySelector('#cap-level').textContent = state.capLevel;
-  document.querySelector('#power-cap').textContent = powerMax();
+  const powerLevelMax = powerMax();
+  document.querySelector('#power-level-max').textContent = powerLevelMax;
+  document.querySelector('#power-cap').textContent = powerLevelMax;
   document.querySelector('#token-tab').hidden = state.totalPrestiges < 1 && lt(state.tokens, 1);
   const hasCredits = state.totalCreditPrestiges > 0 || gt(state.credits, 0) || state.creditEngine || state.cubeUnlocked || state.pyramidUnlocked;
   document.querySelector('#credit-tab').hidden = !hasCredits;
