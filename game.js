@@ -265,12 +265,12 @@ const levelUpgrades = {
   run: {
     multiplier: { key: 'multiplierLevel', max: upgradeLevelMax, cost: multiplierCost, ready: () => state.press, kept: true, message: 'Compounding level added' },
     income: { key: 'incomeLevel', max: upgradeLevelMax, cost: incomeCost, ready: () => state.press, kept: true, message: 'Output level added' },
+    cap: { key: 'capLevel', max: upgradeLevelMax, cost: capCost, ready: () => state.expansionUnlocked, kept: true, message: 'Upgrade 5 capacity increased' },
+    'exponent-cap': { key: 'exponentCapLevel', max: () => 5, cost: exponentCapCost, ready: () => state.expansionUnlocked && state.creditExponentLevel >= 1, message: 'Upgrade 8 max level increased' },
     power: { key: 'powerLevel', max: powerMax, cost: powerCost, ready: () => state.multiplierLevel > 0, message: 'Compounding II level added' },
     click: { key: 'clickLevel', max: upgradeLevelMax, cost: clickCost, ready: () => state.incomeLevel > 0, message: 'Click power increased' },
     log: { key: 'logLevel', max: () => 3, cost: logCost, ready: () => state.expansionUnlocked, message: 'Logarithmic output increased' },
     exponent: { key: 'exponentLevel', max: exponentMax, cost: exponentCost, ready: () => state.expansionUnlocked, message: 'Gain exponent increased' },
-    cap: { key: 'capLevel', max: upgradeLevelMax, cost: capCost, ready: () => state.expansionUnlocked, kept: true, message: 'Upgrade 5 capacity increased' },
-    'exponent-cap': { key: 'exponentCapLevel', max: () => 5, cost: exponentCapCost, ready: () => state.expansionUnlocked && state.creditExponentLevel >= 1, message: 'Upgrade 8 max level increased' },
     'point-discount': { key: 'ascPointDiscountLevel', max: () => 20, cost: ascPointDiscountCost, ready: () => state.ascCreditExponent, message: 'All P$ costs halved' }
   },
   token: {
@@ -299,6 +299,26 @@ const levelUpgrades = {
   }
 };
 const upgradeCurrencies = { run: 'balance', token: 'tokens', credit: 'credits', spark: 'spark', ascendance: 'ascendance' };
+
+function clampUpgradeLevels() {
+  // Cap-granting upgrades in the run table come before the levels they affect.
+  for (const upgrades of Object.values(levelUpgrades)) {
+    for (const { key, max } of Object.values(upgrades)) {
+      const limit = max();
+      if (state[key] <= limit) continue;
+      state[key] = limit;
+      if (state.priceOrigins[key] > limit) state.priceOrigins[key] = limit;
+    }
+  }
+  state.darkMatter2Level = Math.min(state.darkMatter2Level, 1000);
+  const excessTrialLevels = state.cyan14Level - 2;
+  if (excessTrialLevels > 0) {
+    state.cyan14Level = 2;
+    if (challengeDuration(state.activeChallenge)) {
+      state.challengeEndsAt -= excessTrialLevels * 60000;
+    }
+  }
+}
 
 function levelPurchase(upgrade, balance, maxBuy) {
   const start = state[upgrade.key];
@@ -857,6 +877,7 @@ document.querySelector('#buy-alpha-boost').addEventListener('click', () => { con
 document.querySelector('#buy-alpha-neutral').addEventListener('click', () => { if (!state.alphaUnlocked || state.alphaBoostLevel < 1 || state.alphaNeutralBought) return; const gain = applyAlphaGain(5).times(cubeMultiplier('alpha')); state.alpha = plus(state.alpha, gain); state.alphaNeutralBought = true; toast(`+${fmt(gain)} α · Neutral multiplier bought`); render(); save(); });
 document.querySelector('#buy-alpha-cap').addEventListener('click', () => { const cost = alphaCapPrice(); if (!state.alphaUnlocked || state.alphaBoostLevel < 1 || lt(state.alpha, cost)) return; state.alpha = minus(state.alpha, cost); state.alphaCapLevel += 1; toast('2α max level increased by 2'); render(); save(); });
 document.querySelector('#buy-gain-zero').addEventListener('click', () => {
+  if (!state.gainZeroActive) clampUpgradeLevels();
   if (!state.gainZeroBought) {
     state.gainZeroBought = true;
     state.gainZeroActive = true;
