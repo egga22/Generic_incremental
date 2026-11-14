@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en" w-tid="1">
+  <head w-tid="3">
+    
+
+<link rel="stylesheet" href="https://api.websim.com/fonts.css?v=bb214f5744d460e9bcbdda19eee60f74b7e572ba">
+<style class="websim-injected websim-ios-mobile-fix">
+/* iOS zoom prevention and overscroll behavior - injected by WebSim */
+html, body {
+  touch-action: pan-x pan-y;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+}
+input, textarea, select {
+  font-size: max(1rem, 16px) !important;
+}
+</style>
+<script class="websim-injected">__WEBSIM_DATA__={"home":false,"hostOrigin":"https://websim.com","apiOrigin":"https://api.websim.com","isTopLevelFrame":false,"project_id":"vyqceug4qjvsia3bb698","preview":true,"activityCaptureMode":"on","route":{"type":"project","id":"vyqceug4qjvsia3bb698"},"baseUrl":"https://websim.com/p/vyqceug4qjvsia3bb698"}</script>
+<script class="websim-injected" src="https://api.websim.com/dist/index.js?v=bb214f5744d460e9bcbdda19eee60f74b7e572ba"></script>
+<meta charset="utf-8" w-tid="5"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1" w-tid="7"/>
+    <meta name="theme-color" content="#ffffff" w-tid="9"/>
+    <link rel="icon" href="data:," w-tid="11"/>
+    <title w-tid="13">Generic Incremental</title>
+    <link rel="stylesheet" href="./style.css" w-tid="15"/>
+    <script type="module" src="./game.js" w-tid="17"></script>
+  </head>
+  <body w-tid="19">
+    <main class="game-shell" w-tid="21">
+      <header w-tid="23"><h1 w-tid="25">Generic Incremental</h1><span id="run-label" w-tid="27">NEW RUN</span></header>
+      <section class="economy" w-tid="29">
+        <div w-tid="31"><div class="label" id="balance-label" w-tid="33">AVAILABLE P$</div><div class="balance currency-points" id="balance" w-tid="35">0</div><div class="rate" id="rate-line" w-tid="37"><span id="rate" w-tid="39">0</span> P$ per second</div></div>
+        <button id="work-button" type="button" w-tid="41">Make a sale · +P$1</button>
+      </section>
+      <section class="milestone" w-tid="43">
+        <div w-tid="45">Run earnings <strong w-tid="47">P$ <span id="run-earned" w-tid="49">0</span></strong></div>
+        <div class="progress" w-tid="51"><span id="progress-fill" w-tid="53"></span></div>
+        <div class="goal" w-tid="55"><strong id="prestige-goal" w-tid="57">P$ 500</strong><span w-tid="59">next prestige</span></div>
+      </section>
+      <section class="upgrades" w-tid="61">
+        <button class="sections-toggle" id="sections-toggle" type="button" aria-expanded="false" w-tid="63">Sections <span aria-hidden="true" w-tid="65">⌄</span></button><div class="upgrade-tabs" id="upgrade-tabs" hidden w-tid="67"><button class="tab active" id="run-tab" type="button" w-tid="69">Run upgrades</button><button class="tab" id="token-tab" type="button" hidden w-tid="71">Token upgrades</button><button class="tab" id="credit-tab" type="button" hidden w-tid="73">Credit upgrades</button><button class="tab" id="data-tab" type="button" hidden w-tid="75">Data 𝔻</button><button class="tab" id="spark-tab" type="button" hidden w-tid="77">Spark ⊹</button><button class="tab" id="cube-tab" type="button" hidden w-tid="79">The Cube</button><button class="tab" id="pyramid-tab" type="button" hidden w-tid="81">The Pyramid</button><button class="tab" id="alpha-tab" type="button" hidden w-tid="83">α upgrades</button><button class="tab" id="darkmatter-tab" type="button" hidden w-tid="85">Dark Matter ⊠</button><button class="tab" id="ascendance-tab" type="button" hidden w-tid="87">Ascendance ᛥ</button></div>
+        <div id="run-upgrades" w-tid="89">
+        <article class="upgrade zero-upgrade" id="upgrade-gain-zero" w-tid="91">
+          <div w-tid="93"><h3 w-tid="95">0. Null gain</h3><p w-tid="97">Free. Multiplies all currency gain by ×0. Turning it off sets P$ to 1 and resets upgrade prices without changing levels. ONLY USE IN CASE OF EMERGENCY.</p><div class="effect" w-tid="99">All currency gain ×<span id="gain-zero-factor" w-tid="101">1</span></div></div>
+          <button id="buy-gain-zero" type="button" disabled w-tid="103">Free</button>
+        </article>
+        <article class="upgrade" id="upgrade-printer" w-tid="105">
+          <div w-tid="107"><h3 w-tid="109">1. P$ printer</h3><p w-tid="111">Starts earning automatically.</p><div class="effect" w-tid="113">+1 P$ / sec</div></div>
+          <button id="buy-printer" type="button" w-tid="115">Free</button>
+        </article>
+        <article class="upgrade locked" id="upgrade-press" w-tid="117">
+          <div w-tid="119"><h3 w-tid="121">2. Second printer</h3><p w-tid="123">Requires upgrade 1.</p><div class="effect" w-tid="125">+1 P$ / sec</div></div>
+          <button id="buy-press" type="button" disabled w-tid="127">P$ 10</button>
+        </article>
+        <article class="upgrade locked" id="upgrade-multiplier" w-tid="129">
+          <div w-tid="131"><h3 w-tid="133">3. Compounding</h3><p w-tid="135">Requires upgrade 2. Each level multiplies production by 1.1.</p><div class="effect" w-tid="137">×1.1 per level · Level <span id="mult-level" w-tid="139">0</span> / <span id="mult-level-max" w-tid="141">1000</span></div></div>
+          <button id="buy-multiplier" type="button" disabled w-tid="143">P$ 100</button>
+        </article>
+        <article class="upgrade locked" id="upgrade-income" w-tid="145">
+          <div w-tid="147"><h3 w-tid="149">4. More output</h3><p w-tid="151">Requires upgrade 2. Each level adds its level in P$ / sec.</p><div class="effect" w-tid="153">+<span id="income-level-effect" w-tid="155">0</span> P$ / sec · Level <span id="income-level" w-tid="157">0</span> / <span id="income-level-max" w-tid="159">1000</span></div></div>
+          <button id="buy-income" type="button" disabled w-tid="161">P$ 50</button>
+        </article>
+        <article class="upgrade locked" id="upgrade-power" w-tid="163">
+          <div w-tid="165"><h3 w-tid="167">5. Compounding II</h3><p w-tid="169">Requires upgrade 3. Multiplies production by 1.3 per level.</p><div class="effect" w-tid="171">×1.3 per level · Level <span id="power-level" w-tid="173">0</span> / 100</div></div>
+          <button id="buy-power" type="button" disabled w-tid="175">P$ 250</button>
+        </article>
+        <article class="upgrade locked" id="upgrade-click" w-tid="177">
+          <div w-tid="179"><h3 w-tid="181">6. Better sales</h3><p w-tid="183">Requires upgrade 4. Increase click power by 2 per level.</p><div class="effect" w-tid="185">+<span id="click-bonus" w-tid="187">0</span> per click · Level <span id="click-level" w-tid="189">0</span> / <span id="click-level-max" w-tid="191">1000</span></div></div>
+          <button id="buy-click" type="button" disabled w-tid="193">P$ 100</button>
+        </article>
+        <article class="upgrade locked" id="upgrade-log" w-tid="195">
+          <div w-tid="197"><h3 w-tid="199">7. Logarithmic output</h3><p w-tid="201">Requires 4T. Multiplies production by log₁₀(P$) per level.</p><div class="effect" w-tid="203">×log₁₀(P$) · Level <span id="log-level" w-tid="205">0</span> / 3</div></div>
+          <button id="buy-log" type="button" disabled w-tid="207">P$ 1B</button>
+        </article>
+        <article class="upgrade locked" id="upgrade-exponent" w-tid="209">
+          <div w-tid="211"><h3 w-tid="213">8. Gain exponent</h3><p w-tid="215">Requires 4T. Raises production to the power of 1.1.</p><div class="effect" w-tid="217">Production<sup w-tid="219">1.1</sup> · Level <span id="exponent-level" w-tid="221">0</span> / <span id="exponent-max" w-tid="223">1</span></div></div>
+          <button id="buy-exponent" type="button" disabled w-tid="225">P$ 50B</button>
+        </article>
+        <article class="upgrade locked" id="upgrade-cap" w-tid="227">
+          <div w-tid="229"><h3 w-tid="231">9. Power capacity</h3><p w-tid="233">Requires 4T. Raises upgrade 5's max level by 2 per level.</p><div class="effect" w-tid="235">Upgrade 5 max: <span id="power-cap" w-tid="237">100</span> · Level <span id="cap-level" w-tid="239">0</span> / <span id="cap-level-max" w-tid="241">1000</span></div></div>
+          <button id="buy-cap" type="button" disabled w-tid="243">P$ 500M</button>
+        </article>
+        <article class="upgrade locked" id="upgrade-exponent-cap" w-tid="245">
+          <div w-tid="247"><h3 w-tid="249">10. Exponent capacity</h3><p w-tid="251">Requires 4T and 2C. Adds one level to upgrade 8's max per level.</p><div class="effect" w-tid="253">Upgrade 8 max +1 · Level <span id="exponent-cap-level" w-tid="255">0</span> / 5</div></div>
+          <button id="buy-exponent-cap" type="button" disabled w-tid="257">P$ 100Oc</button>
+        </article>
+        <article class="upgrade locked" id="upgrade-alpha-unlock" w-tid="259">
+          <div w-tid="261"><h3 w-tid="263">11. Alpha access</h3><p w-tid="265">Requires upgrade 1. Permanently unlocks the alpha upgrade section.</p><div class="effect" w-tid="267">Unlocks α upgrades</div></div>
+          <button id="buy-alpha-unlock" type="button" disabled w-tid="269">Free</button>
+        </article>
+        <article class="upgrade locked" id="upgrade-point-discount" w-tid="271">
+          <div w-tid="273"><h3 w-tid="275">12. Frugal foundry</h3><p w-tid="277">Requires 2A. Halves all P$ costs per level, up to 20 levels.</p><div class="effect" w-tid="279">All P$ costs ÷2 · Level <span id="asc-point-discount-level" w-tid="281">0</span> / 20</div></div><button id="buy-point-discount" type="button" disabled w-tid="283">P$ 1e300</button>
+        </article>
+        <article class="upgrade cyan-upgrade locked" id="upgrade-cyan-13" w-tid="285"><div w-tid="287"><h3 w-tid="289">13. Cyan automation</h3><p w-tid="291">Requires 9C. Makes 9C free and automatically purchases it as soon as available.</p><div class="effect" w-tid="293">9C is free · automatically bought when available</div></div><button id="buy-cyan-13" type="button" disabled w-tid="295">P$ 1e150</button></article>
+        <article class="upgrade cyan-upgrade locked" id="upgrade-cyan-14" w-tid="297"><div w-tid="299"><h3 w-tid="301">14. Extended trials</h3><p w-tid="303">Requires 7C. Adds 1 minute to every timed challenge per level.</p><div class="effect" w-tid="305">+1 minute · Level <span id="cyan-14-level" w-tid="307">0</span> / 2</div></div><button id="buy-cyan-14" type="button" disabled w-tid="309">P$ 1e160</button></article>
+        <article class="upgrade cyan-upgrade" id="upgrade-cyan-15" w-tid="311"><div w-tid="313"><h3 w-tid="315">15. Expanded limits</h3><p w-tid="317">Increases the maximum buys of every 1000-level upgrade.</p><div class="effect" w-tid="319">+250 max levels · Current max <span id="cyan-15-max" w-tid="321">1000</span></div></div><button id="buy-cyan-15" type="button" disabled w-tid="323">P$ 1e170</button></article>
+        <article class="upgrade locked" id="upgrade-point-16" w-tid="325"><div w-tid="327"><h3 w-tid="329">16. Deep-space foundry</h3><p w-tid="331">Multiplies all P$ gain by 10.</p><div class="effect" w-tid="333">×10 P$ gain</div></div><button id="buy-point-16" type="button" disabled w-tid="335">P$ 1e180</button></article>
+        <article class="upgrade locked" id="upgrade-point-17" w-tid="337"><div w-tid="339"><h3 w-tid="341">17. Particle accelerator</h3><p w-tid="343">Multiplies all P$ gain by 100.</p><div class="effect" w-tid="345">×100 P$ gain</div></div><button id="buy-point-17" type="button" disabled w-tid="347">P$ 1e200</button></article>
+        <article class="upgrade locked" id="upgrade-point-18" w-tid="349"><div w-tid="351"><h3 w-tid="353">18. Golden ratio</h3><p w-tid="355">Multiplies all P$ gain by 1000.</p><div class="effect" w-tid="357">×1000 P$ gain</div></div><button id="buy-point-18" type="button" disabled w-tid="359">P$ 1e220</button></article>
+        <article class="upgrade locked" id="upgrade-point-19" w-tid="361"><div w-tid="363"><h3 w-tid="365">19. Cascade engine</h3><p w-tid="367">Multiplies all P$ gain by one million.</p><div class="effect" w-tid="369">×1,000,000 P$ gain</div></div><button id="buy-point-19" type="button" disabled w-tid="371">P$ 1e240</button></article>
+        <article class="upgrade locked" id="upgrade-point-20" w-tid="373"><div w-tid="375"><h3 w-tid="377">20. Event horizon</h3><p w-tid="379">Multiplies all P$ gain by one trillion.</p><div class="effect" w-tid="381">×1e12 P$ gain</div></div><button id="buy-point-20" type="button" disabled w-tid="383">P$ 1e260</button></article>
+        </div>
+        <div id="alpha-upgrades" hidden w-tid="385">
+          <article class="upgrade alpha-upgrade" id="upgrade-alpha-gain" w-tid="387"><div w-tid="389"><h3 w-tid="391">1α. Alpha gain</h3><p w-tid="393">Gain alpha when bought.</p><div class="effect" w-tid="395">+<span id="alpha-gain-amount" w-tid="397">1</span> α per purchase</div></div><button id="buy-alpha-gain" type="button" w-tid="399">Gain α</button></article>
+          <article class="upgrade alpha-upgrade locked" id="upgrade-alpha-boost" w-tid="401"><div w-tid="403"><h3 w-tid="405">2α. Alpha boost</h3><p w-tid="407">Requires 1α. Adds +1 to 1α, up to 50 times.</p><div class="effect" w-tid="409">+1 α per 1α purchase · Level <span id="alpha-boost-level" w-tid="411">0</span> / 50</div></div><button id="buy-alpha-boost" type="button" disabled w-tid="413">25 α</button></article>
+          <article class="upgrade alpha-upgrade locked" id="upgrade-alpha-neutral" w-tid="415"><div w-tid="417"><h3 w-tid="419">3α. Neutral multiplier</h3><p w-tid="421">Requires 2α. Multiplies 1α by 1.</p><div class="effect" w-tid="423">×1 α gain</div></div><button id="buy-alpha-neutral" type="button" disabled w-tid="425">−5 α</button></article>
+          <article class="upgrade alpha-upgrade locked" id="upgrade-alpha-cap" w-tid="427"><div w-tid="429"><h3 w-tid="431">4α. Expanded potential</h3><p w-tid="433">Requires 2α. Adds 2 max levels to 2α.</p><div class="effect" w-tid="435">2α max level: <span id="alpha-boost-max" w-tid="437">50</span> · +2 per level</div></div><button id="buy-alpha-cap" type="button" disabled w-tid="439">100 α</button></article>
+          <article class="upgrade alpha-upgrade" id="upgrade-alpha-joke" w-tid="441"><div w-tid="443"><h3 w-tid="445">5α. Totally reasonable</h3><p w-tid="447">Raises P$ to the power of 1000. Its price is 1.5× your current α (minimum 1 α), so it can never be bought.</p><div class="effect" w-tid="449">P$<sup w-tid="451">1000</sup> · Unbuyable</div></div><button id="buy-alpha-joke" type="button" disabled w-tid="453">1 α</button></article>
+          <article class="upgrade alpha-upgrade locked" id="upgrade-alpha-generator" w-tid="455"><div w-tid="457"><h3 w-tid="459">6α. Alpha generator</h3><p w-tid="461">Generates α automatically.</p><div class="effect" w-tid="463">+1 α every 10 seconds</div></div><button id="buy-alpha-generator" type="button" disabled w-tid="465">10 α</button></article>
+          <article class="upgrade alpha-upgrade locked" id="upgrade-darkmatter-unlock" w-tid="467"><div w-tid="469"><h3 w-tid="471">7α. Dark Matter</h3><p w-tid="473">Unlocks the Dark Matter currency and its upgrades.</p><div class="effect" w-tid="475">Unlock Dark Matter ⊠</div></div><button id="buy-darkmatter-unlock" type="button" disabled w-tid="477">1000 α</button></article>
+        </div>
+        <div id="darkmatter-upgrades" hidden w-tid="479">
+          <article class="upgrade dark-upgrade locked" id="upgrade-darkmatter-1" w-tid="481"><div w-tid="483"><h3 w-tid="485">−1. First contact</h3><p w-tid="487">Begin generating Dark Matter.</p><div class="effect" w-tid="489">+0.1 ⊠ / sec</div></div><button id="buy-darkmatter-1" type="button" disabled w-tid="491">Free</button></article>
+          <article class="upgrade dark-upgrade locked" id="upgrade-darkmatter-2" w-tid="493"><div w-tid="495"><h3 w-tid="497">−2. Double-down</h3><p w-tid="499">Sets your ⊠ to 0, but doubles ⊠ gain per buy.</p><div class="effect" w-tid="501">×2 per buy · Total ×<span id="darkmatter-2-multiplier" w-tid="503">1</span> · Level <span id="darkmatter-2-level" w-tid="505">0</span> / 1000</div></div><button id="buy-darkmatter-2" type="button" disabled w-tid="507">2 ⊠</button></article>
+          <article class="upgrade dark-upgrade locked" id="upgrade-darkmatter-3" w-tid="509"><div w-tid="511"><h3 w-tid="513">−3. Heads or tails</h3><p w-tid="515">Flips every second by default. Heads doubles ⊠ gain compounding; tails resets this boost to ×1.</p><div class="effect" w-tid="517">Current coin boost ×<span id="darkmatter-coin-boost" w-tid="519">1</span></div></div><button id="buy-darkmatter-3" type="button" disabled w-tid="521">Free</button></article>
+          <article class="upgrade dark-upgrade locked" id="upgrade-darkmatter-4" w-tid="523"><div w-tid="525"><h3 w-tid="527">−4. Long odds</h3><p w-tid="529">Requires −3. Each heads result extends the time until the next coin flip.</p><div class="effect" w-tid="531">Current flip duration: <span id="darkmatter-flip-duration" w-tid="533">1</span> sec</div></div><button id="buy-darkmatter-4" type="button" disabled w-tid="535">Free</button></article>
+        </div>
+        <div id="ascendance-upgrades" hidden w-tid="537">
+          <article class="upgrade asc-upgrade" id="upgrade-asc-1" w-tid="539"><div w-tid="541"><h3 w-tid="543">1A. Hundredfold</h3><p w-tid="545">One time. Multiplies all currencies below ᛥ by ×100.</p><div class="effect" w-tid="547">×100 to all lower currency gains</div></div><button id="buy-asc-1" type="button" w-tid="549">5 ᛥ</button></article>
+          <article class="upgrade asc-upgrade locked" id="upgrade-asc-2" w-tid="551"><div w-tid="553"><h3 w-tid="555">2A. Credit calculus</h3><p w-tid="557">Requires 1A and Deduction II. Raises credit gains to the power of 1.5.</p><div class="effect" w-tid="559">Credits<sup w-tid="561">1.5</sup> on credit prestige</div></div><button id="buy-asc-2" type="button" disabled w-tid="563">Free</button></article>
+          <article class="upgrade asc-upgrade locked" id="upgrade-asc-3" w-tid="565"><div w-tid="567"><h3 w-tid="569">3A. Cube force</h3><p w-tid="571">Requires 1A and 4C. Doubles the Cube’s click power per level.</p><div class="effect" w-tid="573">×<span id="asc-cube-power" w-tid="575">1</span> Cube clicks · Level <span id="asc-cube-power-level" w-tid="577">0</span> / 5</div></div><button id="buy-asc-3" type="button" disabled w-tid="579">10 ᛥ</button></article>
+          <article class="upgrade asc-upgrade locked" id="upgrade-asc-4" w-tid="581"><div w-tid="583"><h3 w-tid="585">4A. Cube autoclicker</h3><p w-tid="587">Requires 3A. The Cube gains clicks automatically.</p><div class="effect" w-tid="589">1 Cube click / sec</div></div><button id="buy-asc-4" type="button" disabled w-tid="591">Free</button></article>
+          <article class="upgrade asc-upgrade locked" id="upgrade-asc-5" w-tid="593"><div w-tid="595"><h3 w-tid="597">5A. Ascendant cube</h3><p w-tid="599">Requires 3A. Unlocks ᛥ as a Cube effect.</p><div class="effect" w-tid="601">The Cube can multiply ᛥ gains</div></div><button id="buy-asc-5" type="button" disabled w-tid="603">Free</button></article>
+          <article class="upgrade asc-upgrade locked" id="upgrade-asc-6" w-tid="605"><div w-tid="607"><h3 w-tid="609">6A. Alpha cube</h3><p w-tid="611">Requires 3A and 11. Unlocks α as a Cube effect.</p><div class="effect" w-tid="613">The Cube can multiply α gains</div></div><button id="buy-asc-6" type="button" disabled w-tid="615">Free</button></article>
+          <article class="upgrade asc-upgrade locked" id="upgrade-asc-7" w-tid="617"><div w-tid="619"><h3 w-tid="621">7A. Total mastery</h3><p w-tid="623">Requires 2A. Multiplies P$ gain by the total level of upgrades bought.</p><div class="effect" w-tid="625">×<span id="asc-total-level-multiplier" w-tid="627">1</span> P$ gain · One time</div></div><button id="buy-asc-7" type="button" disabled w-tid="629">1e10 ᛥ</button></article>
+          <article class="upgrade asc-upgrade" id="upgrade-asc-8" w-tid="631"><div w-tid="633"><h3 w-tid="635">8A. All things doubled</h3><p w-tid="637">Doubles gains of all mainline currencies below ᛥ per level. Bonus currencies α and ⊠ are unaffected. Price increases ×10 per buy.</p><div class="effect" w-tid="639">×<span id="asc-all-currency-multiplier" w-tid="641">1</span> all previous currency gains · Level <span id="asc-all-currency-level" w-tid="643">0</span> / 50</div></div><button id="buy-asc-8" type="button" w-tid="645">1e12 ᛥ</button></article>
+          <article class="upgrade asc-upgrade" id="upgrade-asc-9" w-tid="647"><div w-tid="649"><h3 w-tid="651">9A. Mainline exponent</h3><p w-tid="653">Raises all mainline currency gains below ᛥ to the power of 1.3 per level, compounding. Bonus currencies α and ⊠ are unaffected. Price increases ×1,000 per buy.</p><div class="effect" w-tid="655">Gain<sup w-tid="657"><span id="asc-mainline-power" w-tid="659">1</span></sup> · Level <span id="asc-mainline-power-level" w-tid="661">0</span> / 50</div></div><button id="buy-asc-9" type="button" w-tid="663">1e175 ᛥ</button></article>
+        </div>
+        <div id="token-upgrades" hidden w-tid="665">
+          <article class="upgrade token-upgrade" id="upgrade-token-multiplier" w-tid="667">
+            <div w-tid="669"><h3 w-tid="671">1T. Token amplifier</h3><p w-tid="673">Each level doubles P$ production.</p><div class="effect" w-tid="675">×2 per level · Level <span id="token-mult-level" w-tid="677">0</span> / 10</div></div>
+            <button id="buy-token-multiplier" type="button" w-tid="679">3 tokens</button>
+          </article>
+          <article class="upgrade token-upgrade locked" id="upgrade-discount" w-tid="681">
+            <div w-tid="683"><h3 w-tid="685">2T. Bulk pricing</h3><p w-tid="687">Requires 1T. Reduces upgrade 3's price by 30% per level.</p><div class="effect" w-tid="689">−30% per level · Level <span id="discount-level" w-tid="691">0</span> / <span id="discount-level-max" w-tid="693">1000</span></div></div>
+            <button id="buy-discount" type="button" disabled w-tid="695">3 tokens</button>
+          </article>
+          <article class="upgrade token-upgrade locked" id="upgrade-token-boost" w-tid="697">
+            <div w-tid="699"><h3 w-tid="701">3T. Token foundry</h3><p w-tid="703">Requires 1T. Multiplies production by 1.5 and prestige token rewards by 1.25 per level.</p><div class="effect" w-tid="705">×1.5 P$ · ×1.25 tokens · Level <span id="token-boost-level" w-tid="707">0</span> / 10</div></div>
+            <button id="buy-token-boost" type="button" disabled w-tid="709">5 tokens</button>
+          </article>
+          <article class="upgrade token-upgrade locked" id="upgrade-unlock" w-tid="711">
+            <div w-tid="713"><h3 w-tid="715">4T. Expansion plans</h3><p w-tid="717">Requires 3T. Unlocks upgrades 7, 8, and 9.</p><div class="effect" w-tid="719">New P$ upgrades</div></div>
+            <button id="buy-unlock" type="button" disabled w-tid="721">10 tokens</button>
+          </article>
+          <article class="upgrade token-upgrade locked" id="upgrade-credit-power" w-tid="723">
+            <div w-tid="725"><h3 w-tid="727">5T. Factorial Power</h3><p w-tid="729">Requires 4T. Multiplies credits earned by its level.</p><div class="effect" w-tid="731">×<span id="token-credit-factor" w-tid="733">1</span> credits · Level <span id="token-credit-level" w-tid="735">0</span> / 50</div></div>
+            <button id="buy-credit-power" type="button" disabled w-tid="737">1Qa tokens</button>
+          </article>
+          <article class="upgrade token-upgrade locked" id="upgrade-token-discount" w-tid="739">
+            <div w-tid="741"><h3 w-tid="743">6T. Frugal Factorial</h3><p w-tid="745">Requires 5T. Reduces 5T's cost by 1% per level.</p><div class="effect" w-tid="747">−1% per level · Level <span id="token-discount-level" w-tid="749">0</span> / 25</div></div>
+            <button id="buy-token-discount" type="button" disabled w-tid="751">500M tokens</button>
+          </article>
+          <div id="automation-upgrades" w-tid="753"></div>
+        </div>
+        <div id="credit-upgrades" hidden w-tid="755">
+          <article class="upgrade credit-upgrade" id="upgrade-credit-multiplier" w-tid="757">
+            <div w-tid="759"><h3 w-tid="761">1C. Credit engine</h3><p w-tid="763">One time. Multiplies P$ gain and token rewards by 25.</p><div class="effect" w-tid="765">×25 points · ×25 tokens</div></div>
+            <button id="buy-credit-multiplier" type="button" w-tid="767">1 C$</button>
+          </article>
+          <article class="upgrade credit-upgrade locked" id="upgrade-credit-exponent" w-tid="769">
+            <div w-tid="771"><h3 w-tid="773">2C. Token exponent</h3><p w-tid="775">Requires 1C. Raises token rewards to the power of 1.01 per level.</p><div class="effect" w-tid="777">Tokens<sup w-tid="779">1.01</sup> · Level <span id="credit-exponent-level" w-tid="781">0</span> / 3</div></div>
+            <button id="buy-credit-exponent" type="button" disabled w-tid="783">2 C$</button>
+          </article>
+          <article class="upgrade credit-upgrade locked" id="upgrade-credit-cost" w-tid="785">
+            <div w-tid="787"><h3 w-tid="789">3C. Heavy mint</h3><p w-tid="791">Requires 1C. Multiplies P$ gain and token rewards by 5, but token upgrades cost 7.5× more.</p><div class="effect" w-tid="793">×5 points · ×5 tokens · ×7.5 token upgrade costs</div></div>
+            <button id="buy-credit-cost" type="button" disabled w-tid="795">5 C$</button>
+          </article>
+          <article class="upgrade credit-upgrade" id="upgrade-cube-unlock" w-tid="797">
+            <div w-tid="799"><h3 w-tid="801">4C. The Cube</h3><p w-tid="803">Unlocks The Cube.</p><div class="effect" w-tid="805">A new way to multiply points, tokens, or credits</div></div>
+            <button id="buy-cube-unlock" type="button" w-tid="807">10 C$</button>
+          </article>
+          <article class="upgrade credit-upgrade" id="upgrade-free-run" w-tid="809">
+            <div w-tid="811"><h3 w-tid="813">5C. Costless craft</h3><p w-tid="815">Upgrades 3, 4, and 9 still require their P$ cost, but don't spend it when bought.</p><div class="effect" w-tid="817">Upgrades 3, 4, and 9 cost no P$ to buy</div></div>
+            <button id="buy-free-run" type="button" w-tid="819">100 C$</button>
+          </article>
+          <article class="upgrade credit-upgrade" id="upgrade-passive-tokens" w-tid="821">
+            <div w-tid="823"><h3 w-tid="825">6C. Token trickle</h3><p w-tid="827">Requires 2C. Passively gains tokens based on current P$ and lifetime token resets.</p><div class="effect" w-tid="829"><span id="passive-token-rate" w-tid="831">0</span> tokens / sec</div></div>
+            <button id="buy-passive-tokens" type="button" w-tid="833">10K C$</button>
+          </article>
+          <article class="upgrade credit-upgrade" id="upgrade-pyramid-unlock" w-tid="835">
+            <div w-tid="837"><h3 w-tid="839">7C. The Pyramid</h3><p w-tid="841">Unlocks challenges that will be required for future progress.</p><div class="effect" w-tid="843">The Pyramid</div></div>
+            <button id="buy-pyramid-unlock" type="button" w-tid="845">1M C$</button>
+          </article>
+          <article class="upgrade credit-upgrade locked" id="upgrade-credit-challenge-boost" w-tid="847">
+            <div w-tid="849"><h3 w-tid="851">8C. Pyramid mastery</h3><p w-tid="853">Requires The Pyramid. Multiplies credit and token gain by the number of completed Pyramid challenges plus 1.</p><div class="effect" w-tid="855">×<span id="challenge-gain-multiplier" w-tid="857">1</span> credits · tokens</div></div>
+            <button id="buy-credit-challenge-boost" type="button" disabled w-tid="859">10M C$</button>
+          </article>
+          <article class="upgrade credit-upgrade locked" id="upgrade-automation-unlock" w-tid="861">
+            <div w-tid="863"><h3 w-tid="865">9C. Automations</h3><p w-tid="867">Requires 8C. Unlocks automation upgrades in the Tokens section.</p><div class="effect" w-tid="869">Automate upgrades</div></div>
+            <button id="buy-automation-unlock" type="button" disabled w-tid="871">100M C$</button>
+          </article>
+        </div>
+        <div id="data-upgrades" hidden w-tid="873">
+          <article class="upgrade data-upgrade" id="upgrade-data-1" w-tid="875"><div w-tid="877"><h3 w-tid="879">1D. Points record</h3><p w-tid="881">Purchase to uncover the foundry’s notes on Points and P$.</p><div class="effect" id="data-lore-1" hidden w-tid="883"></div></div><button id="buy-data-1" type="button" w-tid="885">5 𝔻 · P$ 1e210</button></article>
+          <article class="upgrade data-upgrade" id="upgrade-data-2" w-tid="887"><div w-tid="889"><h3 w-tid="891">2D. Token record</h3><p w-tid="893">Purchase to uncover the foundry’s notes on Tokens.</p><div class="effect" id="data-lore-2" hidden w-tid="895"></div></div><button id="buy-data-2" type="button" w-tid="897">10 𝔻 · 1e230 Tokens</button></article>
+          <article class="upgrade data-upgrade" id="upgrade-data-3" w-tid="899"><div w-tid="901"><h3 w-tid="903">3D. Credit record</h3><p w-tid="905">Purchase to uncover the foundry’s notes on Credits.</p><div class="effect" id="data-lore-3" hidden w-tid="907"></div></div><button id="buy-data-3" type="button" w-tid="909">20 𝔻 · 1e250 C$</button></article>
+          <article class="upgrade data-upgrade" id="upgrade-data-4" w-tid="911"><div w-tid="913"><h3 w-tid="915">4D. Data record</h3><p w-tid="917">Purchase to uncover the foundry’s notes on Data.</p><div class="effect" id="data-lore-4" hidden w-tid="919"></div></div><button id="buy-data-4" type="button" w-tid="921">30 𝔻</button></article>
+          <article class="upgrade data-upgrade" id="upgrade-data-5" w-tid="923"><div w-tid="925"><h3 w-tid="927">5D. Pyramid archive</h3><p w-tid="929">Purchase to uncover the Pyramid’s history.</p><div class="effect" id="data-lore-5" hidden w-tid="931"></div></div><button id="buy-data-5" type="button" w-tid="933">40 𝔻</button></article>
+        </div>
+        <div id="spark-upgrades" hidden w-tid="935">
+          <article class="upgrade spark-upgrade" id="upgrade-spark-1" w-tid="937"><div w-tid="939"><h3 w-tid="941">1S. Faster cycles</h3><p w-tid="943">Speeds up all P$ production by 10% per level.</p><div class="effect" w-tid="945">×1.1 P$ / sec · Level <span id="spark-1-level" w-tid="947">0</span> / 1000</div></div><button id="buy-spark-1" type="button" disabled w-tid="949">1 ⊹</button></article>
+          <article class="upgrade spark-upgrade" id="upgrade-spark-2" w-tid="951"><div w-tid="953"><h3 w-tid="955">2S. Overclocked shifts</h3><p w-tid="957">Doubles all P$ production per level.</p><div class="effect" w-tid="959">×2 P$ / sec · Level <span id="spark-2-level" w-tid="961">0</span> / 100</div></div><button id="buy-spark-2" type="button" disabled w-tid="963">10 ⊹</button></article>
+          <article class="upgrade spark-upgrade" id="upgrade-spark-3" w-tid="965"><div w-tid="967"><h3 w-tid="969">3S. Time compression</h3><p w-tid="971">Multiplies all P$ production by 10 per level.</p><div class="effect" w-tid="973">×10 P$ / sec · Level <span id="spark-3-level" w-tid="975">0</span> / 50</div></div><button id="buy-spark-3" type="button" disabled w-tid="977">100 ⊹</button></article>
+        </div>
+        <div id="cube-panel" hidden w-tid="979">
+          <div class="cube-summary" w-tid="981"><div w-tid="983"><span class="label" w-tid="985">CUBE LEVEL</span><div class="cube-level" id="cube-level" w-tid="987">0</div></div><div w-tid="989"><span class="label" w-tid="991">CUBE CLICKS (CC)</span><div class="cube-clicks" id="cube-clicks" w-tid="993">0</div></div><div class="cube-next" id="cube-next" w-tid="995">1 CC to next level</div></div>
+          <div class="cube-stage" w-tid="997">
+            <div class="cube-shape" w-tid="999"><div class="cube-front" w-tid="1001"><span id="cube-face-level" w-tid="1003">0</span></div><button class="cube-side" id="cube-click-button" type="button" aria-label="Click the cube to gain 1 Cube Click" w-tid="1005">+1 CC</button></div>
+          </div>
+          <div class="cube-targets" aria-label="Choose what The Cube multiplies" w-tid="1007">
+            <button class="cube-target active" data-target="points" type="button" w-tid="1009">Points</button><button class="cube-target" data-target="tokens" type="button" w-tid="1011">Tokens</button><button class="cube-target" data-target="credits" type="button" w-tid="1013">Credits</button><button class="cube-target" data-target="ascendance" type="button" hidden w-tid="1015">ᛥ</button><button class="cube-target" data-target="alpha" type="button" hidden w-tid="1017">α</button>
+          </div>
+          <p class="cube-effect" w-tid="1019">The Cube multiplies <strong id="cube-target-name" w-tid="1021">Points</strong> by ×<span id="cube-multiplier" w-tid="1023">1</span>.</p>
+        </div>
+        <div id="pyramid-panel" hidden w-tid="1025">
+          <div class="pyramid-summary" w-tid="1027"><div w-tid="1029"><span class="label" w-tid="1031">CHALLENGE STATUS</span><div class="pyramid-status" id="pyramid-status" w-tid="1033">Choose a challenge</div></div><div class="pyramid-timer" id="pyramid-timer" hidden w-tid="1035"></div></div>
+          <div class="challenge-list" w-tid="1037">
+            <article class="challenge" id="challenge-deduction-1" w-tid="1039"><div w-tid="1041"><strong w-tid="1043">Deduction I</strong><span w-tid="1045">Raise P$ gain to the power of 0.9</span></div><button type="button" data-challenge="deduction1" w-tid="1047">Start</button></article>
+            <article class="challenge" id="challenge-deduction-2" w-tid="1049"><div w-tid="1051"><strong w-tid="1053">Deduction II</strong><span w-tid="1055">Raise P$ gain to the power of 0.8</span></div><button type="button" data-challenge="deduction2" w-tid="1057">Start</button></article>
+            <article class="challenge" id="challenge-deduction-3" w-tid="1059"><div w-tid="1061"><strong w-tid="1063">Deduction III</strong><span w-tid="1065">Raise P$ gain to the power of 0.7</span></div><button type="button" data-challenge="deduction3" w-tid="1067">Start</button></article>
+            <article class="challenge" id="challenge-time-1" w-tid="1069"><div w-tid="1071"><strong w-tid="1073">Time Limit I</strong><span w-tid="1075">Complete within 7 minutes</span></div><button type="button" data-challenge="time1" w-tid="1077">Start</button></article>
+            <article class="challenge" id="challenge-time-2" w-tid="1079"><div w-tid="1081"><strong w-tid="1083">Time Limit II</strong><span w-tid="1085">Complete within 6 minutes</span></div><button type="button" data-challenge="time2" w-tid="1087">Start</button></article>
+            <article class="challenge" id="challenge-time-3" w-tid="1089"><div w-tid="1091"><strong w-tid="1093">Time Limit III</strong><span w-tid="1095">Complete within 5 minutes</span></div><button type="button" data-challenge="time3" w-tid="1097">Start</button></article>
+          </div>
+          <p class="pyramid-note" w-tid="1099">Each challenge resets credits when started. Complete a credit reset before its timer expires to finish; challenge resets award no credits.</p>
+        </div>
+      </section>
+      <section class="prestige" w-tid="1101">
+        <div w-tid="1103"><h2 w-tid="1105">Prestige</h2><p w-tid="1107">Start over and keep a permanent +50% income boost.</p><span w-tid="1109">Tokens: <b id="prestige-tokens" w-tid="1111">0</b> · Credits: <b id="credit-balance" w-tid="1113">0</b> · ᛥ: <b id="ascendance-balance" w-tid="1115">0</b></span></div>
+        <div class="prestige-actions" w-tid="1117"><button id="prestige-button" type="button" disabled w-tid="1119"><span id="prestige-button-label" w-tid="1121">P$ 500 to prestige</span></button><button id="credit-prestige-button" type="button" disabled w-tid="1123"><span id="credit-prestige-label" w-tid="1125">1De tokens for 1 C$</span></button><button id="data-prestige-button" type="button" disabled w-tid="1127"><span id="data-prestige-label" w-tid="1129">P$ 1e200 for 1 𝔻 · resets P$ only</span></button><button id="ascendance-prestige-button" type="button" disabled w-tid="1131"><span id="ascendance-prestige-label" w-tid="1133">C$ 1e250 for 1 ᛥ</span></button><button id="spark-prestige-button" type="button" disabled w-tid="1135"><span id="spark-prestige-label" w-tid="1137">P$ 1e300 for Spark ⊹ · resets P$ only</span></button></div>
+      </section>
+    </main>
+    <div class="toast" id="toast" role="status" aria-live="polite" w-tid="1139"></div>
+  </body>
+</html>
