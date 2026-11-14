@@ -193,7 +193,7 @@ function exponentCost(level = state.exponentLevel) { return pointCost(D('5e10').
 function capCost(level = state.capLevel) { return pointCost(D('5e8').times(D(1.5).pow(priceLevel('capLevel', level)))); }
 function ascPointDiscountCost(level = state.ascPointDiscountLevel) { return D('1e300').times(D(1.5).pow(level)); }
 function ascAllCurrencyCost(level = state.ascAllCurrencyLevel) { return D('1e12').times(D(10).pow(level)); }
-function ascMainlinePowerCost(level = state.ascMainlinePowerLevel) { return D('1e175').times(D(1000).pow(level)); }
+function ascMainlinePowerCost(level = state.ascMainlinePowerLevel) { return D('1e400').times(D(1e6).pow(level)); }
 function highPointUpgradeCost(index) { return pointCost(D(['1e180','1e200','1e220','1e240','1e260'][index - 16])); }
 function sparkPrestigeCost() { return pointCost(SPARK_PRESTIGE_COST); }
 function sparkReward(balance) { const ratio = D(balance).div(sparkPrestigeCost()); return ratio.lt(1) ? D(0) : ratio.log10().floor().plus(1); }
