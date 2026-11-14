@@ -11,7 +11,7 @@ const gt = (a, b) => D(a).gt(b);
 const gte = (a, b) => D(a).gte(b);
 const plus = (a, b) => D(a).plus(b);
 const minus = (a, b) => D(a).minus(b);
-const initialState = { balance: 0, runEarned: 0, lifetime: 0, printer: false, press: false, multiplierLevel: 0, incomeLevel: 0, powerLevel: 0, clickLevel: 0, logLevel: 0, exponentLevel: 0, exponentCapLevel: 0, capLevel: 0, tokens: 0, totalPrestiges: 0, tokenResetCount: 0, tokenMultiplierLevel: 0, discountLevel: 0, tokenBoostLevel: 0, expansionUnlocked: false, tokenCreditLevel: 0, tokenDiscountLevel: 0, credits: 0, totalCreditPrestiges: 0, data: 0, totalDataPrestiges: 0, dataLore: Array(5).fill(false), gainZeroBought: false, gainZeroActive: false, priceOrigins: {}, creditEngine: false, creditExponentLevel: 0, heavyMint: false, cubeUnlocked: false, cubeLevel: 0, cubeClicks: 0, cubeTarget: 'points', freeRunUpgrades: false, passiveTokens: false, alphaUnlocked: false, alpha: 0, alphaGainPurchases: 0, alphaBoostLevel: 0, alphaCapLevel: 0, alphaNeutralBought: false, alphaGeneratorBought: false, darkMatterUnlocked: false, darkMatter: 0, darkMatter1Bought: false, darkMatter2Bought: false, darkMatter2Level: 0, darkMatter3Bought: false, darkMatter4Bought: false, darkMatterCoinBoost: 1, darkMatterFlipTimer: 0, darkMatterFlipDuration: 1, pyramidUnlocked: false, activeChallenge: '', challengeEndsAt: 0, completedChallenges: [], creditChallengeBoost: false, automationsUnlocked: false, automationBought: Array(12).fill(false), automationActive: Array(12).fill(false), ascendance: 0, totalAscendances: 0, ascCurrencyBoost: false, ascCreditExponent: false, ascCubePowerLevel: 0, ascCubeAutoclicker: false, ascCubeAscendance: false, ascCubeAlpha: false, ascPointDiscountLevel: 0, ascTotalLevelBoost: false, ascAllCurrencyLevel: 0, ascMainlinePowerLevel: 0, spark: 0, sparkPrestiges: 0, sparkUpgrade1Level: 0, sparkUpgrade2Level: 0, sparkUpgrade3Level: 0, pointUpgrade16Bought: false, pointUpgrade17Bought: false, pointUpgrade18Bought: false, pointUpgrade19Bought: false, pointUpgrade20Bought: false, cyan13Bought: false, cyan14Level: 0, cyan15Bought: false, cyanSquareCounts: [0, 0, 0] };
+const initialState = { balance: 0, runEarned: 0, lifetime: 0, printer: false, press: false, multiplierLevel: 0, incomeLevel: 0, powerLevel: 0, clickLevel: 0, logLevel: 0, exponentLevel: 0, exponentCapLevel: 0, capLevel: 0, tokens: 0, totalPrestiges: 0, tokenResetCount: 0, tokenMultiplierLevel: 0, discountLevel: 0, tokenBoostLevel: 0, expansionUnlocked: false, maxBuyUnlocked: false, maxBuyActive: false, tokenCreditLevel: 0, tokenDiscountLevel: 0, credits: 0, totalCreditPrestiges: 0, data: 0, totalDataPrestiges: 0, dataLore: Array(5).fill(false), gainZeroBought: false, gainZeroActive: false, priceOrigins: {}, creditEngine: false, creditExponentLevel: 0, heavyMint: false, cubeUnlocked: false, cubeLevel: 0, cubeClicks: 0, cubeTarget: 'points', freeRunUpgrades: false, passiveTokens: false, alphaUnlocked: false, alpha: 0, alphaGainPurchases: 0, alphaBoostLevel: 0, alphaCapLevel: 0, alphaNeutralBought: false, alphaGeneratorBought: false, darkMatterUnlocked: false, darkMatter: 0, darkMatter1Bought: false, darkMatter2Bought: false, darkMatter2Level: 0, darkMatter3Bought: false, darkMatter4Bought: false, darkMatterCoinBoost: 1, darkMatterFlipTimer: 0, darkMatterFlipDuration: 1, pyramidUnlocked: false, activeChallenge: '', challengeEndsAt: 0, completedChallenges: [], creditChallengeBoost: false, automationsUnlocked: false, automationBought: Array(12).fill(false), automationActive: Array(12).fill(false), ascendance: 0, totalAscendances: 0, ascCurrencyBoost: false, ascCreditExponent: false, ascCubePowerLevel: 0, ascCubeAutoclicker: false, ascCubeAscendance: false, ascCubeAlpha: false, ascPointDiscountLevel: 0, ascTotalLevelBoost: false, ascAllCurrencyLevel: 0, ascMainlinePowerLevel: 0, spark: 0, sparkPrestiges: 0, sparkUpgrade1Level: 0, sparkUpgrade2Level: 0, sparkUpgrade3Level: 0, pointUpgrade16Bought: false, pointUpgrade17Bought: false, pointUpgrade18Bought: false, pointUpgrade19Bought: false, pointUpgrade20Bought: false, cyan13Bought: false, cyan14Level: 0, cyan15Bought: false, cyanSquareCounts: [0, 0, 0] };
 let savedSnapshot;
 let saveConflict = false;
 const savedState = loadState();
@@ -103,6 +103,7 @@ function resetCreditRun() {
   state.exponentCapLevel = 0; state.capLevel = 0; state.tokenMultiplierLevel = 0;
   state.discountLevel = 0; state.tokenBoostLevel = 0; state.expansionUnlocked = false;
   state.tokenCreditLevel = 0; state.tokenDiscountLevel = 0;
+  state.maxBuyUnlocked = false; state.maxBuyActive = false;
   state.pointUpgrade16Bought = false; state.pointUpgrade17Bought = false; state.pointUpgrade18Bought = false; state.pointUpgrade19Bought = false; state.pointUpgrade20Bought = false;
   resetPriceOrigins(['multiplierLevel', 'incomeLevel', 'powerLevel', 'clickLevel', 'discountLevel', 'tokenBoostLevel', 'tokenCreditLevel', 'tokenDiscountLevel', 'exponentCapLevel', 'logLevel', 'exponentLevel', 'capLevel']);
 }
@@ -111,6 +112,7 @@ function resetAscendanceRun() {
   state.printer = false; state.press = false; state.multiplierLevel = 0; state.incomeLevel = 0;
   state.powerLevel = 0; state.clickLevel = 0; state.logLevel = 0; state.exponentLevel = 0;
   state.exponentCapLevel = 0; state.capLevel = 0; state.tokens = D(0); state.totalPrestiges = 0;
+  state.maxBuyUnlocked = false; state.maxBuyActive = false;
   state.tokenResetCount = 0; state.tokenMultiplierLevel = 0; state.discountLevel = 0;
   state.tokenBoostLevel = 0; state.expansionUnlocked = false; state.tokenCreditLevel = 0;
   state.tokenDiscountLevel = 0; state.credits = D(0); state.totalCreditPrestiges = 0;
@@ -157,7 +159,7 @@ function addCubeClicks(amount) {
 }
 function totalUpgradeLevels() {
   const levels = [state.multiplierLevel,state.incomeLevel,state.powerLevel,state.clickLevel,state.logLevel,state.exponentLevel,state.exponentCapLevel,state.capLevel,state.tokenMultiplierLevel,state.discountLevel,state.tokenBoostLevel,state.tokenCreditLevel,state.tokenDiscountLevel,state.creditExponentLevel,state.sparkUpgrade1Level,state.sparkUpgrade2Level,state.sparkUpgrade3Level,state.alphaGainPurchases,state.alphaBoostLevel,state.alphaCapLevel,state.ascCubePowerLevel,state.ascPointDiscountLevel,state.cyan14Level,state.darkMatter2Level];
-  const bought = [state.printer,state.press,state.expansionUnlocked,state.creditEngine,state.heavyMint,state.cubeUnlocked,state.freeRunUpgrades,state.passiveTokens,state.alphaUnlocked,state.alphaNeutralBought,state.alphaGeneratorBought,state.darkMatterUnlocked,state.darkMatter1Bought,state.darkMatter3Bought,state.darkMatter4Bought,state.pyramidUnlocked,state.creditChallengeBoost,state.automationsUnlocked,state.ascCurrencyBoost,state.ascCreditExponent,state.ascCubeAutoclicker,state.ascCubeAscendance,state.ascCubeAlpha,state.ascTotalLevelBoost,state.pointUpgrade16Bought,state.pointUpgrade17Bought,state.pointUpgrade18Bought,state.pointUpgrade19Bought,state.pointUpgrade20Bought,state.cyan13Bought,state.cyan15Bought];
+  const bought = [state.printer,state.press,state.expansionUnlocked,state.maxBuyUnlocked,state.creditEngine,state.heavyMint,state.cubeUnlocked,state.freeRunUpgrades,state.passiveTokens,state.alphaUnlocked,state.alphaNeutralBought,state.alphaGeneratorBought,state.darkMatterUnlocked,state.darkMatter1Bought,state.darkMatter3Bought,state.darkMatter4Bought,state.pyramidUnlocked,state.creditChallengeBoost,state.automationsUnlocked,state.ascCurrencyBoost,state.ascCreditExponent,state.ascCubeAutoclicker,state.ascCubeAscendance,state.ascCubeAlpha,state.ascTotalLevelBoost,state.pointUpgrade16Bought,state.pointUpgrade17Bought,state.pointUpgrade18Bought,state.pointUpgrade19Bought,state.pointUpgrade20Bought,state.cyan13Bought,state.cyan15Bought];
   return levels.reduce((sum, level) => sum + (Number(level) || 0), state.automationBought.filter(Boolean).length + state.dataLore.filter(Boolean).length + bought.filter(Boolean).length + state.ascAllCurrencyLevel + state.ascMainlinePowerLevel);
 }
 function pointMultiplier() { return D(state.creditEngine ? 25 : 1).times(state.heavyMint ? 5 : 1).times(cubeMultiplier('points')).times(state.ascTotalLevelBoost ? D(totalUpgradeLevels()).max(1) : 1).times(state.pointUpgrade16Bought ? 10 : 1).times(state.pointUpgrade17Bought ? 100 : 1).times(state.pointUpgrade18Bought ? 1000 : 1).times(state.pointUpgrade19Bought ? 1e6 : 1).times(state.pointUpgrade20Bought ? 1e12 : 1); }
@@ -172,6 +174,7 @@ function powerCost() { return pointCost(D(250).times(D(1.5).pow(priceLevel('powe
 function clickCost() { return pointCost(D(100).times(D(1.5).pow(priceLevel('clickLevel', state.clickLevel))).ceil()); }
 function tokenBoostCost() { return D(5).times(D(1.5).pow(priceLevel('tokenBoostLevel', state.tokenBoostLevel))).times(tokenCostMultiplier()); }
 function expansionCost() { return D(10).times(tokenCostMultiplier()); }
+function maxBuyCost() { return D(25).times(tokenCostMultiplier()); }
 function creditPowerCost() { return D('1e15').times(D(2.5).pow(priceLevel('tokenCreditLevel', state.tokenCreditLevel))).times(D(0.99).pow(priceLevel('tokenDiscountLevel', state.tokenDiscountLevel))).times(tokenCostMultiplier()); }
 function tokenDiscountCost() { return D('5e8').times(D(1.5).pow(priceLevel('tokenDiscountLevel', state.tokenDiscountLevel))).times(tokenCostMultiplier()); }
 function exponentCapCost() { return pointCost(D('1e29').times(D(2).pow(priceLevel('exponentCapLevel', state.exponentCapLevel)))); }
@@ -257,6 +260,21 @@ function purchase(cost, action, message, spend = true) {
   action();
   toast(message);
   render();
+}
+function buyLevels(currency, key, max, cost, message, spend = true) {
+  const startLevel = state[key];
+  const maxBuy = state.maxBuyUnlocked && state.maxBuyActive;
+  while (state[key] < max) {
+    const price = cost();
+    if (lt(state[currency], price)) break;
+    if (spend) state[currency] = minus(state[currency], price);
+    state[key] += 1;
+    if (!maxBuy) break;
+  }
+  const levels = state[key] - startLevel;
+  if (!levels) return;
+  toast(levels === 1 ? message : `Bought ${levels} levels`);
+  render(); save();
 }
 function render() {
   if (applyCyanAutomation()) save();
@@ -475,6 +493,12 @@ function render() {
   unlock.disabled = state.tokenBoostLevel < 1 || lt(state.tokens, expansionCost()) || state.expansionUnlocked;
   unlock.textContent = state.expansionUnlocked ? 'Unlocked' : `${fmt(expansionCost())} tokens`;
   document.querySelector('#upgrade-unlock').classList.toggle('locked', state.tokenBoostLevel < 1 || state.expansionUnlocked);
+  const maxBuyUnlock = document.querySelector('#buy-max-buy');
+  maxBuyUnlock.disabled = !expansionReady || state.maxBuyUnlocked || lt(state.tokens, maxBuyCost());
+  maxBuyUnlock.textContent = state.maxBuyUnlocked ? 'Unlocked' : `${fmt(maxBuyCost())} tokens`;
+  const maxBuyToggle = document.querySelector('#max-buy-toggle');
+  maxBuyToggle.hidden = !state.maxBuyUnlocked || !['run', 'token', 'credit', 'spark', 'ascendance'].includes(activeTab);
+  maxBuyToggle.setAttribute('aria-pressed', String(state.maxBuyActive));
   const creditPower = document.querySelector('#buy-credit-power');
   creditPower.disabled = !state.expansionUnlocked || state.tokenCreditLevel >= 50 || lt(state.tokens, creditPowerCost());
   creditPower.textContent = state.tokenCreditLevel >= 50 ? 'MAX LEVEL' : `${fmt(creditPowerCost())} tokens`;
@@ -599,6 +623,7 @@ function render() {
   showUpgrade('discount', state.tokenMultiplierLevel > 0 || state.discountLevel > 0);
   showUpgrade('token-boost', state.tokenMultiplierLevel > 0 || state.tokenBoostLevel > 0);
   showUpgrade('unlock', state.tokenBoostLevel > 0 || state.expansionUnlocked);
+  showUpgrade('max-buy', state.expansionUnlocked);
   showUpgrade('credit-power', state.expansionUnlocked || state.tokenCreditLevel > 0);
   showUpgrade('token-discount', state.tokenCreditLevel > 0 || state.tokenDiscountLevel > 0);
   showUpgrade('credit-exponent', state.creditEngine || state.creditExponentLevel > 0);
@@ -731,11 +756,8 @@ document.querySelector('#buy-asc-2').addEventListener('click', () => {
   render(); save();
 });
 document.querySelector('#buy-asc-3').addEventListener('click', () => {
-  if (!state.ascCurrencyBoost || !state.cubeUnlocked || state.ascCubePowerLevel >= 5 || lt(state.ascendance, 10)) return;
-  state.ascendance = minus(state.ascendance, 10);
-  state.ascCubePowerLevel += 1;
-  toast('Cube click power doubled');
-  render(); save();
+  if (!state.ascCurrencyBoost || !state.cubeUnlocked) return;
+  buyLevels('ascendance', 'ascCubePowerLevel', 5, () => D(10), 'Cube click power doubled');
 });
 document.querySelector('#buy-asc-4').addEventListener('click', () => {
   if (!state.ascCubePowerLevel || state.ascCubeAutoclicker) return;
@@ -761,23 +783,14 @@ document.querySelector('#buy-asc-7').addEventListener('click', () => {
   toast('P$ gain linked to upgrade levels'); render(); save();
 });
 document.querySelector('#buy-asc-8').addEventListener('click', () => {
-  const cost = ascAllCurrencyCost();
-  if (state.ascAllCurrencyLevel >= 50 || lt(state.ascendance, cost)) return;
-  state.ascendance = minus(state.ascendance, cost); state.ascAllCurrencyLevel += 1;
-  toast('All previous currency gains doubled'); render(); save();
+  buyLevels('ascendance', 'ascAllCurrencyLevel', 50, ascAllCurrencyCost, 'All previous currency gains doubled');
 });
 document.querySelector('#buy-asc-9').addEventListener('click', () => {
-  const cost = ascMainlinePowerCost();
-  if (state.ascMainlinePowerLevel >= 50 || lt(state.ascendance, cost)) return;
-  state.ascendance = minus(state.ascendance, cost); state.ascMainlinePowerLevel += 1;
-  toast('Mainline currency gains raised to a higher power'); render(); save();
+  buyLevels('ascendance', 'ascMainlinePowerLevel', 50, ascMainlinePowerCost, 'Mainline currency gains raised to a higher power');
 });
 document.querySelector('#buy-point-discount').addEventListener('click', () => {
-  if (!state.ascCreditExponent || state.ascPointDiscountLevel >= 20 || lt(state.balance, ascPointDiscountCost())) return;
-  state.balance = minus(state.balance, ascPointDiscountCost());
-  state.ascPointDiscountLevel += 1;
-  toast('All P$ costs halved');
-  render(); save();
+  if (!state.ascCreditExponent) return;
+  buyLevels('balance', 'ascPointDiscountLevel', 20, ascPointDiscountCost, 'All P$ costs halved');
 });
 document.querySelector('#buy-automation-unlock').addEventListener('click', () => {
   if (!state.creditChallengeBoost || state.automationsUnlocked) return;
@@ -846,60 +859,47 @@ document.querySelector('#buy-press').addEventListener('click', () => {
   purchase(pointCost(10), () => { state.press = true; }, 'Upgrade 2 bought');
 });
 document.querySelector('#buy-multiplier').addEventListener('click', () => {
-  if (state.multiplierLevel >= upgradeLevelMax()) return;
-  purchase(multiplierCost(), () => { state.multiplierLevel += 1; }, 'Compounding level added', !state.freeRunUpgrades);
+  if (!state.press) return;
+  buyLevels('balance', 'multiplierLevel', upgradeLevelMax(), multiplierCost, 'Compounding level added', !state.freeRunUpgrades);
 });
 document.querySelector('#buy-income').addEventListener('click', () => {
-  if (state.incomeLevel >= upgradeLevelMax()) return;
-  purchase(incomeCost(), () => { state.incomeLevel += 1; }, 'Output level added', !state.freeRunUpgrades);
+  if (!state.press) return;
+  buyLevels('balance', 'incomeLevel', upgradeLevelMax(), incomeCost, 'Output level added', !state.freeRunUpgrades);
 });
 document.querySelector('#buy-power').addEventListener('click', () => {
-  if (state.multiplierLevel < 1 || state.powerLevel >= powerMax()) return;
-  purchase(powerCost(), () => { state.powerLevel += 1; }, 'Compounding II level added');
+  if (state.multiplierLevel < 1) return;
+  buyLevels('balance', 'powerLevel', powerMax(), powerCost, 'Compounding II level added');
 });
 document.querySelector('#buy-click').addEventListener('click', () => {
-  if (state.incomeLevel < 1 || state.clickLevel >= upgradeLevelMax()) return;
-  purchase(clickCost(), () => { state.clickLevel += 1; }, 'Click power increased');
+  if (state.incomeLevel < 1) return;
+  buyLevels('balance', 'clickLevel', upgradeLevelMax(), clickCost, 'Click power increased');
 });
 document.querySelector('#buy-log').addEventListener('click', () => {
-  if (!state.expansionUnlocked || state.logLevel >= 3) return;
-  purchase(logCost(), () => { state.logLevel += 1; }, 'Logarithmic output increased');
+  if (!state.expansionUnlocked) return;
+  buyLevels('balance', 'logLevel', 3, logCost, 'Logarithmic output increased');
 });
 document.querySelector('#buy-exponent').addEventListener('click', () => {
-  if (!state.expansionUnlocked || state.exponentLevel >= exponentMax()) return;
-  purchase(exponentCost(), () => { state.exponentLevel += 1; }, 'Gain exponent increased');
+  if (!state.expansionUnlocked) return;
+  buyLevels('balance', 'exponentLevel', exponentMax(), exponentCost, 'Gain exponent increased');
 });
 document.querySelector('#buy-cap').addEventListener('click', () => {
-  if (!state.expansionUnlocked || state.capLevel >= upgradeLevelMax()) return;
-  purchase(capCost(), () => { state.capLevel += 1; }, 'Upgrade 5 capacity increased', !state.freeRunUpgrades);
+  if (!state.expansionUnlocked) return;
+  buyLevels('balance', 'capLevel', upgradeLevelMax(), capCost, 'Upgrade 5 capacity increased', !state.freeRunUpgrades);
 });
 document.querySelector('#buy-exponent-cap').addEventListener('click', () => {
-  if (!state.expansionUnlocked || !state.creditExponentLevel || state.exponentCapLevel >= 5) return;
-  purchase(exponentCapCost(), () => { state.exponentCapLevel += 1; }, 'Upgrade 8 max level increased');
+  if (!state.expansionUnlocked || !state.creditExponentLevel) return;
+  buyLevels('balance', 'exponentCapLevel', 5, exponentCapCost, 'Upgrade 8 max level increased');
 });
 document.querySelector('#buy-token-multiplier').addEventListener('click', () => {
-  const cost = tokenAmplifierCost();
-  if (state.tokenMultiplierLevel >= 10 || lt(state.tokens, cost)) return;
-  state.tokens = minus(state.tokens, cost);
-  state.tokenMultiplierLevel += 1;
-  toast('Token amplifier level added');
-  render();
+  buyLevels('tokens', 'tokenMultiplierLevel', 10, tokenAmplifierCost, 'Token amplifier level added');
 });
 document.querySelector('#buy-discount').addEventListener('click', () => {
-  const cost = discountTokenCost();
-  if (state.tokenMultiplierLevel < 1 || state.discountLevel >= upgradeLevelMax() || lt(state.tokens, cost)) return;
-  state.tokens = minus(state.tokens, cost);
-  state.discountLevel += 1;
-  toast('Bulk pricing level added');
-  render();
+  if (state.tokenMultiplierLevel < 1) return;
+  buyLevels('tokens', 'discountLevel', upgradeLevelMax(), discountTokenCost, 'Bulk pricing level added');
 });
 document.querySelector('#buy-token-boost').addEventListener('click', () => {
-  const cost = tokenBoostCost();
-  if (state.tokenMultiplierLevel < 1 || state.tokenBoostLevel >= 10 || lt(state.tokens, cost)) return;
-  state.tokens = minus(state.tokens, cost);
-  state.tokenBoostLevel += 1;
-  toast('Token foundry level added');
-  render();
+  if (state.tokenMultiplierLevel < 1) return;
+  buyLevels('tokens', 'tokenBoostLevel', 10, tokenBoostCost, 'Token foundry level added');
 });
 document.querySelector('#buy-unlock').addEventListener('click', () => {
   const cost = expansionCost();
@@ -909,23 +909,25 @@ document.querySelector('#buy-unlock').addEventListener('click', () => {
   toast('New P$ upgrades unlocked');
   render();
 });
-document.querySelector('#buy-credit-power').addEventListener('click', () => {
-  const cost = creditPowerCost();
-  if (!state.expansionUnlocked || state.tokenCreditLevel >= 50 || lt(state.tokens, cost)) return;
+document.querySelector('#buy-max-buy').addEventListener('click', () => {
+  const cost = maxBuyCost();
+  if (!state.expansionUnlocked || state.maxBuyUnlocked || lt(state.tokens, cost)) return;
   state.tokens = minus(state.tokens, cost);
-  state.tokenCreditLevel += 1;
-  toast('Factorial Power increased');
-  render();
-  save();
+  state.maxBuyUnlocked = true;
+  toast('Max Buy unlocked'); render(); save();
+});
+document.querySelector('#max-buy-toggle').addEventListener('click', () => {
+  if (!state.maxBuyUnlocked) return;
+  state.maxBuyActive = !state.maxBuyActive;
+  toast(state.maxBuyActive ? 'Max Buy on' : 'Max Buy off'); render(); save();
+});
+document.querySelector('#buy-credit-power').addEventListener('click', () => {
+  if (!state.expansionUnlocked) return;
+  buyLevels('tokens', 'tokenCreditLevel', 50, creditPowerCost, 'Factorial Power increased');
 });
 document.querySelector('#buy-token-discount').addEventListener('click', () => {
-  const cost = tokenDiscountCost();
-  if (state.tokenCreditLevel < 1 || state.tokenDiscountLevel >= 25 || lt(state.tokens, cost)) return;
-  state.tokens = minus(state.tokens, cost);
-  state.tokenDiscountLevel += 1;
-  toast('Factorial cost reduced');
-  render();
-  save();
+  if (state.tokenCreditLevel < 1) return;
+  buyLevels('tokens', 'tokenDiscountLevel', 25, tokenDiscountCost, 'Factorial cost reduced');
 });
 document.querySelector('#sections-toggle').addEventListener('click', () => { const tabs = document.querySelector('#upgrade-tabs'); tabs.hidden = !tabs.hidden; document.querySelector('#sections-toggle').setAttribute('aria-expanded', String(!tabs.hidden)); });
 function chooseTab(tab) { activeTab = tab; document.querySelector('#upgrade-tabs').hidden = true; document.querySelector('#sections-toggle').setAttribute('aria-expanded', 'false'); render(); }
@@ -935,12 +937,7 @@ document.querySelector('#credit-tab').addEventListener('click', () => { if (stat
 document.querySelector('#data-tab').addEventListener('click', () => { if (state.totalDataPrestiges || gt(state.data, 0) || state.dataLore.some(Boolean)) chooseTab('data'); });
 document.querySelector('#spark-tab').addEventListener('click', () => { if (state.sparkPrestiges || gt(state.spark, 0)) chooseTab('spark'); });
 for (let i = 1; i <= 3; i += 1) document.querySelector(`#buy-spark-${i}`).addEventListener('click', () => {
-  const levelKey = `sparkUpgrade${i}Level`;
-  const max = [0, 1000, 100, 50][i];
-  const cost = sparkUpgradeCost(i);
-  if (state[levelKey] >= max || lt(state.spark, cost)) return;
-  state.spark = minus(state.spark, cost); state[levelKey] += 1;
-  toast(`Spark upgrade ${i} accelerated P$ production`); render(); save();
+  buyLevels('spark', `sparkUpgrade${i}Level`, [0, 1000, 100, 50][i], () => sparkUpgradeCost(i), `Spark upgrade ${i} accelerated P$ production`);
 });
 document.querySelector('#cube-tab').addEventListener('click', () => { if (state.cubeUnlocked) chooseTab('cube'); });
 document.querySelector('#pyramid-tab').addEventListener('click', () => { if (state.pyramidUnlocked) chooseTab('pyramid'); });
@@ -1066,13 +1063,8 @@ document.querySelector('#buy-credit-multiplier').addEventListener('click', () =>
   save();
 });
 document.querySelector('#buy-credit-exponent').addEventListener('click', () => {
-  const cost = creditExponentCost();
-  if (!state.creditEngine || state.creditExponentLevel >= 3 || lt(state.credits, cost)) return;
-  state.credits = minus(state.credits, cost);
-  state.creditExponentLevel += 1;
-  toast('Token exponent increased');
-  render();
-  save();
+  if (!state.creditEngine) return;
+  buyLevels('credits', 'creditExponentLevel', 3, creditExponentCost, 'Token exponent increased');
 });
 document.querySelector('#buy-credit-cost').addEventListener('click', () => {
   if (!state.creditEngine || state.heavyMint || lt(state.credits, 5)) return;

@@ -39,7 +39,11 @@ input, textarea, select {
         <div class="goal" w-tid="55"><strong id="prestige-goal" w-tid="57">P$ 500</strong><span w-tid="59">next prestige</span></div>
       </section>
       <section class="upgrades" w-tid="61">
-        <button class="sections-toggle" id="sections-toggle" type="button" aria-expanded="false" w-tid="63">Sections <span aria-hidden="true" w-tid="65">⌄</span></button><div class="upgrade-tabs" id="upgrade-tabs" hidden w-tid="67"><button class="tab active" id="run-tab" type="button" w-tid="69">Run upgrades</button><button class="tab" id="token-tab" type="button" hidden w-tid="71">Token upgrades</button><button class="tab" id="credit-tab" type="button" hidden w-tid="73">Credit upgrades</button><button class="tab" id="data-tab" type="button" hidden w-tid="75">Data 𝔻</button><button class="tab" id="spark-tab" type="button" hidden w-tid="77">Spark ⊹</button><button class="tab" id="cube-tab" type="button" hidden w-tid="79">The Cube</button><button class="tab" id="pyramid-tab" type="button" hidden w-tid="81">The Pyramid</button><button class="tab" id="alpha-tab" type="button" hidden w-tid="83">α upgrades</button><button class="tab" id="darkmatter-tab" type="button" hidden w-tid="85">Dark Matter ⊠</button><button class="tab" id="ascendance-tab" type="button" hidden w-tid="87">Ascendance ᛥ</button></div>
+        <div class="upgrade-controls">
+          <button class="sections-toggle" id="sections-toggle" type="button" aria-expanded="false" w-tid="63">Sections <span aria-hidden="true" w-tid="65">⌄</span></button>
+          <button id="max-buy-toggle" type="button" aria-pressed="false" hidden>Max Buy</button>
+        </div>
+        <div class="upgrade-tabs" id="upgrade-tabs" hidden w-tid="67"><button class="tab active" id="run-tab" type="button" w-tid="69">Run upgrades</button><button class="tab" id="token-tab" type="button" hidden w-tid="71">Token upgrades</button><button class="tab" id="credit-tab" type="button" hidden w-tid="73">Credit upgrades</button><button class="tab" id="data-tab" type="button" hidden w-tid="75">Data 𝔻</button><button class="tab" id="spark-tab" type="button" hidden w-tid="77">Spark ⊹</button><button class="tab" id="cube-tab" type="button" hidden w-tid="79">The Cube</button><button class="tab" id="pyramid-tab" type="button" hidden w-tid="81">The Pyramid</button><button class="tab" id="alpha-tab" type="button" hidden w-tid="83">α upgrades</button><button class="tab" id="darkmatter-tab" type="button" hidden w-tid="85">Dark Matter ⊠</button><button class="tab" id="ascendance-tab" type="button" hidden w-tid="87">Ascendance ᛥ</button></div>
         <div id="run-upgrades" w-tid="89">
         <article class="upgrade zero-upgrade" id="upgrade-gain-zero" w-tid="91">
           <div w-tid="93"><h3 w-tid="95">0. Null gain</h3><p w-tid="97">Free. Multiplies all currency gain by ×0. Turning it off sets P$ to 1 and resets upgrade prices without changing levels. ONLY USE IN CASE OF EMERGENCY.</p><div class="effect" w-tid="99">All currency gain ×<span id="gain-zero-factor" w-tid="101">1</span></div></div>
@@ -151,6 +155,10 @@ input, textarea, select {
           <article class="upgrade token-upgrade locked" id="upgrade-token-discount" w-tid="739">
             <div w-tid="741"><h3 w-tid="743">6T. Frugal Factorial</h3><p w-tid="745">Requires 5T. Reduces 5T's cost by 1% per level.</p><div class="effect" w-tid="747">−1% per level · Level <span id="token-discount-level" w-tid="749">0</span> / 25</div></div>
             <button id="buy-token-discount" type="button" disabled w-tid="751">500M tokens</button>
+          </article>
+          <article class="upgrade token-upgrade" id="upgrade-max-buy" hidden>
+            <div><h3>7T. Max Buy</h3><p>Requires 4T. Unlocks a toggle that buys as many levels of an upgrade as you can afford.</p></div>
+            <button id="buy-max-buy" type="button" disabled>25 tokens</button>
           </article>
           <div id="automation-upgrades" w-tid="753"></div>
         </div>
