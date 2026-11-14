@@ -244,6 +244,13 @@ input, textarea, select {
         <label class="theme-switch"><input id="theme-toggle" type="checkbox" role="switch"> Dark mode</label>
         <button type="button" id="export-save">Export save</button>
         <button type="button" id="import-save">Import save</button>
+        <button type="button" popovertarget="deep-settings">Deep settings</button>
+        <div id="deep-settings" popover aria-labelledby="deep-settings-title"
+             style="background: Canvas; color: CanvasText;">
+          <h2 id="deep-settings-title">Deep settings</h2>
+          <p>No settings yet.</p>
+          <button type="button" popovertarget="deep-settings" popovertargetaction="hide">Close</button>
+        </div>
         <input type="file" accept=".json,application/json" hidden>
       </details>
     </main>
