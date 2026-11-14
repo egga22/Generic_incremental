@@ -37,6 +37,11 @@ function normalizeSavedCurrency(value) {
   if (value === null || value === Infinity || value?.__numericValue === 'Infinity' || value === 'Infinity') return D(1);
   try { const result = D(value); return result.isNan() ? D(0) : result; } catch { return D(0); }
 }
+function serializeState() {
+  const snapshot = { ...state };
+  for (const key of CURRENCY_KEYS) snapshot[key] = state[key].toString();
+  return JSON.stringify(snapshot);
+}
 function save() {
   if (saveConflict) return;
   if (localStorage.getItem(SAVE_KEY) !== savedSnapshot) {
@@ -44,9 +49,7 @@ function save() {
     window.alert('Another tab updated this save. Close the other tab, then reload this one to continue from the latest save.');
     return;
   }
-  const snapshot = { ...state };
-  for (const key of CURRENCY_KEYS) snapshot[key] = state[key].toString();
-  const serialized = JSON.stringify(snapshot);
+  const serialized = serializeState();
   if (serialized === savedSnapshot) return;
   localStorage.setItem(SAVE_KEY, serialized);
   savedSnapshot = serialized;
@@ -1168,3 +1171,82 @@ setInterval(() => {
   save();
 }, 250);
 render();
+
+// Keep save transfer out of the upgrade and prestige controls.
+const saveTools = document.createElement('details');
+saveTools.style.cssText = 'margin-top:24px;font-size:12px;color:#767676';
+saveTools.innerHTML = `
+  <summary style="cursor:pointer;width:fit-content;padding:8px 0">More</summary>
+  <button type="button" id="export-save">Export save</button>
+  <button type="button" id="import-save">Import save</button>
+  <input type="file" accept=".json,application/json" hidden>
+`;
+document.querySelector('.game-shell').append(saveTools);
+
+function isSaveObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+function isValidSave(snapshot) {
+  if (!isSaveObject(snapshot) || !Object.hasOwn(snapshot, 'balance') || !Object.hasOwn(snapshot, 'runEarned')) return false;
+  return Object.entries(snapshot).every(([key, value]) => {
+    if (!Object.hasOwn(initialState, key)) return false;
+    if (CURRENCY_KEYS.includes(key)) {
+      return (typeof value === 'string' && value.trim() !== '' || typeof value === 'number')
+        && D(value).isFinite() && D(value).gte(0);
+    }
+    const fallback = initialState[key];
+    if (key === 'priceOrigins') {
+      return isSaveObject(value) && Object.values(value).every(n => Number.isFinite(n) && n >= 0);
+    }
+    if (key === 'activeChallenge') return value === '' || Object.hasOwn(challengeNames, value);
+    if (key === 'cubeTarget') return ['points', 'tokens', 'credits', 'ascendance', 'alpha'].includes(value);
+    if (key === 'completedChallenges') return Array.isArray(value) && value.every(id => Object.hasOwn(challengeNames, id));
+    if (Array.isArray(fallback)) {
+      return Array.isArray(value) && value.every(item => typeof item === typeof fallback[0]
+        && (typeof item !== 'number' || Number.isSafeInteger(item) && item >= 0));
+    }
+    if (typeof fallback === 'number') {
+      return Number.isFinite(value) && value >= 0
+        && (key === 'darkMatterFlipTimer' || Number.isSafeInteger(value));
+    }
+    return typeof value === typeof fallback;
+  });
+}
+
+saveTools.querySelector('#export-save').addEventListener('click', () => {
+  const backup = JSON.stringify({ format: SAVE_KEY, state: JSON.parse(serializeState()) });
+  const url = URL.createObjectURL(new Blob([backup], { type: 'application/json' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'generic-incremental-save.json';
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+const importFile = saveTools.querySelector('input');
+saveTools.querySelector('#import-save').addEventListener('click', () => importFile.click());
+importFile.addEventListener('change', async () => {
+  const [file] = importFile.files;
+  importFile.value = '';
+  if (!file) return;
+
+  let backup;
+  try {
+    backup = JSON.parse(await file.text());
+    if (backup?.format !== SAVE_KEY || !isValidSave(backup.state)) throw new Error('Invalid save');
+  } catch {
+    toast('Choose a valid Generic Incremental save file.');
+    return;
+  }
+  if (!window.confirm('Replace your current progress with this save?')) return;
+  try {
+    if (saveConflict || localStorage.getItem(SAVE_KEY) !== savedSnapshot) {
+      toast('Another tab updated this save. Close it and reload before importing.');
+      return;
+    }
+    localStorage.setItem(SAVE_KEY, JSON.stringify(backup.state));
+  } catch {
+    toast('Could not write the save to browser storage.');
+    return;
+  }
+  window.location.reload();
+});
