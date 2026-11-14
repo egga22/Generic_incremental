@@ -207,20 +207,24 @@ function setupAutomationCards() {
     return `<article class="upgrade token-upgrade automation-upgrade" id="upgrade-automation-${number}" hidden><div><h3>${number}AU. Automate ${target}</h3><p>Permanent. Automatically buys ${target} when available.</p><div class="effect">${state.automationBought[index] ? 'Automation active' : 'One time'}</div></div><button id="buy-automation-${number}" type="button">${fmt(automationCost(index))} tokens</button></article>`;
   }).join('');
 }
+const NUMBER_SUFFIXES = ['K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'De'];
+
 function fmt(value) {
   const number = D(value);
   if (number.isNan()) return '0';
   if (!number.isFinite()) return number.sign < 0 ? '-∞' : '∞';
-  if (number.lt(1000)) {
+  const magnitude = number.abs();
+  if (magnitude.lt(1000)) {
     const small = number.toNumber();
     return Number.isInteger(small) ? String(small) : small.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
   }
-  const exponent = Math.floor(number.log10().toNumber());
-  if (exponent > 33 || number.layer > 0) return number.toString().replace('e+', 'e');
-  const names = { 3: 'K', 6: 'M', 9: 'B', 12: 'T', 15: 'Qa', 18: 'Qi', 21: 'Sx', 24: 'Sp', 27: 'Oc', 30: 'No', 33: 'De' };
-  const group = Math.floor(exponent / 3) * 3;
-  const scaled = number.div(D(10).pow(group)).toNumber();
-  return `${Number(scaled.toPrecision(3))}${names[group]}`;
+  if (magnitude.lt('1e36')) {
+    const group = Math.floor(magnitude.e / 3);
+    const scaled = Number(number.div(D(10).pow(group * 3)).toNumber().toPrecision(3));
+    if (Math.abs(scaled) < 1000) return `${scaled}${NUMBER_SUFFIXES[group - 1]}`;
+    if (group < NUMBER_SUFFIXES.length) return `${number.sign}${NUMBER_SUFFIXES[group]}`;
+  }
+  return number.toExponential(2).replace(/e\+/g, 'e');
 }
 function toast(message) {
   const el = document.querySelector('#toast');
