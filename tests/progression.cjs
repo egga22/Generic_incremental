@@ -17,6 +17,21 @@ vm.runInContext(source, context);
 const a = context.testAPI, s = a.state, doc = dom.window.document;
 assert(a.isValidSave(JSON.parse(a.serializeState())), 'fresh save round trip');
 assert(a.isValidSave({balance:0,runEarned:0}), 'old save accepted');
+// Only held currencies count, with a strict greater-than threshold.
+const achievementStart = {...s};
+for (const key of ['balance', 'tokens', 'credits', 'data', 'alpha', 'ascendance', 'darkMatter', 'spark', 'fishPoints', 'fortuneTokens', 'fortuneCharges']) {
+  s.achievements = []; s[key] = a.D('1e9000');
+  a.checkAchievements();
+  assert(!s.achievements.includes('over9000'), `${key}: exact threshold does not qualify`);
+  s[key] = a.D('1.01e9000'); a.checkAchievements(); a.checkAchievements();
+  assert.equal(s.achievements.filter(id => id === 'over9000').length, 1, `${key}: award once above threshold`);
+  if (key !== 'fortuneTokens' && key !== 'fortuneCharges') assert(a.isValidSave(JSON.parse(a.serializeState())), `${key}: achievement saves correctly`);
+  Object.assign(s, achievementStart);
+}
+s.lifetime = a.D('1e9001'); s.runEarned = a.D('1e9001'); s.cubeClicks = a.D('1e9001');
+a.checkAchievements(); assert(!s.achievements.includes('over9000'), 'statistics and Cube progress are not currency');
+Object.assign(s, achievementStart);
+
 s.printer = true; const base = a.rate(); s.researchBranch='production'; s.researchLevel=2;
 assert(a.rate().eq(base.times(4)), 'production research');
 s.balance=a.D(500); s.researchBranch='none'; const reward=a.tokenReward(); s.researchBranch='resets';

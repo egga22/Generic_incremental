@@ -1837,6 +1837,7 @@ fortunePanel.addEventListener('change', event => {
 
 // Expansion progress uses additive save fields so older saves retain their progress.
 const ACHIEVEMENTS = {
+  over9000: ['its over 9000', 'Hold more than 1e9000 of any currency.', () => ['balance', 'tokens', 'credits', 'data', 'alpha', 'ascendance', 'darkMatter', 'spark', 'fishPoints', 'fortuneTokens', 'fortuneCharges'].some(key => gt(state[key], '1e9000'))],
   neutral: ['A resounding ×1', 'Buy Neutral multiplier.', () => state.alphaNeutralBought],
   cube: ['Thinking inside the box', 'Reach Cube level 10.', () => state.cubeLevel >= 10],
   combo: ['Two problems at once', 'Complete a combined Pyramid trial.', () => state.completedCombos.length > 0],
@@ -1886,7 +1887,7 @@ expansionPanel.innerHTML = `
 <div id="preset-feature"><h3>Automation presets</h3><p>Uses purchased, active autobuyers. Fast resets unlocks with Automations; Save for next upgrade after 3 trials; Long push after 1 Ascendance. Off keeps ordinary autobuyers running. Fast resets uses your interval; Long push waits 5× longer. Save mode keeps a reserve and never resets. Trials always disable automatic resets.</p>${['P$ → tokens','Tokens → credits'].map((name, i) => `<fieldset><legend>${name}</legend><select id="preset-${i}"><option value="off">Off</option><option value="fast">Fast resets</option><option value="save">Save for next upgrade</option><option value="push">Long push</option></select><label>Reset interval (seconds) <input id="preset-seconds-${i}" type="number" min="5" max="3600"></label><label>Reserve % <input id="preset-reserve-${i}" type="number" min="0" max="90"></label></fieldset>`).join('')}</div>
 <div id="burst-feature"><h3>Spark charge &amp; burst</h3><p>Production charges 1% every 3 seconds after your first Spark reset. Spend 25%, 50%, or all stored charge for 30 seconds of ×(1 + charge/25) P$/sec, up to ×5. Charging pauses during bursts.</p><p id="burst-progress"></p>${[25,50,100].map(n => `<button data-burst="${n}">${n === 100 ? 'Spend all charge' : `Spend ${n}%`}</button>`).join('')}</div>
 <h3>Ascendance milestones</h3><p id="asc-milestones"></p>
-<h3>Questionable achievements</h3><p>Three achievements unlock Gold; all six unlock Violet. Rewards are cosmetic.</p><ul id="achievement-list"></ul><label>Theme <select id="achievement-theme"><option value="default">Default</option><option value="gold">Gold</option><option value="violet">Violet</option></select></label>
+<h3>Questionable achievements</h3><p>Three achievements unlock Gold; six unlock Violet. Rewards are cosmetic.</p><ul id="achievement-list"></ul><label>Theme <select id="achievement-theme"><option value="default">Default</option><option value="gold">Gold</option><option value="violet">Violet</option></select></label>
 </details>`;
 function renderExpansion() {
   renderFortune();
