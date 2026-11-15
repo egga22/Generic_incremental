@@ -11,7 +11,7 @@ const MAINLINE_SOFT_CAP = '1e1000';
 const MAINLINE_CURRENCIES = {
   points: 'balance', tokens: 'tokens', credits: 'credits', data: 'data', spark: 'spark', ascendance: 'ascendance'
 };
-const CURRENCY_KEYS = ['balance', 'runEarned', 'lifetime', 'tokens', 'credits', 'data', 'cubeClicks', 'alpha', 'ascendance', 'darkMatter', 'darkMatterCoinBoost', 'spark', 'fishPoints', 'fortuneBase', 'blackjackStake'];
+const CURRENCY_KEYS = ['balance', 'runEarned', 'lifetime', 'tokens', 'credits', 'data', 'cubeClicks', 'alpha', 'ascendance', 'darkMatter', 'darkMatterCoinBoost', 'spark', 'fishPoints', 'fortuneBase', 'blackjackStake', 'epsilon'];
 const D = value => value instanceof Decimal ? value : new Decimal(value ?? 0);
 function upgradeLevelMax() { return BASE_MAX_UPGRADE_LEVEL + (state?.cyan15Bought ? 250 : 0); }
 const lt = (a, b) => D(a).lt(b);
@@ -22,6 +22,11 @@ const plus = (a, b) => D(a).plus(b);
 const minus = (a, b) => D(a).minus(b);
 const initialState = { balance: 0, runEarned: 0, lifetime: 0, printer: false, press: false, multiplierLevel: 0, incomeLevel: 0, powerLevel: 0, clickLevel: 0, logLevel: 0, exponentLevel: 0, exponentCapLevel: 0, capLevel: 0, tokens: 0, totalPrestiges: 0, tokenResetCount: 0, tokenMultiplierLevel: 0, discountLevel: 0, tokenBoostLevel: 0, expansionUnlocked: false, maxBuyUnlocked: false, maxBuyActive: false, tokenCreditLevel: 0, tokenDiscountLevel: 0, credits: 0, totalCreditPrestiges: 0, data: 0, totalDataPrestiges: 0, dataLore: Array(5).fill(false), gainZeroBought: false, gainZeroActive: false, priceOrigins: {}, creditEngine: false, creditExponentLevel: 0, heavyMint: false, cubeUnlocked: false, cubeLevel: 0, cubeClicks: 0, cubeTarget: 'points', freeRunUpgrades: false, passiveTokens: false, alphaUnlocked: false, alpha: 0, alphaGainPurchases: 0, alphaBoostLevel: 0, alphaCapLevel: 0, alphaNeutralBought: false, alphaGeneratorBought: false, fishingUnlocked: false, fishPoints: 0, fishGainLevel: 0, redFishLevel: 0, fishAlphaLevel: 0, garbageUnlocked: false, darkMatterUnlocked: false, darkMatter: 0, darkMatter1Bought: false, darkMatter2Bought: false, darkMatter2Level: 0, darkMatter3Bought: false, darkMatter4Bought: false, darkMatterCoinBoost: 1, darkMatterFlipTimer: 0, darkMatterFlipDuration: 1, pyramidUnlocked: false, activeChallenge: '', challengeEndsAt: 0, completedChallenges: [], creditChallengeBoost: false, automationsUnlocked: false, automationBought: Array(12).fill(false), automationActive: Array(12).fill(false), ascendance: 0, totalAscendances: 0, ascCurrencyBoost: false, ascCreditExponent: false, ascCubePowerLevel: 0, ascCubeAutoclicker: false, ascCubeAscendance: false, ascCubeAlpha: false, ascPointDiscountLevel: 0, ascTotalLevelBoost: false, ascAllCurrencyLevel: 0, ascMainlinePowerLevel: 0, scaryModeLevel: 0, scaryModeActive: true, spark: 0, sparkPrestiges: 0, sparkUpgrade1Level: 0, sparkUpgrade2Level: 0, sparkUpgrade3Level: 0, pointUpgrade16Bought: false, pointUpgrade17Bought: false, pointUpgrade18Bought: false, pointUpgrade19Bought: false, pointUpgrade20Bought: false, pointUpgrade21Bought: false, cyan13Bought: false, cyan14Level: 0, cyan15Bought: false, cyanSquareCounts: [0, 0, 0] };
 Object.assign(initialState, {
+  epsilon: 0, epsilonUnlocked: false, epsilonEscapeUnlocked: false,
+  epsilonUpgrade1Bought: false, epsilonUpgrade2Level: 0, epsilonUpgrade3Level: 0,
+  epsilonUpgrade4Level: 0, epsilonUpgrade5Level: 0, epsilonUpgrade6Level: 0,
+  epsilonUpgrade7Level: 0, epsilonUpgrade8Level: 0, epsilonUpgrade9Bought: false,
+  epsilonOctahedrons: [], epsilonOctahedronTimer: 0,
   npcProgress: [0, 0, 0], npcTalks: [0, 0, 0],
   expedition: null, expeditionSeals: 0, expeditionBest: 0, expeditionUpgrades: [0, 0, 0],
   casinoUnlocked: false,
@@ -82,13 +87,16 @@ state.dataLore = Array.from({ length: 5 }, (_, i) => Boolean(savedState.dataLore
 state.darkMatter2Level = Math.max(0, Math.min(1000, Number(savedState.darkMatter2Level ?? (savedState.darkMatter2Bought ? 1 : 0)) || 0));
 state.darkMatterFlipDuration = Math.max(1, Number(savedState.darkMatterFlipDuration) || 1);
 state.cyanSquareCounts = Array.from({ length: 3 }, (_, i) => Math.max(0, Number(savedState.cyanSquareCounts?.[i]) || 0));
+state.epsilonOctahedrons = Array.isArray(savedState.epsilonOctahedrons) && savedState.epsilonOctahedrons.length <= 3 && savedState.epsilonOctahedrons.every(n => Number.isInteger(n) && n >= 1 && n <= 9) ? savedState.epsilonOctahedrons : [];
+state.epsilonOctahedronTimer = Number.isFinite(savedState.epsilonOctahedronTimer) && savedState.epsilonOctahedronTimer >= 0 && savedState.epsilonOctahedronTimer < 5 ? savedState.epsilonOctahedronTimer : 0;
 state.priceOrigins ||= {};
 if (!validExpedition(state.expedition) || (state.activeChallenge === 'expedition') !== Boolean(state.expedition)) {
   state.expedition = null;
   if (state.activeChallenge === 'expedition') { state.activeChallenge = ''; state.challengeEndsAt = 0; }
 }
 let toastTimer;
-let activeTab = 'run';
+let activeTab = state.epsilonUnlocked && !state.epsilonEscapeUnlocked ? 'epsilon' : 'run';
+let travelerAppears = false;
 let fishingBiteAt = null;
 let fishingRedFish = false;
 let fishingResult = 'Ready to cast.';
@@ -122,6 +130,76 @@ function save() {
   savedSnapshot = serialized;
 }
 function incomeBase() { return (state.printer ? 1 : 0) + (state.press ? 1 : 0) + state.incomeLevel * (state.incomeLevel + 1) / 2; }
+const EPSILON_UPGRADE_MAX = [0, 1, 1, 5, 4, 1, 1, 5, 2, 1];
+function epsilonUpgradeLevel(index) { return index === 1 ? Number(state.epsilonUpgrade1Bought) : index === 9 ? Number(state.epsilonUpgrade9Bought) : state[`epsilonUpgrade${index}Level`]; }
+function epsilonUpgradeCost(index, level = epsilonUpgradeLevel(index)) {
+  const base = [0, 0, .15, .3, 1, 7.5, 40, 100, 125, 2000][index];
+  return D(base).times([0, 1, 1, 1.5, 1.5, 1, 1, 1.5, 1.5, 1][index] ** level);
+}
+function epsilonUpgradeReady(index) {
+  if (index === 1) return true;
+  if (index === 2) return state.epsilonUpgrade1Bought;
+  if (index === 3) return state.epsilonUpgrade2Level > 0;
+  if (index === 4) return state.epsilonUpgrade3Level > 0;
+  if (index === 5) return state.epsilonUpgrade4Level > 0;
+  if (index === 6) return state.epsilonUpgrade5Level > 0;
+  if (index === 7) return state.epsilonUpgrade6Level > 0;
+  if (index === 8) return state.epsilonUpgrade7Level === EPSILON_UPGRADE_MAX[7];
+  return index === 9 && state.epsilonUpgrade1Bought
+    && [2, 3, 4, 5, 6, 7, 8].every(upgrade => epsilonUpgradeLevel(upgrade) === EPSILON_UPGRADE_MAX[upgrade]);
+}
+function epsilonGainRate() {
+  if (!state.epsilonUpgrade1Bought) return D(0);
+  return D(.01 + state.epsilonUpgrade2Level * .01 + state.epsilonUpgrade3Level * .02)
+    .times(D(1.1).pow(state.epsilonUpgrade4Level))
+    .times(state.epsilonUpgrade5Level ? 1.5 : 1)
+    .times(state.epsilonUpgrade6Level ? 3 : 1)
+    .times(D(.75).pow(state.epsilonUpgrade7Level))
+    .times(D(2.5).pow(state.epsilonUpgrade8Level));
+}
+function epsilonOctahedronCount() { return state.epsilonOctahedrons.length; }
+function syncEpsilonOctahedrons() {
+  const created = Number(state.epsilonUpgrade2Level > 0)
+    + Number(state.epsilonUpgrade5Level > 0)
+    + Number(state.epsilonUpgrade6Level > 0);
+  const removed = Math.min(3, state.epsilonUpgrade7Level);
+  const count = Math.max(0, created - removed);
+  while (state.epsilonOctahedrons.length > count) state.epsilonOctahedrons.pop();
+  while (state.epsilonOctahedrons.length < count) state.epsilonOctahedrons.push(1 + Math.floor(Math.random() * 9));
+  if (!count) state.epsilonOctahedronTimer = 0;
+}
+function updateEpsilonOctahedrons(elapsed) {
+  syncEpsilonOctahedrons();
+  if (!epsilonOctahedronCount()) return;
+  state.epsilonOctahedronTimer += elapsed;
+  while (state.epsilonOctahedronTimer >= 5) {
+    state.epsilonOctahedronTimer -= 5;
+    state.epsilonOctahedrons = state.epsilonOctahedrons.map(position => {
+      const next = 1 + Math.floor(Math.random() * 8);
+      return next >= position ? next + 1 : next;
+    });
+  }
+}
+function tickEpsilon(elapsed) {
+  updateEpsilonOctahedrons(elapsed);
+  const earned = epsilonGainRate().times(elapsed);
+  if (gt(earned, 0)) state.epsilon = plus(state.epsilon, earned);
+}
+function buyEpsilonUpgrade(index) {
+  if (!state.epsilonUnlocked || !epsilonUpgradeReady(index) || epsilonUpgradeLevel(index) >= EPSILON_UPGRADE_MAX[index]) return;
+  const cost = epsilonUpgradeCost(index);
+  if (lt(state.epsilon, cost)) return;
+  const hit = state.epsilonOctahedrons.includes(index);
+  state.epsilon = minus(state.epsilon, cost);
+  if (index === 1) state.epsilonUpgrade1Bought = true;
+  else if (index === 9) { state.epsilonUpgrade9Bought = true; state.epsilonEscapeUnlocked = true; }
+  else state[`epsilonUpgrade${index}Level`] += 1;
+  if (index === 7 && state.epsilonUpgrade7Level <= 3) state.epsilonOctahedrons.pop();
+  syncEpsilonOctahedrons();
+  if (hit) state.epsilon = D(0);
+  toast(hit ? `Upgrade ${index}ε bought · Octahedron reset ε to 0` : `Upgrade ${index}ε bought`);
+  render(); save();
+}
 function currencyGainMultiplier() { return state.gainZeroActive ? 0 : D(100).pow(state.ascCurrencyBoost ? 1 : 0).times(D(2).pow(state.ascAllCurrencyLevel)); }
 function applyCurrencyGain(amount) {
   if (state.gainZeroActive) return D(0);
@@ -770,9 +848,11 @@ applyThemePreference();
 
 function renderTheme() {
   const matterTab = activeTab === 'darkmatter';
-  const darkScreen = darkMode !== matterTab;
+  const epsilonScreen = activeTab === 'epsilon';
+  const darkScreen = epsilonScreen || darkMode !== matterTab;
   document.body.classList.toggle('dark-screen', darkScreen);
   document.body.classList.toggle('light-matter-screen', darkMode && matterTab);
+  document.body.classList.toggle('epsilon-screen', epsilonScreen);
   document.querySelector('meta[name="theme-color"]').content = darkScreen ? '#000000' : '#ffffff';
 }
 
@@ -910,6 +990,7 @@ function renderPrestigeProgress(fraction) {
 }
 
 function render() {
+  if (state.epsilonUnlocked && !state.epsilonEscapeUnlocked) activeTab = 'epsilon';
   document.getElementById('scary-overlay').hidden = !state.scaryModeLevel || !state.scaryModeActive;
   document.getElementById('scary-mode-setting').hidden = !state.scaryModeLevel;
   document.getElementById('scary-mode').checked = state.scaryModeActive;
@@ -924,7 +1005,9 @@ function render() {
   const balance = document.querySelector('#balance');
   const balanceLabel = document.querySelector('#balance-label');
   const rateLine = document.querySelector('#rate-line');
-  const counter = activeTab === 'spark'
+  const counter = activeTab === 'epsilon'
+    ? { label: 'AVAILABLE EPSILON · ε', value: state.epsilon, color: 'epsilon', detail: `${fmt(epsilonGainRate())} ε per second` }
+    : activeTab === 'spark'
     ? { label: 'AVAILABLE SPARK · ⊹', value: state.spark, color: 'spark', detail: `${fmt(rate())} P$ per second` }
     : activeTab === 'darkmatter'
     ? { label: 'AVAILABLE ⊠', value: state.darkMatter, color: 'darkmatter', detail: `${fmt(darkMatterRate())} ⊠ per second` }
@@ -1106,6 +1189,9 @@ function render() {
   document.querySelector('#spark-upgrades').hidden = activeTab !== 'spark';
   document.querySelector('#cube-panel').hidden = activeTab !== 'cube';
   document.querySelector('#pyramid-panel').hidden = activeTab !== 'pyramid';
+  document.querySelector('#epsilon-upgrades').hidden = activeTab !== 'epsilon';
+  document.querySelector('#epsilon-tab').hidden = !state.epsilonUnlocked;
+  document.querySelector('#epsilon-tab').classList.toggle('active', activeTab === 'epsilon');
   document.querySelector('#alpha-upgrades').hidden = activeTab !== 'alpha';
   document.querySelector('#darkmatter-upgrades').hidden = activeTab !== 'darkmatter';
   document.querySelector('#darkmatter-tab').classList.toggle('active', activeTab === 'darkmatter');
@@ -1119,6 +1205,9 @@ function render() {
   document.querySelector('#ascendance-tab').classList.toggle('active', activeTab === 'ascendance');
   document.querySelector('#data-tab').classList.toggle('active', activeTab === 'data');
   document.querySelector('#spark-tab').classList.toggle('active', activeTab === 'spark');
+  const epsilonTrapped = state.epsilonUnlocked && !state.epsilonEscapeUnlocked;
+  document.querySelector('#sections-toggle').hidden = epsilonTrapped;
+  if (epsilonTrapped) document.querySelector('#upgrade-tabs').hidden = true;
   renderNPCs();
   renderCasino();
   document.querySelector('#alpha-gain-amount').textContent = fmt(applyAlphaGain(1 + state.alphaBoostLevel).times(cubeMultiplier('alpha')));
@@ -1171,6 +1260,23 @@ function render() {
   document.querySelector('#upgrade-darkmatter-4').classList.toggle('locked', !state.darkMatter3Bought);
   document.querySelector('#darkmatter-coin-boost').textContent = fmt(state.darkMatterCoinBoost);
   document.querySelector('#darkmatter-flip-duration').textContent = state.darkMatterFlipDuration;
+  document.querySelectorAll('[data-epsilon-threats]').forEach(marker => {
+    const upgrade = Number(marker.dataset.epsilonThreats);
+    const threats = state.epsilonOctahedrons.map((position, index) => ({ position, index })).filter(octahedron => octahedron.position === upgrade);
+    marker.innerHTML = threats.map(({ index }) => `<span class="epsilon-octahedron${index === 1 ? ' dim' : ''}" aria-hidden="true"></span>`).join('');
+    marker.setAttribute('aria-label', threats.length ? `${threats.length} octahedron${threats.length === 1 ? '' : 's'} targeting upgrade ${upgrade}ε` : '');
+  });
+  for (let index = 1; index <= 9; index += 1) {
+    const level = epsilonUpgradeLevel(index);
+    const cost = epsilonUpgradeCost(index);
+    const maxed = level >= EPSILON_UPGRADE_MAX[index];
+    const ready = epsilonUpgradeReady(index);
+    const button = document.querySelector(`#buy-epsilon-${index}`);
+    button.disabled = !state.epsilonUnlocked || !ready || maxed || lt(state.epsilon, cost);
+    button.textContent = maxed ? (index === 1 || index === 9 ? 'Bought' : 'MAX LEVEL') : cost.eq(0) ? 'Free' : `${fmt(cost)} ε`;
+    document.querySelector(`#upgrade-epsilon-${index}`).classList.toggle('locked', !ready);
+    if (index >= 2 && index <= 4 || index === 7 || index === 8) document.querySelector(`#epsilon-level-${index}`).textContent = level;
+  }
   const showUpgrade = (id, available) => { document.querySelector(`#upgrade-${id}`).hidden = !available; };
   showUpgrade('press', state.printer || state.press);
   showUpgrade('multiplier', state.press || state.multiplierLevel > 0);
@@ -1498,11 +1604,17 @@ document.querySelector('#max-buy-toggle').addEventListener('click', () => {
   state.maxBuyActive = !state.maxBuyActive;
   toast(state.maxBuyActive ? 'Max Buy on' : 'Max Buy off'); render(); save();
 });
-document.querySelector('#sections-toggle').addEventListener('click', () => { const tabs = document.querySelector('#upgrade-tabs'); tabs.hidden = !tabs.hidden; document.querySelector('#sections-toggle').setAttribute('aria-expanded', String(!tabs.hidden)); });
+document.querySelector('#sections-toggle').addEventListener('click', () => {
+  if (state.epsilonUnlocked && !state.epsilonEscapeUnlocked) return;
+  const tabs = document.querySelector('#upgrade-tabs');
+  tabs.hidden = !tabs.hidden;
+  document.querySelector('#sections-toggle').setAttribute('aria-expanded', String(!tabs.hidden));
+});
 function renderNPCs() {
   const panel = document.getElementById('npc-panel');
   panel.hidden = activeTab !== 'npc';
   document.getElementById('npc-tab').classList.toggle('active', activeTab === 'npc');
+  document.getElementById('traveler-card').hidden = panel.hidden || !travelerAppears;
   if (panel.hidden) return;
   const bonds = ['New acquaintance', 'Familiar face', 'Trusted friend', 'Close friend'];
   document.getElementById('npc-list').innerHTML = NPCS.map((npc, i) => {
@@ -1531,8 +1643,32 @@ document.getElementById('npc-list').addEventListener('click', event => {
   render(); save();
 });
 
-function chooseTab(tab) { activeTab = tab; document.querySelector('#upgrade-tabs').hidden = true; document.querySelector('#sections-toggle').setAttribute('aria-expanded', 'false'); render(); }
-document.querySelector('#npc-tab').addEventListener('click', () => chooseTab('npc'));
+function chooseTab(tab) {
+  if (state.epsilonUnlocked && !state.epsilonEscapeUnlocked && tab !== 'epsilon') return;
+  activeTab = tab;
+  document.querySelector('#upgrade-tabs').hidden = true;
+  document.querySelector('#sections-toggle').setAttribute('aria-expanded', 'false');
+  render();
+}
+document.querySelector('#npc-tab').addEventListener('click', () => {
+  if (state.epsilonUnlocked && !state.epsilonEscapeUnlocked) return;
+  travelerAppears = Math.random() < 0.2;
+  chooseTab('npc');
+});
+document.querySelector('#traveler-no').addEventListener('click', () => {
+  if (!travelerAppears || activeTab !== 'npc') return;
+  travelerAppears = false;
+  render();
+});
+document.querySelector('#traveler-yes').addEventListener('click', () => {
+  if (!travelerAppears || activeTab !== 'npc') return;
+  travelerAppears = false;
+  state.epsilonUnlocked = true;
+  syncEpsilonOctahedrons();
+  activeTab = 'epsilon';
+  document.querySelector('#upgrade-tabs').hidden = true;
+  render(); save();
+});
 document.querySelector('#run-tab').addEventListener('click', () => chooseTab('run'));
 document.querySelector('#token-tab').addEventListener('click', () => { if (state.totalPrestiges || gt(state.tokens, 0) || state.garbageUnlocked) chooseTab('token'); });
 document.querySelector('#credit-tab').addEventListener('click', () => { if (state.totalCreditPrestiges || gt(state.credits, 0)) chooseTab('credit'); });
@@ -1543,6 +1679,8 @@ document.querySelector('#icosahedron-tab').addEventListener('click', () => { if 
 document.querySelector('#pyramid-tab').addEventListener('click', () => { if (state.pyramidUnlocked) chooseTab('pyramid'); });
 document.querySelector('#alpha-tab').addEventListener('click', () => { if (state.alphaUnlocked) chooseTab('alpha'); });
 document.querySelector('#darkmatter-tab').addEventListener('click', () => { if (state.darkMatterUnlocked) chooseTab('darkmatter'); });
+document.querySelector('#epsilon-tab').addEventListener('click', () => { if (state.epsilonUnlocked) chooseTab('epsilon'); });
+document.querySelectorAll('[id^="buy-epsilon-"]').forEach(button => button.addEventListener('click', () => buyEpsilonUpgrade(Number(button.id.at(-1)))));
 document.querySelector('#buy-darkmatter-unlock').addEventListener('click', () => { if (!state.alphaUnlocked || state.darkMatterUnlocked || lt(state.alpha, 1000)) return; changeAlpha(-1000); state.darkMatterUnlocked = true; activeTab = 'darkmatter'; toast(`${matterName()} unlocked`); render(); save(); });
 document.querySelector('#buy-darkmatter-1').addEventListener('click', () => { if (!state.darkMatterUnlocked || state.darkMatter1Bought) return; state.darkMatter1Bought = true; toast(`${matterName()} generation started`); render(); save(); });
 document.querySelector('#buy-darkmatter-2').addEventListener('click', () => { if (!state.darkMatter1Bought || state.darkMatter2Level >= 1000 || lt(state.darkMatter, 2)) return; state.darkMatter = D(0); state.darkMatter2Level += 1; toast(`${matterName()} gain doubled`); render(); save(); });
@@ -2125,7 +2263,7 @@ for (const id of ['data-prestige-button', 'spark-prestige-button', 'ascendance-p
 
 // Expansion progress uses additive save fields so older saves retain their progress.
 const ACHIEVEMENTS = {
-  over9000: ['its over 9000', 'Hold more than 1e9000 of any currency.', () => ['balance', 'tokens', 'credits', 'data', 'alpha', 'ascendance', 'darkMatter', 'spark', 'fishPoints', 'fortuneTokens', 'fortuneCharges'].some(key => gt(state[key], '1e9000'))],
+  over9000: ['its over 9000', 'Hold more than 1e9000 of any currency.', () => ['balance', 'tokens', 'credits', 'data', 'alpha', 'ascendance', 'darkMatter', 'epsilon', 'spark', 'fishPoints', 'fortuneTokens', 'fortuneCharges'].some(key => gt(state[key], '1e9000'))],
   neutral: ['A resounding ×1', 'Buy Neutral multiplier.', () => state.alphaNeutralBought],
   cube: ['Thinking inside the box', 'Reach Cube level 10.', () => state.cubeLevel >= 10],
   combo: ['Two problems at once', 'Complete a combined Pyramid trial.', () => state.completedCombos.length > 0],
@@ -2265,6 +2403,7 @@ setInterval(() => {
   const now = Date.now();
   const elapsed = Math.max(0, (now - lastTick) / 1000);
   lastTick = now;
+  tickEpsilon(elapsed);
   runAutomations();
   if (state.researchBranch === 'automation') for (let i = 0; i < state.researchLevel; i++) runAutomations();
   runPresetResets(now);
@@ -2320,6 +2459,12 @@ function isValidSave(snapshot) {
     if (CURRENCY_KEYS.includes(key)) {
       return (typeof value === 'string' && value.trim() !== '' || typeof value === 'number')
         && D(value).isFinite() && D(value).gte(0);
+    }
+    if (key === 'epsilonOctahedrons') return Array.isArray(value) && value.length <= 3 && value.every(n => Number.isInteger(n) && n >= 1 && n <= 9);
+    if (key === 'epsilonOctahedronTimer') return Number.isFinite(value) && value >= 0 && value < 5;
+    if (key.startsWith('epsilonUpgrade') && key.endsWith('Level')) {
+      const index = Number(key.match(/\d+/)?.[0]);
+      return Number.isInteger(value) && value >= 0 && value <= EPSILON_UPGRADE_MAX[index];
     }
     if (['npcProgress', 'npcTalks'].includes(key)) return Array.isArray(value) && value.length === 3 && value.every(n => Number.isSafeInteger(n) && n >= 0 && n <= (key === 'npcProgress' ? 3 : 1000000));
     if (key === 'expedition') return validExpedition(value);

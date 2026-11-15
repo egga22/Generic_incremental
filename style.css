@@ -233,6 +233,21 @@ body.dark-screen .progress-disc[data-visual="ring"]::after { background: #090909
   border: 1px solid var(--settings-border, #888);
   border-radius: 4px;
 }
+
+body.epsilon-screen { background: #000; color: #fff; }
+body.epsilon-screen header { border-color: #444; }
+body.epsilon-screen header h1,
+body.epsilon-screen .epsilon-upgrade :is(h3, p, .effect) { color: #fff; }
+body.epsilon-screen .epsilon-upgrade { background: #050505; border-color: #555; }
+body.epsilon-screen .epsilon-upgrade.locked { background: #090909; border-color: #333; }
+body.epsilon-screen .epsilon-upgrade button { background: #111; color: #fff; border-color: #aaa; }
+body.epsilon-screen .epsilon-upgrade button:disabled { background: #161616; color: #888; }
+body.epsilon-screen .epsilon-upgrade button:not(:disabled):hover { background: #292929; }
+.balance.currency-epsilon { color: #c6b8ff; }
+.epsilon-threats { display: inline-flex; gap: 5px; margin: 0 0 5px; vertical-align: middle; }
+.epsilon-octahedron { display: inline-block; width: 18px; height: 20px; background: #b7a4ff; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+.epsilon-octahedron.dim { opacity: .35; }
+.epsilon-tree { display: grid; gap: 4px; }
 #alpha-casino input { width: min(12rem, 100%); }
 #blackjack-cards { font-size: 1.1rem; overflow-wrap: anywhere; }
 #casino-result { min-height: 2.5em; }
