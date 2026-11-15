@@ -35,7 +35,14 @@ input, textarea, select {
       </section>
       <section class="milestone" w-tid="43">
         <div w-tid="45">Run earnings <strong w-tid="47">P$ <span id="run-earned" w-tid="49">0</span></strong></div>
-        <div class="progress" w-tid="51"><span id="progress-fill" w-tid="53"></span></div>
+        <div id="prestige-progress" class="prestige-progress" role="progressbar" aria-label="Progress to prestige goal" aria-valuemin="0" aria-valuemax="100">
+          <div class="progress" data-visual="bar"><span id="progress-fill" w-tid="53"></span></div>
+          <div class="progress-disc" data-visual="ring" hidden></div>
+          <div class="progress-disc" data-visual="pie" hidden></div>
+          <div class="progress-multibar" data-visual="multibar" hidden aria-label="Multi Bar"><i></i><i></i><i></i></div>
+          <div class="progress-letters" data-visual="letters" hidden><b>AAA</b><div class="progress"><span></span></div></div>
+          <div class="progress-color" data-visual="color" hidden></div>
+        </div>
         <div class="goal" w-tid="55"><strong id="prestige-goal" w-tid="57">P$ 500</strong><span w-tid="59">next prestige</span></div>
       </section>
       <section class="upgrades" w-tid="61">
@@ -333,7 +340,20 @@ input, textarea, select {
         <h2 id="deep-settings-title">Deep settings</h2>
         <button type="submit" class="deep-settings-close" aria-label="Close settings" autofocus>×</button>
       </form>
-      <p class="deep-settings-empty">No settings yet.</p>
+      <div class="deep-settings-content">
+        <label for="prestige-animation">Prestige progress animation</label>
+        <select id="prestige-animation" aria-describedby="prestige-animation-help">
+          <option value="none">No animation</option>
+          <option value="bar" selected>Bar</option>
+          <option value="ring">Ring</option>
+          <option value="pie">Pie</option>
+          <option value="multibar">Multi Bar</option>
+          <option value="letters">Letters</option>
+          <option value="color">Color</option>
+          <option value="pro">Pro Mode (Split)</option>
+        </select>
+        <p id="prestige-animation-help">Hyper Timer styles, driven by your current prestige goal. Letters advance from AAA to ZZZ; Color shifts from blue to green. Pro Mode shows Multi Bar, Letters, and Color together. No animation hides the visual. Your goal stays visible.</p>
+      </div>
     </dialog>
     <div class="toast" id="toast" role="status" aria-live="polite" w-tid="1139"></div>
   </body>

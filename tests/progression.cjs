@@ -186,3 +186,35 @@ assert(a.kirbyBonus('stone')>1); ks.cubeTarget='tokens'; assert.equal(a.kirbyBon
 ks.kirbyAbility='beam'; ks.kirbyBurstUntil=Date.now()-1; ks.kirbyNapUntil=Date.now()-1;
 assert(a.kirbyBonus('beam')>1 && a.kirbyBonus('beam')<1.4,'expired burst and nap restore ordinary bonus');
 assert(a.isValidSave(JSON.parse(a.serializeState())));
+
+// Every Hyper Timer style is selectable, persisted, and bounded by the same goal.
+const animation = doc.getElementById('prestige-animation');
+const progress = doc.getElementById('prestige-progress');
+assert.equal(animation.options.length, 8);
+for (const style of ['none', 'bar', 'ring', 'pie', 'multibar', 'letters', 'color', 'pro']) {
+  animation.value = style;
+  animation.dispatchEvent(new dom.window.Event('change'));
+  assert.equal(a.state.prestigeAnimation, style);
+  assert.equal(JSON.parse(a.serializeState()).prestigeAnimation, style);
+  assert(a.isValidSave(JSON.parse(a.serializeState())), `${style} save is importable`);
+  const shown = [...progress.querySelectorAll('[data-visual]')].filter(el => !el.hidden).map(el => el.dataset.visual);
+  assert.deepEqual(shown, style === 'none' ? [] : style === 'pro' ? ['multibar','letters','color'] : [style]);
+  for (const fraction of [0, .5, 1, 2, -1]) {
+    vm.runInContext(`renderPrestigeProgress(${fraction})`, context);
+    const expected = Math.max(0, Math.min(1, fraction));
+    assert.equal(Number(progress.getAttribute('aria-valuenow')), expected * 100);
+    assert.equal(doc.getElementById('progress-fill').style.width, `${expected * 100}%`);
+    if (expected === 0 || expected === 1) {
+      assert.equal(progress.querySelector('.progress-letters b').textContent, expected ? 'ZZZ' : 'AAA');
+      for (const bar of progress.querySelectorAll('.progress-multibar i')) assert.equal(bar.style.getPropertyValue('--bar-fill'), expected ? '100%' : '0%');
+    }
+  }
+}
+assert(!a.isValidSave({balance:0, runEarned:0, prestigeAnimation:'unknown'}));
+a.resetAscendanceRun();
+assert.equal(a.state.prestigeAnimation, 'pro', 'appearance survives Ascendance');
+vm.runInContext('state.balance = D(nextGoal()).div(2); render();', context);
+assert.equal(Number(progress.getAttribute('aria-valuenow')), 50, 'uses current prestige goal');
+vm.runInContext('state.balance = D(0); render();', context);
+assert.equal(Number(progress.getAttribute('aria-valuenow')), 0, 'resets track run balance');
+console.log('Prestige styles passed: all eight choices, save validation, visibility, endpoints, goal tracking, reset persistence.');

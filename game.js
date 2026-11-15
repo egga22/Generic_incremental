@@ -1,6 +1,7 @@
 import Decimal from './break_eternity.js';
 
 const SAVE_KEY = 'pocket-foundry-save-v2';
+const PRESTIGE_STYLES = ['none', 'bar', 'ring', 'pie', 'multibar', 'letters', 'color', 'pro'];
 const BASE_MAX_UPGRADE_LEVEL = 1000;
 const FISHING_COST = 100;
 const FISHING_REEL_WINDOW = 1600;
@@ -21,6 +22,7 @@ const plus = (a, b) => D(a).plus(b);
 const minus = (a, b) => D(a).minus(b);
 const initialState = { balance: 0, runEarned: 0, lifetime: 0, printer: false, press: false, multiplierLevel: 0, incomeLevel: 0, powerLevel: 0, clickLevel: 0, logLevel: 0, exponentLevel: 0, exponentCapLevel: 0, capLevel: 0, tokens: 0, totalPrestiges: 0, tokenResetCount: 0, tokenMultiplierLevel: 0, discountLevel: 0, tokenBoostLevel: 0, expansionUnlocked: false, maxBuyUnlocked: false, maxBuyActive: false, tokenCreditLevel: 0, tokenDiscountLevel: 0, credits: 0, totalCreditPrestiges: 0, data: 0, totalDataPrestiges: 0, dataLore: Array(5).fill(false), gainZeroBought: false, gainZeroActive: false, priceOrigins: {}, creditEngine: false, creditExponentLevel: 0, heavyMint: false, cubeUnlocked: false, cubeLevel: 0, cubeClicks: 0, cubeTarget: 'points', freeRunUpgrades: false, passiveTokens: false, alphaUnlocked: false, alpha: 0, alphaGainPurchases: 0, alphaBoostLevel: 0, alphaCapLevel: 0, alphaNeutralBought: false, alphaGeneratorBought: false, fishingUnlocked: false, fishPoints: 0, fishGainLevel: 0, redFishLevel: 0, fishAlphaLevel: 0, garbageUnlocked: false, darkMatterUnlocked: false, darkMatter: 0, darkMatter1Bought: false, darkMatter2Bought: false, darkMatter2Level: 0, darkMatter3Bought: false, darkMatter4Bought: false, darkMatterCoinBoost: 1, darkMatterFlipTimer: 0, darkMatterFlipDuration: 1, pyramidUnlocked: false, activeChallenge: '', challengeEndsAt: 0, completedChallenges: [], creditChallengeBoost: false, automationsUnlocked: false, automationBought: Array(12).fill(false), automationActive: Array(12).fill(false), ascendance: 0, totalAscendances: 0, ascCurrencyBoost: false, ascCreditExponent: false, ascCubePowerLevel: 0, ascCubeAutoclicker: false, ascCubeAscendance: false, ascCubeAlpha: false, ascPointDiscountLevel: 0, ascTotalLevelBoost: false, ascAllCurrencyLevel: 0, ascMainlinePowerLevel: 0, spark: 0, sparkPrestiges: 0, sparkUpgrade1Level: 0, sparkUpgrade2Level: 0, sparkUpgrade3Level: 0, pointUpgrade16Bought: false, pointUpgrade17Bought: false, pointUpgrade18Bought: false, pointUpgrade19Bought: false, pointUpgrade20Bought: false, cyan13Bought: false, cyan14Level: 0, cyan15Bought: false, cyanSquareCounts: [0, 0, 0] };
 Object.assign(initialState, {
+  prestigeAnimation: 'bar',
   copyrightMode: false, kirbyUnlocked: false, kirbyAbility: 'beam',
   kirbyBeam: false, kirbyMirror: false, kirbyFullness: 0,
   kirbyFeedAt: 0, kirbySwitchAt: 0, kirbyBurstUntil: 0, kirbyNapUntil: 0,
@@ -42,6 +44,7 @@ let savedSnapshot;
 let saveConflict = false;
 const savedState = loadState();
 let state = { ...initialState, ...savedState, totalPrestiges: savedState.totalPrestiges ?? savedState.tokens ?? 0, tokenResetCount: savedState.tokenResetCount ?? savedState.totalPrestiges ?? savedState.tokens ?? 0 };
+if (!PRESTIGE_STYLES.includes(state.prestigeAnimation)) state.prestigeAnimation = 'bar';
 for (const key of CURRENCY_KEYS) state[key] = normalizeSavedCurrency(Object.hasOwn(savedState, key) ? savedState[key] : initialState[key]);
 state.automationBought = Array.from({ length: 12 }, (_, i) => Boolean(savedState.automationBought?.[i]));
 state.automationActive = Array.from({ length: 12 }, (_, i) => Boolean(savedState.automationActive?.[i] ?? savedState.automationBought?.[i]));
@@ -629,6 +632,37 @@ garbageForm.addEventListener('submit', event => {
 });
 garbageAll.addEventListener('click', () => discardCurrency(true));
 
+// Use the existing goal fraction for every style; no extra animation timers.
+function renderPrestigeProgress(fraction) {
+  const p = Number.isNaN(fraction) ? 0 : Math.max(0, Math.min(1, fraction));
+  const style = PRESTIGE_STYLES.includes(state.prestigeAnimation) ? state.prestigeAnimation : 'bar';
+  const visual = document.getElementById('prestige-progress');
+  visual.dataset.style = style;
+  visual.setAttribute('aria-valuenow', String(p * 100));
+  visual.setAttribute('aria-valuetext', `${(p * 100).toFixed(1)}% of prestige goal`);
+  visual.style.setProperty('--progress-angle', `${p * 360}deg`);
+  visual.style.setProperty('--progress-color', `hsl(${220 - p * 80} 65% 45%)`);
+  for (const part of visual.querySelectorAll('[data-visual]')) {
+    part.hidden = !(part.dataset.visual === style || style === 'pro' && ['multibar', 'letters', 'color'].includes(part.dataset.visual));
+  }
+  document.getElementById('progress-fill').style.width = `${p * 100}%`;
+  // Three nested base-10 bars: fine progress rolls over into the next row.
+  visual.querySelectorAll('.progress-multibar i').forEach((bar, i) => {
+    const units = p * 10 ** (3 - i);
+    const fill = p === 1 ? 1 : (i === 0 ? units % 10 : Math.floor(units) % 10) / 10;
+    bar.style.setProperty('--bar-fill', `${fill * 100}%`);
+  });
+  let index = Math.floor(p * (26 ** 3 - 1));
+  let letters = '';
+  for (let i = 0; i < 3; i++) {
+    letters = String.fromCharCode(65 + index % 26) + letters;
+    index = Math.floor(index / 26);
+  }
+  visual.querySelector('.progress-letters b').textContent = letters;
+  visual.querySelector('.progress-letters span').style.width = `${p === 1 ? 100 : (p * (26 ** 3 - 1) % 1) * 100}%`;
+  document.getElementById('prestige-animation').value = style;
+}
+
 function render() {
   renderKirby();
   renderExpansion();
@@ -673,7 +707,7 @@ function render() {
   document.querySelector('#run-label').textContent = gt(state.runEarned, 0) ? 'ACTIVE RUN' : 'NEW RUN';
   const goal = nextGoal();
   document.querySelector('#prestige-goal').textContent = `P$ ${fmt(goal)}`;
-  document.querySelector('#progress-fill').style.width = `${Math.min(100, state.balance.div(goal).times(100).toNumber())}%`;
+  renderPrestigeProgress(state.balance.div(goal).toNumber());
   document.querySelector('#mult-level').textContent = state.multiplierLevel;
   document.querySelector('#income-level').textContent = state.incomeLevel;
   document.querySelector('#mult-level-max').textContent = upgradeLevelMax();
@@ -1738,6 +1772,7 @@ function isValidSave(snapshot) {
         && D(value).isFinite() && D(value).gte(0);
     }
     const fallback = initialState[key];
+    if (key === 'prestigeAnimation') return PRESTIGE_STYLES.includes(value);
     if (key === 'kirbyAbility') return ['beam', 'mirror', 'spark', 'stone', 'fisher'].includes(value);
     if (key === 'kirbyStoneTarget') return ['points', 'tokens', 'credits', 'ascendance', 'alpha'].includes(value);
     if (key === 'kirbyFullness') return Number.isInteger(value) && value >= 0 && value <= 100;
@@ -1817,6 +1852,12 @@ importFile.addEventListener('change', async () => {
     return;
   }
   window.location.reload();
+});
+
+document.getElementById('prestige-animation').addEventListener('change', event => {
+  if (!PRESTIGE_STYLES.includes(event.target.value)) return;
+  state.prestigeAnimation = event.target.value;
+  render(); save();
 });
 
 const deepSettings = document.querySelector('#deep-settings');
