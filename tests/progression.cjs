@@ -366,3 +366,30 @@ assert(doc.querySelector('#buy-casino').disabled, 'cannot buy twice');
 assert(a.isValidSave(JSON.parse(a.serializeState())), 'license saves');
 a.resetAscendanceRun(); assert(cs.casinoUnlocked, 'license survives Ascendance');
 console.log('Casino license passed: cost, prerequisites, visibility, handlers, saves and permanent unlock.');
+
+const hs = a.state;
+// Translations charge distinct currencies exactly once and persist independently of the puzzle.
+hs.cubeUnlocked=true; hs.fortuneUnlocked=false; hs.fortuneHints=0; hs.fortuneClue=2;
+hs.balance=a.D(0); a.render();
+assert(!doc.getElementById('fortune-hint-shop').hidden);
+assert.equal(doc.getElementById('fortune-bought-hints').children.length,0);
+const hintButton=doc.getElementById('buy-fortune-hint');
+assert(hintButton.disabled); hintButton.disabled=false; hintButton.click();
+assert.equal(hs.fortuneHints,0,'handler rejects unaffordable hint');
+const prices=[['balance','1e100'],['tokens','1e50'],['credits','1e25'],['data','1000']];
+for (const [i,[currency,cost]] of prices.entries()) {
+  hs[currency]=a.D(cost); a.render(); assert(!hintButton.disabled);
+  const untouched=Object.fromEntries(prices.filter(([key])=>key!==currency).map(([key])=>[key,hs[key].toString()]));
+  hintButton.click(); assert(hs[currency].eq(0),'exact hint price deducted');
+  for (const [key,value] of Object.entries(untouched)) assert(hs[key].eq(value),'other currencies untouched');
+  assert.equal(hs.fortuneHints,i+1); assert.equal(hs.fortuneClue,2,'hint never advances puzzle');
+  assert.equal(doc.getElementById('fortune-bought-hints').children.length,i+1);
+}
+assert(hintButton.disabled); hintButton.disabled=false; hintButton.click(); assert.equal(hs.fortuneHints,4,'no duplicate purchases');
+a.resetAscendanceRun(); assert.equal(hs.fortuneHints,4,'translations survive Ascendance');
+assert(a.isValidSave(JSON.parse(a.serializeState())),'hint save round trip');
+for (const value of [-1,5,1.5,'1']) assert(!a.isValidSave({balance:0,runEarned:0,fortuneHints:value}));
+hs.fortuneUnlocked=true; a.render(); assert(doc.getElementById('fortune-hint-shop').hidden,'shop hides after discovery');
+hs.fortuneHints=0; hs.balance=a.D('1e100'); hintButton.disabled=false; hintButton.click();
+assert.equal(hs.fortuneHints,0,'no purchases after discovery');
+console.log('Fortune hints passed: sequential prices, currency isolation, insufficient funds, no duplicates, persistence, validation and discovery gating.');

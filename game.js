@@ -30,7 +30,7 @@ Object.assign(initialState, {
   kirbyBeam: false, kirbyMirror: false, kirbyFullness: 0,
   kirbyFeedAt: 0, kirbySwitchAt: 0, kirbyBurstUntil: 0, kirbyNapUntil: 0,
   kirbyStoneSeconds: 0, kirbyStoneTarget: 'points', kirbyCatches: 0,
-  fortuneUnlocked: false, fortuneClue: 0,
+  fortuneUnlocked: false, fortuneClue: 0, fortuneHints: 0,
   fortuneCharges: 0, fortuneTokens: 0, fortuneFrame: 0, fortuneQuality: 0,
   fortuneWedges: ['points', 'tokens', 'multiplier', 'refund'],
   fortuneMilestone: 0, fortunePending: 0, fortuneSeconds: 0,
@@ -1672,8 +1672,39 @@ fortunePanel.innerHTML = `<details open><summary>Fortune Engine</summary>
 const fortuneHint = document.createElement('p'); fortuneHint.id = 'fortune-hint';
 fortuneHint.textContent = 'An inscription on the Cube: “Let raw work turn a cycle; let cycles turn another. Let credit turn the deeper cycle. Return raw work to a cycle, and the square will remember how to turn.” Four faint notches border the inscription.';
 document.querySelector('.cube-effect').after(fortuneHint);
+// Optional translations: buying information never advances the inscription itself.
+const FORTUNE_HINTS = [
+  { currency: 'balance', cost: '1e100', label: 'P$', text: 'The inscription describes four prestiges. Before each, choose what the Cube multiplies. Its notches record the correct order; a mistake can always be retried.' },
+  { currency: 'tokens', cost: '1e50', label: 'Tokens', text: '“Raw work”, “cycles”, and “credit” mean the Cube targets Points, Tokens, and Credits. Read them in the inscription’s order, including the return.' },
+  { currency: 'credits', cost: '1e25', label: 'C$', text: '“A cycle” means a token prestige; “the deeper cycle” means a credit prestige. Only the third step uses the deeper reset. Pyramid trials do not count.' },
+  { currency: 'data', cost: '1000', label: 'Data', text: 'Full translation: Points target → token prestige; Tokens target → token prestige; Credits target → credit prestige; Points target → token prestige. The Fortune Engine then unfolds. Change the Cube target before each reset.' }
+];
+const fortuneHintShop = document.createElement('div');
+fortuneHintShop.id = 'fortune-hint-shop';
+fortuneHintShop.innerHTML = '<details><summary>Commission a translation</summary><p>The translator charges outrageous fees. These optional hints only explain the inscription; solving it yourself is free. Purchases survive all prestiges.</p><ol id="fortune-bought-hints"></ol><button id="buy-fortune-hint" type="button"></button></details>';
+fortuneHint.after(fortuneHintShop);
+function renderFortuneHints() {
+  fortuneHintShop.hidden = !state.cubeUnlocked || state.fortuneUnlocked;
+  if (fortuneHintShop.hidden) return;
+  const list = document.getElementById('fortune-bought-hints');
+  // Build only purchased text, so unopened hints are not present in the page DOM.
+  list.replaceChildren(...FORTUNE_HINTS.slice(0, state.fortuneHints).map(hint => {
+    const item = document.createElement('li'); item.textContent = hint.text; return item;
+  }));
+  const hint = FORTUNE_HINTS[state.fortuneHints], button = document.getElementById('buy-fortune-hint');
+  button.textContent = hint ? `Buy hint ${state.fortuneHints + 1} · ${fmt(D(hint.cost))} ${hint.label}` : 'All translations purchased';
+  button.disabled = !hint || lt(state[hint.currency], hint.cost);
+}
+document.getElementById('buy-fortune-hint').addEventListener('click', () => {
+  const hint = FORTUNE_HINTS[state.fortuneHints];
+  if (!state.cubeUnlocked || state.fortuneUnlocked || !hint || lt(state[hint.currency], hint.cost)) return;
+  state[hint.currency] = minus(state[hint.currency], hint.cost);
+  state.fortuneHints++;
+  save(); render();
+});
 let fortuneEditorKey = '';
 function renderFortune() {
+  renderFortuneHints();
   updateFortuneProgress();
   fortuneHint.hidden = !state.cubeUnlocked || state.fortuneUnlocked;
   fortuneHint.dataset.notches = state.fortuneClue;
@@ -1932,6 +1963,7 @@ function isValidSave(snapshot) {
     if (key === 'kirbyFullness') return Number.isInteger(value) && value >= 0 && value <= 100;
     if (key === 'kirbyStoneSeconds') return Number.isFinite(value) && value >= 0 && value <= 300;
     if (key === 'kirbyCatches') return Number.isInteger(value) && value >= 0 && value <= 4;
+    if (key === 'fortuneHints') return Number.isInteger(value) && value >= 0 && value <= FORTUNE_HINTS.length;
     if (key === 'fortuneClue') return Number.isInteger(value) && value >= 0 && value <= 4;
     if (key === 'fortuneWedges') return Array.isArray(value) && value.length >= 4 && value.length <= 6 && value.every(v => Object.hasOwn(FORTUNE_WEDGES, v)) && value.reduce((n, v) => n + FORTUNE_WEDGES[v].space, 0) <= 10 + 2 * (snapshot.fortuneFrame || 0) && value.length <= 4 + Math.floor((snapshot.fortuneFrame || 0) / 2);
     if (['fortuneFrame', 'fortuneQuality'].includes(key)) return Number.isInteger(value) && value >= 0 && value <= 4;

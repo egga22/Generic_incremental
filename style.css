@@ -234,3 +234,8 @@ body.dark-screen .progress-disc[data-visual="ring"]::after { background: #090909
 #alpha-casino input { width: min(12rem, 100%); }
 #blackjack-cards { font-size: 1.1rem; overflow-wrap: anywhere; }
 #casino-result { min-height: 2.5em; }
+
+#fortune-hint-shop { margin: 1rem 0; line-height: 1.6; }
+#fortune-hint-shop summary { cursor: pointer; }
+#fortune-hint-shop li { margin: .65rem 0; }
+#buy-fortune-hint { margin: .5rem 0; padding: .6rem; }
