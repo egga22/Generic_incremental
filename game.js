@@ -1623,14 +1623,34 @@ function fortuneSegments() {
   segments.push({ id: 'bust', name: 'Bust', weight: 4, color: '#b44f61' });
   return segments;
 }
-function spinFortune(reroll = false) {
-  if (!fortuneAllowed() || state.fortuneCharges < 1) return;
+let fortuneSpinning = false;
+let fortuneRotation = 0;
+function animateFortuneSpin(segment) {
+  const parts = fortuneSegments(), total = fortuneCapacity() + 4;
+  const index = parts.findIndex(part => part === segment || (part.id === segment.id && part.index === segment.index));
+  const before = parts.slice(0, index).reduce((sum, part) => sum + part.weight, 0);
+  const target = 360 - (before + segment.weight / 2) / total * 360;
+  // The fixed pointer sits at twelve o'clock; land the selected wedge beneath it.
+  fortuneRotation += 360 * 5 + ((target - fortuneRotation % 360 + 360) % 360);
+  const wheel = document.getElementById('fortune-wheel');
+  fortuneSpinning = true;
+  wheel.style.transform = `rotate(${fortuneRotation}deg)`;
+  wheel.setAttribute('aria-busy', 'true');
+  setTimeout(() => {
+    fortuneSpinning = false;
+    wheel.setAttribute('aria-busy', 'false');
+    renderFortune();
+  }, 2600);
+}
+function spinFortune(reroll = false, animate = false) {
+  if (fortuneSpinning || !fortuneAllowed() || state.fortuneCharges < 1) return;
   if (reroll && (state.fortuneFrame < 2 || state.fortuneRerolled || !state.fortunePending)) return;
   if (!state.fortunePending) state.fortuneBase = rate();
   if (reroll) state.fortuneRerolled = true;
   state.fortuneCharges--;
   let roll = Math.random() * (fortuneCapacity() + 4);
   const segment = fortuneSegments().find(part => (roll -= part.weight) < 0);
+  if (animate) animateFortuneSpin(segment);
   const id = segment.id;
   // A reroll protects the existing pot, but still spends a charge and cannot be repeated.
   if (id === 'bust') {
@@ -1668,7 +1688,7 @@ fortunePanel.id = 'fortune-panel'; fortunePanel.className = 'expansion-panel'; f
 document.querySelector('.prestige').before(fortunePanel);
 fortunePanel.innerHTML = `<details open><summary>Fortune Engine</summary>
 <p>Bank winnings or risk another charge. Bust loses the current pot. Every safe spin adds one cog; repeat wedges build a ×2/×3 streak. Prime affects the next Output, Cache, or Cogs payout. Idle only adds its one cog.</p>
-<div class="fortune-layout"><div id="fortune-wheel" role="img" aria-label="Wheel probabilities"></div><div><p id="fortune-wallet"></p><p id="fortune-pot"></p><p id="fortune-result" role="status" aria-live="polite"></p>
+<div class="fortune-layout"><div class="fortune-wheel-frame"><div id="fortune-wheel" role="img" aria-label="Wheel probabilities"></div><span class="fortune-wheel-label" aria-hidden="true">FORTUNE</span></div><div><p id="fortune-wallet"></p><p id="fortune-pot"></p><p id="fortune-result" role="status" aria-live="polite"></p>
 <button id="fortune-spin">Spin · 1 charge</button><button id="fortune-reroll">Protected reroll · 1 charge</button><button id="fortune-bank">Bank winnings</button></div></div>
 <p>Charges: +1 per Credit prestige and per new ten-decade P$ high-water mark (100 stored max). Refunds: twice per chain. Production payouts: at most 120 seconds at the lower of starting and current production. All prestiges forfeit the pot and end Overdrive. Trials and Null gain pause the engine.</p>
 <h3>Wheel workshop</h3><p>Each wedge occupies its stated space and has that many chances to land. Unused space becomes Idle. Four spaces always belong to Bust. Editing and upgrades require an empty pot.</p>
@@ -1717,10 +1737,10 @@ function renderFortune() {
   fortuneHint.title = `${state.fortuneClue} of four notches are lit. The inscription can always be retried.`;
   fortunePanel.hidden = !state.fortuneUnlocked;
   if (!state.fortuneUnlocked) return;
-  const locked = !fortuneAllowed(), editing = !!state.fortunePending;
+  const locked = !fortuneAllowed() || fortuneSpinning, editing = !!state.fortunePending || fortuneSpinning;
   document.getElementById('fortune-wallet').textContent = `${state.fortuneCharges} charges · ${state.fortuneTokens} banked cogs`;
   document.getElementById('fortune-pot').textContent = `Pot: ${state.fortunePending} cogs + ${state.fortuneSeconds}s output · Next payout ×${state.fortuneMultiplier}${state.fortuneBoost ? ' + Overdrive' : ''}`;
-  document.getElementById('fortune-result').textContent = locked ? 'Engine paused during trials or Null gain.' : state.fortuneResult;
+  document.getElementById('fortune-result').textContent = fortuneSpinning ? 'Spinning…' : locked ? 'Engine paused during trials or Null gain.' : state.fortuneResult;
   document.getElementById('fortune-spin').disabled = locked || !state.fortuneCharges;
   document.getElementById('fortune-reroll').disabled = locked || !state.fortuneCharges || !editing || state.fortuneFrame < 2 || state.fortuneRerolled;
   document.getElementById('fortune-bank').disabled = locked || !editing;
@@ -1740,13 +1760,13 @@ function renderFortune() {
     const wheel = document.getElementById('fortune-wheel'); wheel.style.background = `conic-gradient(${parts.join(',')})`;
     document.getElementById('fortune-odds').textContent = fortuneSegments().map(part => `${part.name}: ${(100 * part.weight / (fortuneCapacity() + 4)).toFixed(1)}%`).join(' · ');
     wheel.setAttribute('aria-label', fortuneSegments().map(part => `${part.name}: ${(100 * part.weight / (fortuneCapacity() + 4)).toFixed(1)}%`).join(', '));
-    wheel.textContent = 'FORTUNE';
+    if (!wheel.style.transform) { wheel.style.transition = 'none'; wheel.style.transform = 'rotate(0deg)'; void wheel.offsetWidth; wheel.style.transition = ''; }
   }
 }
 fortunePanel.addEventListener('click', event => {
-  const button = event.target.closest('button'); if (!button || button.disabled || !state.fortuneUnlocked) return;
-  if (button.id === 'fortune-spin') spinFortune();
-  if (button.id === 'fortune-reroll') spinFortune(true);
+  const button = event.target.closest('button'); if (!button || button.disabled || !state.fortuneUnlocked || fortuneSpinning) return;
+  if (button.id === 'fortune-spin') spinFortune(false, true);
+  if (button.id === 'fortune-reroll') spinFortune(true, true);
   if (button.id === 'fortune-bank') bankFortune();
   if (!state.fortunePending) {
     if (button.id === 'fortune-add' && state.fortuneWedges.length < fortuneSlots() && fortuneUsed() + 2 <= fortuneCapacity()) state.fortuneWedges.push('points');
@@ -1760,7 +1780,7 @@ fortunePanel.addEventListener('click', event => {
 });
 fortunePanel.addEventListener('change', event => {
   const index = Number(event.target.dataset.fortuneWedge), id = event.target.value;
-  if (!state.fortuneUnlocked || state.fortunePending || !Number.isInteger(index) || index < 0 || index >= state.fortuneWedges.length || !Object.hasOwn(FORTUNE_WEDGES, id)) return;
+  if (fortuneSpinning || !state.fortuneUnlocked || state.fortunePending || !Number.isInteger(index) || index < 0 || index >= state.fortuneWedges.length || !Object.hasOwn(FORTUNE_WEDGES, id)) return;
   const next = [...state.fortuneWedges]; next[index] = id;
   if (fortuneUsed(next) <= fortuneCapacity()) state.fortuneWedges = next;
   save(); render();

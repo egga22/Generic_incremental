@@ -412,3 +412,34 @@ hs.fortuneUnlocked=true; a.render(); assert(doc.getElementById('fortune-hint-sho
 hs.fortuneHints=0; hs.balance=a.D('1e100'); hintButton.disabled=false; hintButton.click();
 assert.equal(hs.fortuneHints,0,'no purchases after discovery');
 console.log('Fortune hints passed: sequential prices, currency isolation, insufficient funds, no duplicates, persistence, validation and discovery gating.');
+
+// Visible spins land the selected weighted wedge under the fixed pointer.
+hs.activeChallenge=''; hs.gainZeroActive=false; hs.fortuneCharges=20;
+a.clearFortuneChain(); a.render();
+const originalTimeout = context.setTimeout;
+let finishSpin;
+context.setTimeout = (callback, delay) => { if (delay === 2600) finishSpin=callback; return 1; };
+const wheel = doc.getElementById('fortune-wheel');
+const segments = a.fortuneSegments();
+const winningIndex = segments.findIndex(part=>part.id==='points');
+const preceding = segments.slice(0,winningIndex).reduce((sum,part)=>sum+part.weight,0);
+context.Math.random=()=> (preceding+.5)/(a.fortuneCapacity()+4);
+doc.getElementById('fortune-spin').click();
+assert.equal(wheel.getAttribute('aria-busy'),'true');
+assert.equal(doc.getElementById('fortune-result').textContent,'Spinning…');
+const angle=Number(wheel.style.transform.match(/rotate\((.+)deg\)/)[1]);
+assert(angle>=1800,'at least five full turns');
+const center=(preceding+segments[winningIndex].weight/2)/(a.fortuneCapacity()+4)*360;
+assert(Math.abs((angle+center)%360)<1e-8,'winning wedge aligns with pointer');
+assert(doc.getElementById('fortune-spin').disabled);
+assert(doc.getElementById('fortune-bank').disabled);
+assert(doc.querySelector('[data-fortune-wedge]').disabled);
+const remaining=hs.fortuneCharges;
+a.spinFortune(); assert.equal(hs.fortuneCharges,remaining,'no overlapping spins');
+a.render(); assert.equal(wheel.style.transform,`rotate(${angle}deg)`,'render preserves motion');
+assert.equal(typeof finishSpin,'function'); finishSpin();
+assert.equal(wheel.getAttribute('aria-busy'),'false');
+assert(!doc.getElementById('fortune-bank').disabled);
+assert.match(doc.getElementById('fortune-result').textContent,/Output/);
+context.setTimeout=originalTimeout;
+console.log('Fortune animation passed: turns, landing angle, input lock, rerender stability and completion.');

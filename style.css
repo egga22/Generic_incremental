@@ -279,3 +279,12 @@ body.hard-mode .hard-mode-wall:has(+ section[hidden]) { display: none; }
   opacity: .85;
 }
 #scary-overlay[hidden] { display: none; }
+
+/* Only the colored disc rotates; the pointer and hub stay fixed. */
+.fortune-wheel-frame { position: relative; flex-shrink: 0; width: 188px; height: 188px; }
+.fortune-wheel-frame::after { content: ''; position: absolute; top: -8px; left: 80px; border-left: 14px solid transparent; border-right: 14px solid transparent; border-top: 24px solid #eee; filter: drop-shadow(0 2px 2px #000); }
+#fortune-wheel { transition: transform 2.6s cubic-bezier(.12,.7,.12,1); }
+.fortune-wheel-label { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; color: white; font-weight: bold; text-shadow: 0 1px 4px #000; }
+@media (prefers-reduced-motion: reduce) {
+  #fortune-wheel { transition-duration: .1s; }
+}
