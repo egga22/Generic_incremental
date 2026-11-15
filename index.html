@@ -113,31 +113,6 @@ input, textarea, select {
         <article class="upgrade locked" id="upgrade-point-20" w-tid="373"><div w-tid="375"><h3 w-tid="377">20. Event horizon</h3><p w-tid="379">Requires 19. Multiplies all P$ gain by one trillion.</p><div class="effect" w-tid="381">×1e12 P$ gain</div></div><button id="buy-point-20" type="button" disabled w-tid="383">P$ 1e260</button></article>
         </div>
         <div id="alpha-upgrades" hidden w-tid="385">
-          <article class="upgrade alpha-upgrade" id="upgrade-casino">
-            <div><h3>9α. Casino license</h3><p>Unlock blackjack and roulette to gamble your α. Permanent unlock.</p></div>
-            <button id="buy-casino" type="button" disabled>250 α</button>
-          </article>
-          <section id="alpha-casino" hidden class="expansion-panel" aria-labelledby="casino-title">
-            <h3 id="casino-title">Alpha Casino</h3>
-            <p>Risk α for a bigger stack. Winning payouts include your stake; a loss spends it. No gain multipliers apply. Casino pauses during Null gain and challenges.</p>
-            <label for="casino-stake">Stake (α)</label>
-            <input id="casino-stake" type="text" inputmode="text" value="1" autocomplete="off" aria-describedby="casino-help">
-            <p id="casino-help">Enter at least 1 α: a number, scientific notation such as 1e6, or e / π / pi. Irrational stakes stay symbolic in your α balance (for example, 100 − e − π).</p>
-            <h4>European / American roulette</h4>
-            <p id="roulette-rules"></p>
-            <label for="roulette-bet">Bet</label>
-            <select id="roulette-bet"><option value="red">Red · 2× payout</option><option value="black">Black · 2× payout</option><option value="number">Single number · 36× payout</option></select>
-            <label for="roulette-number">Number</label>
-            <select id="roulette-number"></select>
-            <button id="roulette-spin" type="button">Spin roulette</button>
-            <h4>Blackjack</h4>
-            <p>Hit or stand. Dealer stands on all 17s. Natural blackjack pays 3:2 (2.5× total); other wins pay 2×; ties return your stake. No splits, doubles, or insurance. Each hand uses a fresh 52-card deck.</p>
-            <button id="blackjack-deal" type="button">Deal blackjack</button>
-            <button id="blackjack-hit" type="button">Hit</button>
-            <button id="blackjack-stand" type="button">Stand</button>
-            <p id="blackjack-cards"></p>
-            <p id="casino-result" role="status" aria-live="polite">Choose a stake and a game.</p>
-          </section>
           <article class="upgrade alpha-upgrade" id="upgrade-alpha-gain" w-tid="387"><div w-tid="389"><h3 w-tid="391">1α. Alpha gain</h3><p w-tid="393">Gain alpha when bought.</p><div class="effect" w-tid="395">+<span id="alpha-gain-amount" w-tid="397">1</span> α per purchase</div></div><button id="buy-alpha-gain" type="button" w-tid="399">Gain α</button></article>
           <article class="upgrade alpha-upgrade locked" id="upgrade-alpha-boost" w-tid="401"><div w-tid="403"><h3 w-tid="405">2α. Alpha boost</h3><p w-tid="407">Requires 1α. Adds +1 to 1α, up to 50 times.</p><div class="effect" w-tid="409">+1 α per 1α purchase · Level <span id="alpha-boost-level" w-tid="411">0</span> / 50</div></div><button id="buy-alpha-boost" type="button" disabled w-tid="413">25 α</button></article>
           <article class="upgrade alpha-upgrade locked" id="upgrade-alpha-neutral" w-tid="415"><div w-tid="417"><h3 w-tid="419">3α. Neutral multiplier</h3><p w-tid="421">Requires 2α. Multiplies 1α by 1.</p><div class="effect" w-tid="423">×1 α gain</div></div><button id="buy-alpha-neutral" type="button" disabled w-tid="425">−5 α</button></article>
@@ -175,6 +150,31 @@ input, textarea, select {
               <button id="buy-fish-3" type="button" disabled>25 🐟</button>
             </article>
           </div>
+          <article class="upgrade alpha-upgrade" id="upgrade-casino">
+            <div><h3>9α. Casino license</h3><p>Unlock blackjack and roulette to gamble your α. Permanent unlock.</p></div>
+            <button id="buy-casino" type="button" disabled>250 α</button>
+          </article>
+          <section id="alpha-casino" hidden class="expansion-panel" aria-labelledby="casino-title">
+            <h3 id="casino-title">Alpha Casino</h3>
+            <p>Risk α for a bigger stack. Winning payouts include your stake; a loss spends it. No gain multipliers apply. Casino pauses during Null gain and challenges.</p>
+            <label for="casino-stake">Stake (α)</label>
+            <input id="casino-stake" type="text" inputmode="text" value="1" autocomplete="off" aria-describedby="casino-help">
+            <p id="casino-help">Enter at least 1 α: a number, scientific notation such as 1e6, or e / π / pi. Irrational stakes stay symbolic in your α balance (for example, 100 − e − π).</p>
+            <h4>European / American roulette</h4>
+            <p id="roulette-rules"></p>
+            <label for="roulette-bet">Bet</label>
+            <select id="roulette-bet"><option value="red">Red · 2× payout</option><option value="black">Black · 2× payout</option><option value="number">Single number · 36× payout</option></select>
+            <label for="roulette-number">Number</label>
+            <select id="roulette-number"></select>
+            <button id="roulette-spin" type="button">Spin roulette</button>
+            <h4>Blackjack</h4>
+            <p>Hit or stand. Dealer stands on all 17s. Natural blackjack pays 3:2 (2.5× total); other wins pay 2×; ties return your stake. No splits, doubles, or insurance. Each hand uses a fresh 52-card deck.</p>
+            <button id="blackjack-deal" type="button">Deal blackjack</button>
+            <button id="blackjack-hit" type="button">Hit</button>
+            <button id="blackjack-stand" type="button">Stand</button>
+            <p id="blackjack-cards"></p>
+            <p id="casino-result" role="status" aria-live="polite">Choose a stake and a game.</p>
+          </section>
         </div>
         <div id="darkmatter-upgrades" hidden w-tid="479">
           <article class="upgrade dark-upgrade locked" id="upgrade-darkmatter-1" w-tid="481"><div w-tid="483"><h3 w-tid="485">−1. First contact</h3><p w-tid="487">Begin generating <span data-matter-name>Dark Matter</span>.</p><div class="effect" w-tid="489">+0.1 ⊠ / sec</div></div><button id="buy-darkmatter-1" type="button" disabled w-tid="491">Free</button></article>
