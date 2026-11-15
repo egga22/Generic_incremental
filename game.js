@@ -740,10 +740,6 @@ function discardCurrency(discardAll) {
     return;
   }
   const remaining = balance.minus(amount);
-  if (remaining.eq(balance)) {
-    toast('That amount is too small to change this balance.');
-    return;
-  }
   const label = garbageCurrency.selectedOptions[0].textContent;
   if (!window.confirm(`Permanently delete ${discardAll ? 'all' : amount.toString()} ${label}?`)) return;
   if (key === 'alpha') {
