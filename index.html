@@ -293,6 +293,15 @@ input, textarea, select {
             <div w-tid="863"><h3 w-tid="865">9C. Automations</h3><p w-tid="867">Requires 8C. Unlocks automation upgrades in the Tokens section.</p><div class="effect" w-tid="869">Automate upgrades</div></div>
             <button id="buy-automation-unlock" type="button" disabled w-tid="871">100M C$</button>
           </article>
+          <article class="upgrade credit-upgrade locked" id="upgrade-icosahedron-unlock">
+            <div><h3>10C. The Icosahedron</h3><p>Requires 4C and 7C. Unlocks a twenty-sided die with good and bad effects.</p><div class="effect">Roll once every 5 minutes · persists through resets</div></div>
+            <button id="buy-icosahedron-unlock" type="button" disabled>1e1000 C$</button>
+          </article>
+          <section id="icosahedron-panel" hidden>
+            <h3>The Icosahedron</h3><p>20 equally likely faces. First roll is ready immediately. Unlock and cooldown persist through resets; time offline counts. Disabled during Pyramid trials and Null gain.</p>
+            <details><summary>All roll effects (5% each)</summary><ol id="icosahedron-effects"></ol></details>
+            <button id="roll-icosahedron" type="button">Roll</button><p id="icosahedron-result" role="status" aria-live="polite"></p>
+          </section>
         </div>
         <div id="data-upgrades" hidden w-tid="873">
           <article class="upgrade data-upgrade" id="upgrade-data-1" w-tid="875"><div w-tid="877"><h3 w-tid="879">1D. Points record</h3><p w-tid="881">Purchase to uncover the foundry’s notes on Points and P$.</p><div class="effect" id="data-lore-1" hidden w-tid="883"></div></div><button id="buy-data-1" type="button" w-tid="885">5 𝔻 · P$ 1e210</button></article>

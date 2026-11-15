@@ -443,3 +443,35 @@ assert(!doc.getElementById('fortune-bank').disabled);
 assert.match(doc.getElementById('fortune-result').textContent,/Output/);
 context.setTimeout=originalTimeout;
 console.log('Fortune animation passed: turns, landing angle, input lock, rerender stability and completion.');
+
+const dieState=a.state;
+// Icosahedron: exact price, both prerequisites, all faces, cooldown, and persistence.
+dieState.icosahedronUnlocked=false; dieState.cubeUnlocked=false; dieState.pyramidUnlocked=true; dieState.credits=a.D('1e1001'); a.render();
+const buyDie=doc.getElementById('buy-icosahedron-unlock');
+assert(buyDie.disabled); buyDie.click(); assert(!dieState.icosahedronUnlocked);
+dieState.cubeUnlocked=true; dieState.pyramidUnlocked=false; a.render(); assert(buyDie.disabled);
+dieState.pyramidUnlocked=true; dieState.credits=a.D('9e999'); a.render(); assert(buyDie.disabled);
+dieState.credits=a.D('1e1000'); a.render(); buyDie.click(); assert(dieState.icosahedronUnlocked); assert(dieState.credits.eq(0));
+dieState.activeChallenge=''; dieState.gainZeroActive=false;
+const rollDie=doc.getElementById('roll-icosahedron'), oldRandom=context.Math.random;
+for(let face=0; face<20; face++) {
+  dieState.icosahedronReadyAt=0; dieState.balance=a.D(1000); dieState.tokens=a.D(1000); dieState.credits=a.D(1000); dieState.cubeLevel=10; dieState.cubeClicks=a.D(0);
+  context.Math.random=()=> (face+.5)/20; a.render(); rollDie.click();
+  assert(dieState.icosahedronResult.startsWith(`Face ${face+1}:`));
+  assert(dieState.icosahedronReadyAt>Date.now()+299000);
+  if(face>=12) { const key=face<15?'balance':face<18?'tokens':'credits'; assert(dieState[key].lt(1000) && dieState[key].gte(600)); }
+  else if(face>=9) assert(dieState.cubeLevel>10 || dieState.cubeClicks.gt(0));
+  else if(face>=6) assert(dieState.credits.gt(1000));
+  else if(face>=3) assert(dieState.tokens.gt(1000));
+  const result=dieState.icosahedronResult; rollDie.click(); assert.equal(dieState.icosahedronResult,result);
+}
+context.Math.random=oldRandom;
+for(const block of ['trial','null']) {
+  dieState.icosahedronReadyAt=0; dieState.activeChallenge=block==='trial'?'deduction1':''; dieState.gainZeroActive=block==='null'; a.render(); assert(rollDie.disabled);
+}
+dieState.activeChallenge=''; dieState.gainZeroActive=false; dieState.icosahedronReadyAt=Date.now()+300000;
+const deadline=dieState.icosahedronReadyAt; a.resetCreditRun(); a.resetAscendanceRun();
+assert(dieState.icosahedronUnlocked); assert.equal(dieState.icosahedronReadyAt,deadline);
+const dieSave=JSON.parse(a.serializeState()); assert(a.isValidSave(dieSave)); assert.equal(dieSave.icosahedronReadyAt,deadline);
+dieState.icosahedronReadyAt=Date.now()-1; a.render(); assert(!rollDie.disabled, 'elapsed wall-clock cooldown enables rolling');
+console.log('Icosahedron checks passed');

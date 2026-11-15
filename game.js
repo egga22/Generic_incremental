@@ -37,6 +37,7 @@ Object.assign(initialState, {
   fortuneMultiplier: 1, fortuneLast: '', fortuneStreak: 0, fortuneRefunds: 0,
   fortuneRerolled: false, fortuneBoost: false, fortuneBoostUntil: 0,
   fortuneBase: 0, fortuneResult: 'The mechanism is waiting.',
+  icosahedronUnlocked: false, icosahedronReadyAt: 0, icosahedronResult: 'Ready for your first roll.',
   cubeLoadouts: ['', '', ''], researchBranch: 'none', researchLevel: 0,
   completedCombos: [], achievements: [], achievementTheme: 'default',
   sparkCharge: 0, sparkBurstUntil: 0, sparkBurstPower: 1,
@@ -1549,6 +1550,58 @@ document.querySelector('#buy-cube-unlock').addEventListener('click', () => {
   render();
   save();
 });
+const ICOSAHEDRON_COST = D('1e1000');
+const ICOSAHEDRON_FACES = [
+  ...[30, 120, 300].map(seconds => ({kind: 'points', seconds, label: `Gain ${seconds} seconds of current point production`})),
+  ...['tokens', 'credits'].flatMap(kind => [10, 25, 50].map(percent => ({kind, percent, label: `Gain ${percent}% of held ${kind} (minimum 1)`}))),
+  ...[25, 50, 100].map(percent => ({kind: 'cube', percent, label: `Gain ${percent}% of the Cube clicks needed for the next level`})),
+  ...['points', 'tokens'].flatMap(kind => [10, 25, 40].map(percent => ({kind, percent, loss: true, label: `Lose ${percent}% of held ${kind}`}))),
+  ...[10, 40].map(percent => ({kind: 'credits', percent, loss: true, label: `Lose ${percent}% of held credits`}))
+];
+function icosahedronAllowed() { return state.icosahedronUnlocked && !state.activeChallenge && !state.gainZeroActive; }
+function rollIcosahedron() {
+  const now = Date.now();
+  if (!icosahedronAllowed() || now < state.icosahedronReadyAt) return;
+  const faceIndex = Math.floor(Math.random() * 20), face = ICOSAHEDRON_FACES[faceIndex];
+  state.icosahedronReadyAt = now + 300000;
+  let amount;
+  if (face.kind === 'cube') {
+    amount = cubeClicksToNext().times(face.percent / 100);
+    addCubeClicks(amount);
+  } else {
+    const key = face.kind === 'points' ? 'balance' : face.kind;
+    amount = face.seconds ? rate().times(face.seconds) : D(state[key]).times(face.percent / 100);
+    if (!face.loss && !face.seconds) amount = amount.max(1);
+    state[key] = face.loss ? minus(state[key], amount) : plus(state[key], amount);
+    if (face.kind === 'points' && !face.loss) {
+      state.runEarned = plus(state.runEarned, amount); state.lifetime = plus(state.lifetime, amount);
+    }
+  }
+  state.icosahedronResult = `Face ${faceIndex + 1}: ${face.label}. ${face.loss ? 'Lost' : 'Gained'} ${fmt(amount)} ${face.kind === 'cube' ? 'Cube clicks' : face.kind}.`;
+  render(); save();
+}
+function renderIcosahedron() {
+  const ready = state.cubeUnlocked && state.pyramidUnlocked;
+  document.getElementById('upgrade-icosahedron-unlock').hidden = !ready && !state.icosahedronUnlocked;
+  document.getElementById('upgrade-icosahedron-unlock').classList.toggle('locked', !ready && !state.icosahedronUnlocked);
+  const buy = document.getElementById('buy-icosahedron-unlock');
+  buy.disabled = !ready || state.icosahedronUnlocked || lt(state.credits, ICOSAHEDRON_COST);
+  buy.textContent = state.icosahedronUnlocked ? 'Unlocked' : '1e1000 C$';
+  document.getElementById('icosahedron-panel').hidden = !state.icosahedronUnlocked;
+  const remaining = Math.max(0, Math.ceil((state.icosahedronReadyAt - Date.now()) / 1000));
+  const roll = document.getElementById('roll-icosahedron');
+  roll.disabled = !icosahedronAllowed() || remaining > 0;
+  roll.textContent = remaining ? `Ready in ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}` : !icosahedronAllowed() ? 'Unavailable during trials or Null gain' : 'Roll';
+  document.getElementById('icosahedron-result').textContent = state.icosahedronResult;
+}
+document.getElementById('icosahedron-effects').innerHTML = ICOSAHEDRON_FACES.map(face => `<li>${face.label}</li>`).join('');
+document.getElementById('buy-icosahedron-unlock').addEventListener('click', () => {
+  if (!state.cubeUnlocked || !state.pyramidUnlocked || state.icosahedronUnlocked || lt(state.credits, ICOSAHEDRON_COST)) return;
+  state.credits = minus(state.credits, ICOSAHEDRON_COST); state.icosahedronUnlocked = true;
+  render(); save();
+});
+document.getElementById('roll-icosahedron').addEventListener('click', rollIcosahedron);
+
 document.querySelector('#buy-free-run').addEventListener('click', () => {
   if (state.freeRunUpgrades || lt(state.credits, 100)) return;
   state.credits = minus(state.credits, 100);
@@ -1837,6 +1890,7 @@ expansionPanel.innerHTML = `
 </details>`;
 function renderExpansion() {
   renderFortune();
+  renderIcosahedron();
   for (const [id, visible] of [['loadout',state.cubeUnlocked],['combo',state.pyramidUnlocked],['research',state.dataLore.every(Boolean)],['preset',state.automationsUnlocked],['burst',state.sparkPrestiges > 0]]) document.getElementById(`${id}-feature`).hidden = !visible;
   document.getElementById('loadout-slots').innerHTML = Array.from({length:3}, (_,i) => `<p>Slot ${i+1}: ${state.cubeLoadouts[i] || 'Empty'} <button data-save-loadout="${i}" ${i >= loadoutSlots() ? 'disabled' : ''}>Save current target</button> <button data-load-loadout="${i}" ${i >= loadoutSlots() || !cubeTargetAvailable(state.cubeLoadouts[i]) ? 'disabled' : ''}>Load</button></p>`).join('');
   document.getElementById('combo-progress').textContent = `${state.completedCombos.length}/9 pairs complete: ${state.completedCombos.map(id => challengeNames[id]).join(', ') || 'none'}`;
@@ -1995,6 +2049,7 @@ function isValidSave(snapshot) {
     if (key === 'fortuneRefunds') return Number.isInteger(value) && value >= 0 && value <= 2;
     if (key === 'fortuneStreak') return Number.isInteger(value) && value >= 0 && value <= 3;
     if (key === 'fortuneLast') return ['', 'blank'].includes(value) || Object.hasOwn(FORTUNE_WEDGES, value);
+    if (key === 'icosahedronResult') return typeof value === 'string' && value.length <= 300;
     if (key === 'fortuneResult') return typeof value === 'string' && value.length <= 200;
     if (key === 'cubeLoadouts') return Array.isArray(value) && value.length === 3 && value.every(v => ['', 'points', 'tokens', 'credits', 'ascendance', 'alpha'].includes(v));
     if (key === 'researchBranch') return ['none', 'production', 'resets', 'automation'].includes(value);
