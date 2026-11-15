@@ -311,3 +311,37 @@ for (const invalid of ['pie', 'Math.PI', '2*pi', 'e+1']) {
   assert(vm.runInContext('casinoStake().eq(0)', context), `reject unsupported expression ${invalid}`);
 }
 console.log('Casino constant stakes passed: e, π, pi, case/whitespace, both games and saves.');
+// Preserve e and pi as algebraic terms rather than their decimal approximations.
+vm.runInContext(`
+state.alpha = D(100); state.alphaTerms = null; state.blackjackActive = false;
+document.querySelector('#roulette-bet').value = 'red';
+Math.random = () => 0;
+document.querySelector('#casino-stake').value = 'e'; spinRoulette();
+document.querySelector('#casino-stake').value = 'π'; spinRoulette();
+`, context);
+assert.equal(vm.runInContext('alphaDisplay()',context), '100 − e − π');
+vm.runInContext(`changeAlpha(10); activeTab = 'alpha'; render();`,context);
+assert.equal(doc.querySelector('#balance').textContent,'110 − e − π','ordinary Alpha gains preserve symbolic terms');
+vm.runInContext(`Math.random = () => 1.5 / 38; spinRoulette();`,context);
+assert.equal(vm.runInContext('alphaDisplay()',context),'110 − e','pi win cancels prior pi loss exactly');
+vm.runInContext(`
+document.querySelector('#casino-stake').value = 'π'; Math.random = () => .999; dealBlackjack();
+Math.random = casinoRandom;
+`,context);
+assert(cs.blackjackActive, 'known shuffle leaves an active hand');
+assert.equal(vm.runInContext('alphaDisplay()',context),'110 − e − π');
+const symbolicReload = new JSDOM(fs.readFileSync('index.html','utf8'), {url:'https://example.test',runScripts:'outside-only'});
+const sc = symbolicReload.getInternalVMContext(); sc.setInterval=()=>1; sc.setTimeout=()=>1; sc.clearTimeout=()=>{};
+sc.localStorage.setItem('pocket-foundry-save-v2', a.serializeState());
+vm.runInContext('(function(){'+fs.readFileSync('break_eternity.js','utf8').replace(/export \{[\s\S]*?\};/,'globalThis.Decimal = y;')+'})();',sc);
+vm.runInContext(source,sc);
+assert.equal(vm.runInContext('alphaDisplay()',sc),'110 − e − π','reload retains algebraic balance');
+assert.equal(sc.testAPI.state.blackjackStakeKind,'pi','reload retains symbolic hand stake');
+vm.runInContext(`settleBlackjack(1, 'Push.');`,sc);
+assert.equal(vm.runInContext('alphaDisplay()',sc),'110 − e','push restores pi exactly after reload');
+vm.runInContext(`changeAlpha(-1, 'pi'); settleBlackjack(2.5, 'Natural.');`,context);
+assert.equal(vm.runInContext('alphaDisplay()',context),'110 − e + 0.5π','natural payout retains fractional pi coefficient');
+assert(a.isValidSave(JSON.parse(a.serializeState())), 'symbolic save valid');
+assert(!a.isValidSave({balance:0,runEarned:0,alphaTerms:{base:'0',e:'Infinity',pi:'0'}}));
+assert(!a.isValidSave({balance:0,runEarned:0,blackjackStakeKind:'invalid'}));
+console.log('Symbolic Alpha passed: mixed balances, ordinary gains, exact cancellations, blackjack payouts, reloads and validation.');

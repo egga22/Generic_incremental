@@ -22,6 +22,7 @@ const plus = (a, b) => D(a).plus(b);
 const minus = (a, b) => D(a).minus(b);
 const initialState = { balance: 0, runEarned: 0, lifetime: 0, printer: false, press: false, multiplierLevel: 0, incomeLevel: 0, powerLevel: 0, clickLevel: 0, logLevel: 0, exponentLevel: 0, exponentCapLevel: 0, capLevel: 0, tokens: 0, totalPrestiges: 0, tokenResetCount: 0, tokenMultiplierLevel: 0, discountLevel: 0, tokenBoostLevel: 0, expansionUnlocked: false, maxBuyUnlocked: false, maxBuyActive: false, tokenCreditLevel: 0, tokenDiscountLevel: 0, credits: 0, totalCreditPrestiges: 0, data: 0, totalDataPrestiges: 0, dataLore: Array(5).fill(false), gainZeroBought: false, gainZeroActive: false, priceOrigins: {}, creditEngine: false, creditExponentLevel: 0, heavyMint: false, cubeUnlocked: false, cubeLevel: 0, cubeClicks: 0, cubeTarget: 'points', freeRunUpgrades: false, passiveTokens: false, alphaUnlocked: false, alpha: 0, alphaGainPurchases: 0, alphaBoostLevel: 0, alphaCapLevel: 0, alphaNeutralBought: false, alphaGeneratorBought: false, fishingUnlocked: false, fishPoints: 0, fishGainLevel: 0, redFishLevel: 0, fishAlphaLevel: 0, garbageUnlocked: false, darkMatterUnlocked: false, darkMatter: 0, darkMatter1Bought: false, darkMatter2Bought: false, darkMatter2Level: 0, darkMatter3Bought: false, darkMatter4Bought: false, darkMatterCoinBoost: 1, darkMatterFlipTimer: 0, darkMatterFlipDuration: 1, pyramidUnlocked: false, activeChallenge: '', challengeEndsAt: 0, completedChallenges: [], creditChallengeBoost: false, automationsUnlocked: false, automationBought: Array(12).fill(false), automationActive: Array(12).fill(false), ascendance: 0, totalAscendances: 0, ascCurrencyBoost: false, ascCreditExponent: false, ascCubePowerLevel: 0, ascCubeAutoclicker: false, ascCubeAscendance: false, ascCubeAlpha: false, ascPointDiscountLevel: 0, ascTotalLevelBoost: false, ascAllCurrencyLevel: 0, ascMainlinePowerLevel: 0, spark: 0, sparkPrestiges: 0, sparkUpgrade1Level: 0, sparkUpgrade2Level: 0, sparkUpgrade3Level: 0, pointUpgrade16Bought: false, pointUpgrade17Bought: false, pointUpgrade18Bought: false, pointUpgrade19Bought: false, pointUpgrade20Bought: false, cyan13Bought: false, cyan14Level: 0, cyan15Bought: false, cyanSquareCounts: [0, 0, 0] };
 Object.assign(initialState, {
+  alphaTerms: null, blackjackStakeKind: 'base',
   americanRoulette: false, blackjackStake: 0, blackjackDeck: [], blackjackPlayer: [], blackjackDealer: [], blackjackActive: false,
   prestigeAnimation: 'bar',
   copyrightMode: false, kirbyUnlocked: false, kirbyAbility: 'beam',
@@ -71,6 +72,7 @@ function normalizeSavedCurrency(value) {
   try { const result = D(value); return result.isNan() ? D(0) : result; } catch { return D(0); }
 }
 function serializeState() {
+  ensureAlphaTerms();
   const snapshot = { ...state };
   for (const key of CURRENCY_KEYS) snapshot[key] = state[key].toString();
   return JSON.stringify(snapshot);
@@ -334,6 +336,43 @@ function tokenAscendanceReward() {
 function creditExponentCost(level = state.creditExponentLevel) { return D(2).times(D(2).pow(priceLevel('creditExponentLevel', level))); }
 function cubeNextCost() { return D(2).pow(priceLevel('cubeLevel', state.cubeLevel)); }
 function cubeClicksToNext() { return cubeNextCost().minus(state.cubeClicks).max(0); }
+// Keep irrational components symbolic; alpha is the numeric projection used by progression.
+function alphaTermsValue(terms) {
+  return D(terms.base).plus(D(terms.e).times(Math.E)).plus(D(terms.pi).times(Math.PI));
+}
+function ensureAlphaTerms() {
+  if (!state.alphaTerms || !alphaTermsValue(state.alphaTerms).eq(state.alpha)) {
+    state.alphaTerms = { base: state.alpha.toString(), e: '0', pi: '0' };
+  }
+  return state.alphaTerms;
+}
+function changeAlpha(amount, kind = 'base') {
+  const terms = ensureAlphaTerms();
+  terms[kind] = D(terms[kind]).plus(amount).toString();
+  state.alpha = alphaTermsValue(terms);
+}
+function symbolicAmount(terms) {
+  const pieces = [];
+  for (const [key, suffix] of [['base', ''], ['e', 'e'], ['pi', 'π']]) {
+    const n = D(terms[key]);
+    if (n.eq(0)) continue;
+    const sign = n.lt(0) ? '−' : '+';
+    const coefficient = suffix && n.abs().eq(1) ? '' : n.abs().toString();
+    pieces.push(`${pieces.length ? ` ${sign} ` : n.lt(0) ? '−' : ''}${coefficient}${suffix}`);
+  }
+  return pieces.join('') || '0';
+}
+function alphaDisplay() {
+  const terms = ensureAlphaTerms();
+  return D(terms.e).eq(0) && D(terms.pi).eq(0) ? fmt(state.alpha) : symbolicAmount(terms);
+}
+function casinoStakeKind() {
+  const raw = document.querySelector('#casino-stake').value.trim().toLowerCase();
+  return raw === 'e' ? 'e' : ['pi', 'π'].includes(raw) ? 'pi' : 'base';
+}
+function casinoStakeLabel(amount, kind) {
+  return symbolicAmount({ base: kind === 'base' ? amount : 0, e: kind === 'e' ? amount : 0, pi: kind === 'pi' ? amount : 0 });
+}
 const ROULETTE_RED = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
 function casinoStake() {
   const raw = document.querySelector('#casino-stake').value.trim().toLowerCase();
@@ -372,9 +411,10 @@ function spinRoulette() {
   const pocket = roll === 37 ? '00' : String(roll);
   const color = roll === 0 || roll === 37 ? 'green' : ROULETTE_RED.includes(roll) ? 'red' : 'black';
   const won = bet === 'number' ? number === pocket : bet === color;
-  const payout = won ? stake.times(bet === 'number' ? 36 : 2) : D(0);
-  state.alpha = state.alpha.minus(stake).plus(payout);
-  document.querySelector('#casino-result').textContent = `Roulette: ${pocket} ${color}. ${won ? `Won ${fmt(payout)} α including stake.` : `Lost ${fmt(stake)} α.`}`;
+  const kind = casinoStakeKind(), units = kind === 'base' ? stake : D(1);
+  const net = won ? units.times(bet === 'number' ? 35 : 1) : units.neg();
+  changeAlpha(net, kind);
+  document.querySelector('#casino-result').textContent = `Roulette: ${pocket} ${color}. ${won ? `Won ${casinoStakeLabel(units.times(bet === 'number' ? 36 : 2), kind)} α including stake.` : `Lost ${casinoStakeLabel(units, kind)} α.`}`;
   render(); save();
 }
 function cardName(card) { return `${['A','2','3','4','5','6','7','8','9','10','J','Q','K'][card % 13]}${['♠','♥','♦','♣'][Math.floor(card / 13)]}`; }
@@ -385,9 +425,11 @@ function handTotal(cards) {
   return total;
 }
 function settleBlackjack(multiplier, message) {
-  state.alpha = state.alpha.plus(state.blackjackStake.times(multiplier));
+  const kind = state.blackjackStakeKind;
+  const units = kind === 'base' ? state.blackjackStake : D(1);
+  changeAlpha(units.times(multiplier), kind);
   state.blackjackActive = false;
-  document.querySelector('#casino-result').textContent = `Blackjack: ${message} Payout ${fmt(state.blackjackStake.times(multiplier))} α including stake.`;
+  document.querySelector('#casino-result').textContent = `Blackjack: ${message} Payout ${casinoStakeLabel(units.times(multiplier), kind)} α including stake.`;
   state.blackjackStake = D(0);
 }
 function dealBlackjack() {
@@ -395,12 +437,13 @@ function dealBlackjack() {
   if (!casinoAvailable() || state.blackjackActive || stake.lt(1) || stake.gt(state.alpha)) return;
   state.blackjackDeck = Array.from({length:52}, (_, i) => i);
   for (let i = 51; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [state.blackjackDeck[i], state.blackjackDeck[j]] = [state.blackjackDeck[j], state.blackjackDeck[i]]; }
-  state.alpha = state.alpha.minus(stake); state.blackjackStake = stake; state.blackjackActive = true;
+  state.blackjackStakeKind = casinoStakeKind();
+  changeAlpha(state.blackjackStakeKind === 'base' ? stake.neg() : -1, state.blackjackStakeKind); state.blackjackStake = stake; state.blackjackActive = true;
   state.blackjackPlayer = [state.blackjackDeck.pop(), state.blackjackDeck.pop()];
   state.blackjackDealer = [state.blackjackDeck.pop(), state.blackjackDeck.pop()];
   const playerNatural = handTotal(state.blackjackPlayer) === 21, dealerNatural = handTotal(state.blackjackDealer) === 21;
   if (playerNatural || dealerNatural) settleBlackjack(playerNatural ? dealerNatural ? 1 : 2.5 : 0, playerNatural ? dealerNatural ? 'Both blackjack. Push.' : 'Natural blackjack!' : 'Dealer blackjack.');
-  else document.querySelector('#casino-result').textContent = `Stake ${fmt(stake)} α placed. Hit or stand.`;
+  else document.querySelector('#casino-result').textContent = `Stake ${casinoStakeLabel(state.blackjackStakeKind === 'base' ? stake : 1, state.blackjackStakeKind)} α placed. Hit or stand.`;
   render(); save();
 }
 function playBlackjack(action) {
@@ -695,7 +738,10 @@ function discardCurrency(discardAll) {
   }
   const label = garbageCurrency.selectedOptions[0].textContent;
   if (!window.confirm(`Permanently delete ${discardAll ? 'all' : amount.toString()} ${label}?`)) return;
-  state[key] = remaining;
+  if (key === 'alpha') {
+    if (discardAll) { state.alpha = D(0); state.alphaTerms = null; }
+    else changeAlpha(amount.neg());
+  } else state[key] = remaining;
   garbageAmount.value = '';
   save();
   render();
@@ -775,7 +821,7 @@ function render() {
         ? { label: 'CUBE CLICKS · CC', value: state.cubeClicks, color: 'cc', detail: `${fmt(cubeClicksToNext())} CC to next cube level` }
         : { label: 'AVAILABLE P$', value: state.balance, color: 'points', detail: `${fmt(rate())} P$ per second` };
   balanceLabel.textContent = counter.label;
-  balance.textContent = fmt(counter.value);
+  balance.textContent = activeTab === 'alpha' ? alphaDisplay() : fmt(counter.value);
   balance.className = `balance currency-${counter.color}`;
   rateLine.textContent = counter.detail;
   const limit = document.querySelector('#mainline-soft-cap');
@@ -1219,6 +1265,7 @@ for (let i = 0; i < dataUpgradeInfo.length; i += 1) {
     state.data = minus(state.data, info.cost);
     if (info.amount) {
       if (info.currency === 'points') state.balance = minus(state.balance, amount);
+      else if (info.currency === 'alpha') changeAlpha(D(amount).neg());
       else state[info.currency] = minus(state[info.currency], amount);
     }
     state.dataLore[index] = true;
@@ -1232,14 +1279,14 @@ document.querySelector('#blackjack-deal').addEventListener('click', dealBlackjac
 for (const action of ['hit','stand']) document.querySelector(`#blackjack-${action}`).addEventListener('click', () => playBlackjack(action));
 document.querySelector('#american-roulette').addEventListener('change', event => { state.americanRoulette = event.target.checked; render(); save(); });
 document.querySelector('#buy-alpha-unlock').addEventListener('click', () => { if (!state.printer || state.alphaUnlocked) return; state.alphaUnlocked = true; toast('Alpha upgrades unlocked'); render(); save(); });
-document.querySelector('#buy-alpha-gain').addEventListener('click', () => { if (!state.alphaUnlocked) return; const gain = applyAlphaGain(1 + state.alphaBoostLevel).times(cubeMultiplier('alpha')); state.alphaGainPurchases += 1; state.alpha = plus(state.alpha, gain); toast(`+${fmt(gain)} α`); render(); save(); });
-document.querySelector('#buy-alpha-generator').addEventListener('click', () => { if (!state.alphaUnlocked || state.alphaGeneratorBought || lt(state.alpha, 10)) return; state.alpha = minus(state.alpha, 10); state.alphaGeneratorBought = true; toast('Alpha generator started'); render(); save(); });
-document.querySelector('#buy-alpha-boost').addEventListener('click', () => { const cost = alphaBoostPrice(); if (!state.alphaUnlocked || state.alphaBoostLevel >= 50 || lt(state.alpha, cost)) return; state.alpha = minus(state.alpha, cost); state.alphaBoostLevel += 1; toast('Alpha gain increased'); render(); save(); });
-document.querySelector('#buy-alpha-neutral').addEventListener('click', () => { if (!state.alphaUnlocked || state.alphaBoostLevel < 1 || state.alphaNeutralBought) return; const gain = applyAlphaGain(5).times(cubeMultiplier('alpha')); state.alpha = plus(state.alpha, gain); state.alphaNeutralBought = true; toast(`+${fmt(gain)} α · Neutral multiplier bought`); render(); save(); });
-document.querySelector('#buy-alpha-cap').addEventListener('click', () => { const cost = alphaCapPrice(); if (!state.alphaUnlocked || state.alphaBoostLevel < 1 || lt(state.alpha, cost)) return; state.alpha = minus(state.alpha, cost); state.alphaCapLevel += 1; toast('2α max level increased by 2'); render(); save(); });
+document.querySelector('#buy-alpha-gain').addEventListener('click', () => { if (!state.alphaUnlocked) return; const gain = applyAlphaGain(1 + state.alphaBoostLevel).times(cubeMultiplier('alpha')); state.alphaGainPurchases += 1; changeAlpha(gain); toast(`+${fmt(gain)} α`); render(); save(); });
+document.querySelector('#buy-alpha-generator').addEventListener('click', () => { if (!state.alphaUnlocked || state.alphaGeneratorBought || lt(state.alpha, 10)) return; changeAlpha(-10); state.alphaGeneratorBought = true; toast('Alpha generator started'); render(); save(); });
+document.querySelector('#buy-alpha-boost').addEventListener('click', () => { const cost = alphaBoostPrice(); if (!state.alphaUnlocked || state.alphaBoostLevel >= 50 || lt(state.alpha, cost)) return; changeAlpha(cost.neg()); state.alphaBoostLevel += 1; toast('Alpha gain increased'); render(); save(); });
+document.querySelector('#buy-alpha-neutral').addEventListener('click', () => { if (!state.alphaUnlocked || state.alphaBoostLevel < 1 || state.alphaNeutralBought) return; const gain = applyAlphaGain(5).times(cubeMultiplier('alpha')); changeAlpha(gain); state.alphaNeutralBought = true; toast(`+${fmt(gain)} α · Neutral multiplier bought`); render(); save(); });
+document.querySelector('#buy-alpha-cap').addEventListener('click', () => { const cost = alphaCapPrice(); if (!state.alphaUnlocked || state.alphaBoostLevel < 1 || lt(state.alpha, cost)) return; changeAlpha(cost.neg()); state.alphaCapLevel += 1; toast('2α max level increased by 2'); render(); save(); });
 document.querySelector('#buy-fishing').addEventListener('click', () => {
   if (!state.alphaUnlocked || state.fishingUnlocked || lt(state.alpha, FISHING_COST)) return;
-  state.alpha = minus(state.alpha, FISHING_COST);
+  changeAlpha(D(FISHING_COST).neg());
   state.fishingUnlocked = true;
   render();
   save();
@@ -1328,7 +1375,7 @@ document.querySelector('#cube-tab').addEventListener('click', () => { if (state.
 document.querySelector('#pyramid-tab').addEventListener('click', () => { if (state.pyramidUnlocked) chooseTab('pyramid'); });
 document.querySelector('#alpha-tab').addEventListener('click', () => { if (state.alphaUnlocked) chooseTab('alpha'); });
 document.querySelector('#darkmatter-tab').addEventListener('click', () => { if (state.darkMatterUnlocked) chooseTab('darkmatter'); });
-document.querySelector('#buy-darkmatter-unlock').addEventListener('click', () => { if (!state.alphaUnlocked || state.darkMatterUnlocked || lt(state.alpha, 1000)) return; state.alpha = minus(state.alpha, 1000); state.darkMatterUnlocked = true; activeTab = 'darkmatter'; toast(`${matterName()} unlocked`); render(); save(); });
+document.querySelector('#buy-darkmatter-unlock').addEventListener('click', () => { if (!state.alphaUnlocked || state.darkMatterUnlocked || lt(state.alpha, 1000)) return; changeAlpha(-1000); state.darkMatterUnlocked = true; activeTab = 'darkmatter'; toast(`${matterName()} unlocked`); render(); save(); });
 document.querySelector('#buy-darkmatter-1').addEventListener('click', () => { if (!state.darkMatterUnlocked || state.darkMatter1Bought) return; state.darkMatter1Bought = true; toast(`${matterName()} generation started`); render(); save(); });
 document.querySelector('#buy-darkmatter-2').addEventListener('click', () => { if (!state.darkMatter1Bought || state.darkMatter2Level >= 1000 || lt(state.darkMatter, 2)) return; state.darkMatter = D(0); state.darkMatter2Level += 1; toast(`${matterName()} gain doubled`); render(); save(); });
 document.querySelector('#buy-darkmatter-3').addEventListener('click', () => { if (!state.darkMatter1Bought || state.darkMatter3Bought) return; state.darkMatter3Bought = true; state.darkMatterCoinBoost = D(1); state.darkMatterFlipTimer = 0; state.darkMatterFlipDuration = 1; toast('Coin flip activated'); render(); save(); });
@@ -1821,7 +1868,7 @@ setInterval(() => {
   const earned = rate().times(elapsed);
   if (state.activeChallenge && state.challengeEndsAt && now >= state.challengeEndsAt) { const name = challengeNames[state.activeChallenge]; state.activeChallenge = ''; state.challengeEndsAt = 0; toast(`${name} failed · Time expired`); }
   const passiveTokensEarned = tokenIncomeRate().times(elapsed);
-  if (state.alphaGeneratorBought) state.alpha = plus(state.alpha, applyAlphaGain(cubeMultiplier('alpha').times(elapsed / 10)));
+  if (state.alphaGeneratorBought) changeAlpha(applyAlphaGain(cubeMultiplier('alpha').times(elapsed / 10)));
   if (state.darkMatter3Bought) {
     state.darkMatterFlipTimer += elapsed;
     while (state.darkMatterFlipTimer >= state.darkMatterFlipDuration) {
@@ -1863,6 +1910,8 @@ function isValidSave(snapshot) {
     }
     const fallback = initialState[key];
     if (['blackjackDeck', 'blackjackPlayer', 'blackjackDealer'].includes(key)) return Array.isArray(value) && value.length <= 52 && new Set(value).size === value.length && value.every(n => Number.isInteger(n) && n >= 0 && n < 52);
+    if (key === 'alphaTerms') return value === null || isSaveObject(value) && Object.keys(value).length === 3 && ['base', 'e', 'pi'].every(k => typeof value[k] === 'string' && value[k].trim() !== '' && D(value[k]).isFinite());
+    if (key === 'blackjackStakeKind') return ['base', 'e', 'pi'].includes(value);
     if (key === 'prestigeAnimation') return PRESTIGE_STYLES.includes(value);
     if (key === 'kirbyAbility') return ['beam', 'mirror', 'spark', 'stone', 'fisher'].includes(value);
     if (key === 'kirbyStoneTarget') return ['points', 'tokens', 'credits', 'ascendance', 'alpha'].includes(value);
