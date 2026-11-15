@@ -333,7 +333,18 @@ input, textarea, select {
         <div id="cube-panel" hidden w-tid="979">
           <div class="cube-summary" w-tid="981"><div w-tid="983"><span class="label" w-tid="985">CUBE LEVEL</span><div class="cube-level" id="cube-level" w-tid="987">0</div></div><div w-tid="989"><span class="label" w-tid="991">CUBE CLICKS (CC)</span><div class="cube-clicks" id="cube-clicks" w-tid="993">0</div></div><div class="cube-next" id="cube-next" w-tid="995">1 CC to next level</div></div>
           <div class="cube-stage" w-tid="997">
-            <div class="cube-shape" w-tid="999"><div class="cube-front" w-tid="1001"><span id="cube-face-level" w-tid="1003">0</span></div><button class="cube-side" id="cube-click-button" type="button" aria-label="Click the cube to gain 1 Cube Click" w-tid="1005">+1 CC</button></div>
+            <div class="cube-shape">
+              <svg class="cube-solid" viewBox="0 0 240 270" role="img" aria-labelledby="cube-solid-title">
+                <title id="cube-solid-title">A cube with three visible square faces</title>
+                <g stroke="#543a8f" stroke-width="2" stroke-linejoin="round">
+                  <path fill="#bca3ed" d="M120 15 224 75 120 135 16 75Z"/>
+                  <path fill="#8965c4" d="M16 75 120 135 120 255 16 195Z"/>
+                  <path fill="#57388e" d="M120 135 224 75 224 195 120 255Z"/>
+                </g>
+                <text id="cube-face-level" x="68" y="163" text-anchor="middle" dominant-baseline="middle" transform="rotate(30 68 163)">0</text>
+              </svg>
+              <button id="cube-click-button" type="button" aria-label="Click the cube to gain Cube Clicks">+1 CC</button>
+            </div>
           </div>
           <div class="cube-targets" aria-label="Choose what The Cube multiplies" w-tid="1007">
             <button class="cube-target active" data-target="points" type="button" w-tid="1009">Points</button><button class="cube-target" data-target="tokens" type="button" w-tid="1011">Tokens</button><button class="cube-target" data-target="credits" type="button" w-tid="1013">Credits</button><button class="cube-target" data-target="ascendance" type="button" hidden w-tid="1015">ᛥ</button><button class="cube-target" data-target="alpha" type="button" hidden w-tid="1017">α</button>
