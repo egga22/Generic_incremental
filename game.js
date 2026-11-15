@@ -4,6 +4,12 @@ const SAVE_KEY = 'pocket-foundry-save-v2';
 const BASE_MAX_UPGRADE_LEVEL = 1000;
 const FISHING_COST = 100;
 const FISHING_REEL_WINDOW = 1600;
+const RED_FISH_REEL_WINDOW = 850;
+const GARBAGE_COST = '1e900';
+const MAINLINE_SOFT_CAP = '1e1000';
+const MAINLINE_CURRENCIES = {
+  points: 'balance', tokens: 'tokens', credits: 'credits', data: 'data', spark: 'spark', ascendance: 'ascendance'
+};
 const CURRENCY_KEYS = ['balance', 'runEarned', 'lifetime', 'tokens', 'credits', 'data', 'cubeClicks', 'alpha', 'ascendance', 'darkMatter', 'darkMatterCoinBoost', 'spark', 'fishPoints'];
 const D = value => value instanceof Decimal ? value : new Decimal(value ?? 0);
 function upgradeLevelMax() { return BASE_MAX_UPGRADE_LEVEL + (state?.cyan15Bought ? 250 : 0); }
@@ -13,7 +19,7 @@ const gt = (a, b) => D(a).gt(b);
 const gte = (a, b) => D(a).gte(b);
 const plus = (a, b) => D(a).plus(b);
 const minus = (a, b) => D(a).minus(b);
-const initialState = { balance: 0, runEarned: 0, lifetime: 0, printer: false, press: false, multiplierLevel: 0, incomeLevel: 0, powerLevel: 0, clickLevel: 0, logLevel: 0, exponentLevel: 0, exponentCapLevel: 0, capLevel: 0, tokens: 0, totalPrestiges: 0, tokenResetCount: 0, tokenMultiplierLevel: 0, discountLevel: 0, tokenBoostLevel: 0, expansionUnlocked: false, maxBuyUnlocked: false, maxBuyActive: false, tokenCreditLevel: 0, tokenDiscountLevel: 0, credits: 0, totalCreditPrestiges: 0, data: 0, totalDataPrestiges: 0, dataLore: Array(5).fill(false), gainZeroBought: false, gainZeroActive: false, priceOrigins: {}, creditEngine: false, creditExponentLevel: 0, heavyMint: false, cubeUnlocked: false, cubeLevel: 0, cubeClicks: 0, cubeTarget: 'points', freeRunUpgrades: false, passiveTokens: false, alphaUnlocked: false, alpha: 0, alphaGainPurchases: 0, alphaBoostLevel: 0, alphaCapLevel: 0, alphaNeutralBought: false, alphaGeneratorBought: false, fishingUnlocked: false, fishPoints: 0, darkMatterUnlocked: false, darkMatter: 0, darkMatter1Bought: false, darkMatter2Bought: false, darkMatter2Level: 0, darkMatter3Bought: false, darkMatter4Bought: false, darkMatterCoinBoost: 1, darkMatterFlipTimer: 0, darkMatterFlipDuration: 1, pyramidUnlocked: false, activeChallenge: '', challengeEndsAt: 0, completedChallenges: [], creditChallengeBoost: false, automationsUnlocked: false, automationBought: Array(12).fill(false), automationActive: Array(12).fill(false), ascendance: 0, totalAscendances: 0, ascCurrencyBoost: false, ascCreditExponent: false, ascCubePowerLevel: 0, ascCubeAutoclicker: false, ascCubeAscendance: false, ascCubeAlpha: false, ascPointDiscountLevel: 0, ascTotalLevelBoost: false, ascAllCurrencyLevel: 0, ascMainlinePowerLevel: 0, spark: 0, sparkPrestiges: 0, sparkUpgrade1Level: 0, sparkUpgrade2Level: 0, sparkUpgrade3Level: 0, pointUpgrade16Bought: false, pointUpgrade17Bought: false, pointUpgrade18Bought: false, pointUpgrade19Bought: false, pointUpgrade20Bought: false, cyan13Bought: false, cyan14Level: 0, cyan15Bought: false, cyanSquareCounts: [0, 0, 0] };
+const initialState = { balance: 0, runEarned: 0, lifetime: 0, printer: false, press: false, multiplierLevel: 0, incomeLevel: 0, powerLevel: 0, clickLevel: 0, logLevel: 0, exponentLevel: 0, exponentCapLevel: 0, capLevel: 0, tokens: 0, totalPrestiges: 0, tokenResetCount: 0, tokenMultiplierLevel: 0, discountLevel: 0, tokenBoostLevel: 0, expansionUnlocked: false, maxBuyUnlocked: false, maxBuyActive: false, tokenCreditLevel: 0, tokenDiscountLevel: 0, credits: 0, totalCreditPrestiges: 0, data: 0, totalDataPrestiges: 0, dataLore: Array(5).fill(false), gainZeroBought: false, gainZeroActive: false, priceOrigins: {}, creditEngine: false, creditExponentLevel: 0, heavyMint: false, cubeUnlocked: false, cubeLevel: 0, cubeClicks: 0, cubeTarget: 'points', freeRunUpgrades: false, passiveTokens: false, alphaUnlocked: false, alpha: 0, alphaGainPurchases: 0, alphaBoostLevel: 0, alphaCapLevel: 0, alphaNeutralBought: false, alphaGeneratorBought: false, fishingUnlocked: false, fishPoints: 0, fishGainLevel: 0, redFishLevel: 0, fishAlphaLevel: 0, garbageUnlocked: false, darkMatterUnlocked: false, darkMatter: 0, darkMatter1Bought: false, darkMatter2Bought: false, darkMatter2Level: 0, darkMatter3Bought: false, darkMatter4Bought: false, darkMatterCoinBoost: 1, darkMatterFlipTimer: 0, darkMatterFlipDuration: 1, pyramidUnlocked: false, activeChallenge: '', challengeEndsAt: 0, completedChallenges: [], creditChallengeBoost: false, automationsUnlocked: false, automationBought: Array(12).fill(false), automationActive: Array(12).fill(false), ascendance: 0, totalAscendances: 0, ascCurrencyBoost: false, ascCreditExponent: false, ascCubePowerLevel: 0, ascCubeAutoclicker: false, ascCubeAscendance: false, ascCubeAlpha: false, ascPointDiscountLevel: 0, ascTotalLevelBoost: false, ascAllCurrencyLevel: 0, ascMainlinePowerLevel: 0, spark: 0, sparkPrestiges: 0, sparkUpgrade1Level: 0, sparkUpgrade2Level: 0, sparkUpgrade3Level: 0, pointUpgrade16Bought: false, pointUpgrade17Bought: false, pointUpgrade18Bought: false, pointUpgrade19Bought: false, pointUpgrade20Bought: false, cyan13Bought: false, cyan14Level: 0, cyan15Bought: false, cyanSquareCounts: [0, 0, 0] };
 let savedSnapshot;
 let saveConflict = false;
 const savedState = loadState();
@@ -29,6 +35,7 @@ state.priceOrigins ||= {};
 let toastTimer;
 let activeTab = 'run';
 let fishingBiteAt = null;
+let fishingRedFish = false;
 let fishingResult = 'Ready to cast.';
 
 function loadState() {
@@ -61,7 +68,19 @@ function save() {
 function incomeBase() { return (state.printer ? 1 : 0) + (state.press ? 1 : 0) + state.incomeLevel * (state.incomeLevel + 1) / 2; }
 function currencyGainMultiplier() { return state.gainZeroActive ? 0 : D(100).pow(state.ascCurrencyBoost ? 1 : 0).times(D(2).pow(state.ascAllCurrencyLevel)); }
 function applyCurrencyGain(amount) { return state.gainZeroActive ? D(0) : D(amount).pow(D(1.3).pow(state.ascMainlinePowerLevel)).times(D(100).pow(state.ascCurrencyBoost ? 1 : 0)).times(D(2).pow(state.ascAllCurrencyLevel)); }
-function applyAlphaGain(amount) { return state.gainZeroActive ? D(0) : D(amount); }
+function mainlineGainDivisor(currency) {
+  const balance = state[currency];
+  return balance.gt(MAINLINE_SOFT_CAP) ? D(2).pow(balance.log10().minus(1000)) : D(1);
+}
+function softenGain(amount, currency) {
+  return D(amount).div(mainlineGainDivisor(currency));
+}
+function fishAlphaMultiplier() {
+  return state.fishAlphaLevel ? state.fishPoints.div(50).plus(1) : D(1);
+}
+function applyAlphaGain(amount) {
+  return state.gainZeroActive ? D(0) : D(amount).times(fishAlphaMultiplier());
+}
 function pointCost(amount) { return D(amount).div(D(2).pow(state.ascPointDiscountLevel || 0)); }
 function priceLevel(key, level) { return Math.max(0, level - (state.priceOrigins?.[key] || 0)); }
 function resetUpgradePrices() {
@@ -91,11 +110,11 @@ function rate() {
   if (state.exponentLevel && value.gt(0)) value = value.pow(D(1.1).pow(state.exponentLevel));
   const exponent = challengeExponent();
   const challenged = exponent < 1 && value.gt(0) ? value.pow(exponent) : value;
-  return applyCurrencyGain(challenged.times(sparkRateMultiplier()));
+  return softenGain(applyCurrencyGain(challenged.times(sparkRateMultiplier())), 'balance');
 }
 const challengeNames = { deduction1: 'Deduction I', deduction2: 'Deduction II', deduction3: 'Deduction III', time1: 'Time Limit I', time2: 'Time Limit II', time3: 'Time Limit III' };
 function saleGain() {
-  return applyCurrencyGain(D(1 + state.clickLevel * 2).times(pointMultiplier()).pow(challengeExponent()));
+  return softenGain(applyCurrencyGain(D(1 + state.clickLevel * 2).times(pointMultiplier()).pow(challengeExponent())), 'balance');
 }
 function challengeExponent() { return ({ deduction1: .9, deduction2: .8, deduction3: .7 })[state.activeChallenge] || 1; }
 function challengeDuration(id) { const base = ({ time1: 7, time2: 6, time3: 5 })[id] || 0; return base ? base + state.cyan14Level : 0; }
@@ -141,11 +160,14 @@ const dataUpgradeInfo = [
   { cost: 40, currency: 'data', lore: 'The Pyramid was built as a test of repeatability. Its trials strip away accumulated credit, and each completed challenge leaves a permanent mark in the record.' }
 ];
 function challengeGainMultiplier() { return state.creditChallengeBoost ? state.completedChallenges.length + 1 : 1; }
-function tokenIncomeRate() { return state.passiveTokens && state.tokenResetCount > 0 ? applyCurrencyGain(state.balance.div(state.tokenResetCount * 1000).times(challengeGainMultiplier())) : D(0); }
+function tokenIncomeRate() {
+  if (!state.passiveTokens || state.tokenResetCount <= 0) return D(0);
+  return softenGain(applyCurrencyGain(state.balance.div(state.tokenResetCount * 1000).times(challengeGainMultiplier())), 'tokens');
+}
 function tokenReward() {
   let reward = state.balance.div(nextGoal()).floor().times(D(1.25).pow(state.tokenBoostLevel));
   if (state.creditExponentLevel) reward = reward.pow(D(1.01).pow(state.creditExponentLevel));
-  return applyCurrencyGain(reward.times(tokenMultiplier()).times(challengeGainMultiplier()));
+  return softenGain(applyCurrencyGain(reward.times(tokenMultiplier()).times(challengeGainMultiplier())), 'tokens');
 }
 function cubeMultiplier(target) {
   const unlocked = state.cubeUnlocked && (target === 'ascendance' ? state.ascCubeAscendance : target === 'alpha' ? state.ascCubeAlpha : true);
@@ -153,7 +175,7 @@ function cubeMultiplier(target) {
 }
 function cubeClickPower() { return 2 ** state.ascCubePowerLevel; }
 function cubeClickGain() { return D(cubeClickPower()).times(applyCurrencyGain(1)); }
-function ascendanceGain(amount) { return state.gainZeroActive ? D(0) : D(amount).times(cubeMultiplier('ascendance')); }
+function ascendanceGain(amount) { return state.gainZeroActive ? D(0) : softenGain(D(amount).times(cubeMultiplier('ascendance')), 'ascendance'); }
 function addCubeClicks(amount) {
   state.cubeClicks = plus(state.cubeClicks, amount);
   while (gte(state.cubeClicks, cubeNextCost())) {
@@ -190,7 +212,7 @@ function ascAllCurrencyCost(level = state.ascAllCurrencyLevel) { return D('1e12'
 function ascMainlinePowerCost(level = state.ascMainlinePowerLevel) { return D('1e600').times(D(1e6).pow(level)); }
 function highPointUpgradeCost(index) { return pointCost(D(['1e180','1e200','1e220','1e240','1e260'][index - 16])); }
 function sparkPrestigeCost() { return pointCost(SPARK_PRESTIGE_COST); }
-function sparkReward(balance) { const ratio = D(balance).div(sparkPrestigeCost()); return ratio.lt(1) ? D(0) : ratio.log10().floor().plus(1); }
+function sparkReward(balance) { const ratio = D(balance).div(sparkPrestigeCost()); return ratio.lt(1) ? D(0) : softenGain(ratio.log10().floor().plus(1), 'spark'); }
 function sparkUpgradeCost(index, level = state[`sparkUpgrade${index}Level`]) { const base = [0, 1, 10, 100][index]; const growth = [0, 1.5, 2, 3][index]; return D(base).times(D(growth).pow(level)); }
 function cyanUpgradeCost(index) { return pointCost(D(10).pow([150, 160, 170][index] * (2 ** state.cyanSquareCounts[index]))); }
 function cyanUpgradeReady(index) { return index === 0 ? state.automationsUnlocked : index === 1 ? state.pyramidUnlocked : true; }
@@ -210,7 +232,10 @@ function buyCyanUpgrade(index) {
 function creditPrestigeReward() {
   let reward = state.tokens.div('1e33').floor().times(creditMultiplier());
   if (state.ascCreditExponent) reward = reward.pow(1.5);
-  return reward;
+  return softenGain(reward, 'credits');
+}
+function dataReward(cost) {
+  return softenGain(applyCurrencyGain(state.balance.div(cost).floor()), 'data');
 }
 function powerMax() { return 100 + state.capLevel * 2; }
 function exponentMax() { return 1 + state.exponentCapLevel; }
@@ -296,13 +321,18 @@ const levelUpgrades = {
       message: `Spark upgrade ${number} accelerated P$ production`
     }];
   })),
+  alpha: {
+    'fish-1': { key: 'fishGainLevel', max: () => 2, cost: level => D(5 * (level + 1)), ready: () => state.fishingUnlocked, message: 'Fish Point gain increased' },
+    'fish-2': { key: 'redFishLevel', max: () => 1, cost: () => D(10), ready: () => state.fishingUnlocked, message: 'Red Fish added to the pond' },
+    'fish-3': { key: 'fishAlphaLevel', max: () => 1, cost: () => D(25), ready: () => state.fishingUnlocked, message: 'Fish Points now boost Alpha gain' }
+  },
   ascendance: {
     'asc-3': { key: 'ascCubePowerLevel', max: () => 5, cost: () => D(10), ready: () => state.ascCurrencyBoost && state.cubeUnlocked, message: 'Cube click power doubled' },
     'asc-8': { key: 'ascAllCurrencyLevel', max: () => 50, cost: ascAllCurrencyCost, message: 'All previous currency gains doubled' },
     'asc-9': { key: 'ascMainlinePowerLevel', max: () => 10, cost: ascMainlinePowerCost, message: 'Mainline currency gains raised to a higher power' }
   }
 };
-const upgradeCurrencies = { run: 'balance', token: 'tokens', credit: 'credits', spark: 'spark', ascendance: 'ascendance' };
+const upgradeCurrencies = { run: 'balance', token: 'tokens', credit: 'credits', spark: 'spark', ascendance: 'ascendance', alpha: 'fishPoints' };
 
 function clampUpgradeLevels() {
   // Cap-granting upgrades in the run table come before the levels they affect.
@@ -342,7 +372,7 @@ function levelPurchase(upgrade, balance, maxBuy) {
 }
 
 function levelPrice(currency, amount) {
-  const unit = { tokens: 'tokens', credits: 'C$', spark: '⊹', ascendance: 'ᛥ' };
+  const unit = { tokens: 'tokens', credits: 'C$', spark: '⊹', ascendance: 'ᛥ', fishPoints: '🐟' };
   return currency === 'balance' ? `P$ ${amount}` : `${amount} ${unit[currency]}`;
 }
 
@@ -412,7 +442,8 @@ function renderTheme() {
 function fishingPhase(now) {
   if (fishingBiteAt === null) return 'idle';
   if (now < fishingBiteAt) return 'waiting';
-  if (now < fishingBiteAt + FISHING_REEL_WINDOW) return 'bite';
+  const reelWindow = fishingRedFish ? RED_FISH_REEL_WINDOW : FISHING_REEL_WINDOW;
+  if (now < fishingBiteAt + reelWindow) return 'bite';
   return 'escaped';
 }
 
@@ -423,7 +454,11 @@ function renderFishing() {
   unlockCard.hidden = !state.alphaUnlocked || unlocked;
   document.querySelector('#buy-fishing').disabled = !state.alphaUnlocked || unlocked || lt(state.alpha, FISHING_COST);
   pond.hidden = !unlocked;
+  document.querySelector('#fish-upgrades').hidden = !unlocked;
   if (!unlocked) return;
+
+  document.querySelector('#fish-gain-level').textContent = state.fishGainLevel;
+  document.querySelector('#fish-alpha-multiplier').textContent = fmt(fishAlphaMultiplier());
 
   if (state.gainZeroActive) fishingBiteAt = null;
   let phase = fishingPhase(performance.now());
@@ -435,10 +470,11 @@ function renderFishing() {
   const status = document.querySelector('#fishing-status');
   const message = state.gainZeroActive ? 'Fishing is paused during Null gain.'
     : phase === 'waiting' ? 'Waiting for a bite…'
-    : phase === 'bite' ? 'Bite! Reel in now!'
+    : phase === 'bite' ? (fishingRedFish ? 'Red Fish! Reel in now!' : 'Bite! Reel in now!')
     : fishingResult;
   if (status.textContent !== message) status.textContent = message;
   pond.toggleAttribute('data-bite', phase === 'bite');
+  pond.toggleAttribute('data-red-bite', phase === 'bite' && fishingRedFish);
   const action = document.querySelector('#fishing-action');
   action.disabled = state.gainZeroActive;
   const label = phase === 'idle' ? 'Cast line' : 'Reel in';
@@ -446,9 +482,70 @@ function renderFishing() {
   document.querySelector('#fish-points').textContent = fmt(state.fishPoints);
 }
 
+const garbageForm = document.querySelector('#garbage-form');
+const garbageCurrency = document.querySelector('#garbage-currency');
+const garbageAmount = document.querySelector('#garbage-amount');
+const garbageAll = document.querySelector('#garbage-all');
+
+function renderGarbage() {
+  document.querySelector('#upgrade-garbage').hidden = state.garbageUnlocked;
+  document.querySelector('#buy-garbage').disabled = state.garbageUnlocked || lt(state.tokens, GARBAGE_COST);
+  garbageForm.hidden = !state.garbageUnlocked;
+  if (!state.garbageUnlocked) return;
+  const balance = state[garbageCurrency.value];
+  document.querySelector('#garbage-balance').textContent = fmt(balance);
+  garbageAll.disabled = balance.lte(0);
+  document.querySelector('#garbage-delete').disabled = balance.lte(0);
+}
+
+function discardCurrency(discardAll) {
+  if (!state.garbageUnlocked || saveConflict) return;
+  const key = garbageCurrency.value;
+  const balance = state[key];
+  const input = garbageAmount.value.trim();
+  const decimal = /^(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i;
+  const layered = /^(?:e{2,}|\(e\^\d+\))[+-]?\d+(?:\.\d+)?$/i;
+  if (!discardAll && !decimal.test(input) && !layered.test(input)) {
+    toast('Enter an amount such as 100 or 1e900.');
+    return;
+  }
+  const amount = discardAll ? balance : D(input);
+  if (!amount.isFinite() || !amount.gt(0) || amount.gt(balance)) {
+    toast('Enter a positive amount up to your balance.');
+    return;
+  }
+  const remaining = balance.minus(amount);
+  if (remaining.eq(balance)) {
+    toast('That amount is too small to change this balance.');
+    return;
+  }
+  const label = garbageCurrency.selectedOptions[0].textContent;
+  if (!window.confirm(`Permanently delete ${discardAll ? 'all' : amount.toString()} ${label}?`)) return;
+  state[key] = remaining;
+  garbageAmount.value = '';
+  save();
+  render();
+  toast(`${fmt(amount)} ${label} deleted.`);
+}
+
+document.querySelector('#buy-garbage').addEventListener('click', () => {
+  if (state.garbageUnlocked || lt(state.tokens, GARBAGE_COST)) return;
+  state.tokens = minus(state.tokens, GARBAGE_COST);
+  state.garbageUnlocked = true;
+  save();
+  render();
+});
+garbageCurrency.addEventListener('change', renderGarbage);
+garbageForm.addEventListener('submit', event => {
+  event.preventDefault();
+  discardCurrency(false);
+});
+garbageAll.addEventListener('click', () => discardCurrency(true));
+
 function render() {
   renderTheme();
   renderFishing();
+  renderGarbage();
   if (applyCyanAutomation()) save();
   const balance = document.querySelector('#balance');
   const balanceLabel = document.querySelector('#balance-label');
@@ -474,6 +571,11 @@ function render() {
   balance.textContent = fmt(counter.value);
   balance.className = `balance currency-${counter.color}`;
   rateLine.textContent = counter.detail;
+  const limit = document.querySelector('#mainline-soft-cap');
+  const currency = MAINLINE_CURRENCIES[counter.color];
+  const divisor = currency ? mainlineGainDivisor(currency) : D(1);
+  limit.hidden = divisor.lte(1);
+  if (!limit.hidden) limit.textContent = `Gain divided by ${fmt(divisor)} · ÷2 per power of 10 above 1e1000`;
   document.querySelector('#work-button').textContent = state.gainZeroActive ? 'Restore currency gains ×1' : `Make a sale · +P$${fmt(saleGain())}`;
   document.querySelector('#run-earned').textContent = fmt(state.runEarned);
   document.querySelector('#prestige-tokens').textContent = fmt(state.tokens);
@@ -510,7 +612,7 @@ function render() {
   const powerLevelMax = powerMax();
   document.querySelector('#power-level-max').textContent = powerLevelMax;
   document.querySelector('#power-cap').textContent = powerLevelMax;
-  document.querySelector('#token-tab').hidden = state.totalPrestiges < 1 && lt(state.tokens, 1);
+  document.querySelector('#token-tab').hidden = state.totalPrestiges < 1 && lt(state.tokens, 1) && !state.garbageUnlocked;
   const hasCredits = state.totalCreditPrestiges > 0 || gt(state.credits, 0) || state.creditEngine || state.cubeUnlocked || state.pyramidUnlocked;
   document.querySelector('#credit-tab').hidden = !hasCredits;
   document.querySelector('#data-tab').hidden = state.totalDataPrestiges < 1 && lt(state.data, 1) && !state.dataLore.some(Boolean);
@@ -785,9 +887,8 @@ function render() {
   document.querySelector('#credit-prestige-label').textContent = gte(state.tokens, '1e33') ? (state.activeChallenge ? 'Finish challenge · No credits' : `Credit prestige · +${fmt(creditsEarned)} C$`) : '1De tokens for 1 C$';
   const dataPrestige = document.querySelector('#data-prestige-button');
   const dataCost = pointCost(DATA_PRESTIGE_COST);
-  const dataEarned = state.balance.div(dataCost).floor();
   dataPrestige.disabled = lt(state.balance, dataCost);
-  document.querySelector('#data-prestige-label').textContent = gte(state.balance, dataCost) ? `Data reset · +${fmt(applyCurrencyGain(dataEarned))} 𝔻 · resets P$ only` : `P$ ${fmt(dataCost)} for 1 𝔻 · resets P$ only`;
+  document.querySelector('#data-prestige-label').textContent = gte(state.balance, dataCost) ? `Data reset · +${fmt(dataReward(dataCost))} 𝔻 · resets P$ only` : `P$ ${fmt(dataCost)} for 1 𝔻 · resets P$ only`;
   for (let i = 1; i <= 3; i += 1) {
     document.querySelector(`#spark-${i}-level`).textContent = state[`sparkUpgrade${i}Level`];
   }
@@ -931,11 +1032,13 @@ document.querySelector('#fishing-action').addEventListener('click', () => {
   const phase = fishingPhase(now);
   if (phase === 'idle') {
     fishingBiteAt = now + 1500 + Math.random() * 2000;
+    fishingRedFish = Boolean(state.redFishLevel) && Math.random() < 0.2;
   } else {
     fishingBiteAt = null;
     if (phase === 'bite') {
-      state.fishPoints = plus(state.fishPoints, 1);
-      fishingResult = 'Fish caught! +1 🐟';
+      const reward = (1 + state.fishGainLevel) * (fishingRedFish ? 1.5 : 1);
+      state.fishPoints = plus(state.fishPoints, reward);
+      fishingResult = `${fishingRedFish ? 'Red Fish' : 'Fish'} caught! +${fmt(reward)} 🐟`;
       save();
     } else {
       fishingResult = phase === 'waiting' ? 'Too early. The fish got away.' : 'Too late. The fish got away.';
@@ -994,7 +1097,7 @@ document.querySelector('#max-buy-toggle').addEventListener('click', () => {
 document.querySelector('#sections-toggle').addEventListener('click', () => { const tabs = document.querySelector('#upgrade-tabs'); tabs.hidden = !tabs.hidden; document.querySelector('#sections-toggle').setAttribute('aria-expanded', String(!tabs.hidden)); });
 function chooseTab(tab) { activeTab = tab; document.querySelector('#upgrade-tabs').hidden = true; document.querySelector('#sections-toggle').setAttribute('aria-expanded', 'false'); render(); }
 document.querySelector('#run-tab').addEventListener('click', () => chooseTab('run'));
-document.querySelector('#token-tab').addEventListener('click', () => { if (state.totalPrestiges) chooseTab('token'); });
+document.querySelector('#token-tab').addEventListener('click', () => { if (state.totalPrestiges || gt(state.tokens, 0) || state.garbageUnlocked) chooseTab('token'); });
 document.querySelector('#credit-tab').addEventListener('click', () => { if (state.totalCreditPrestiges || gt(state.credits, 0)) chooseTab('credit'); });
 document.querySelector('#data-tab').addEventListener('click', () => { if (state.totalDataPrestiges || gt(state.data, 0) || state.dataLore.some(Boolean)) chooseTab('data'); });
 document.querySelector('#spark-tab').addEventListener('click', () => { if (state.sparkPrestiges || gt(state.spark, 0)) chooseTab('spark'); });
@@ -1093,7 +1196,7 @@ document.querySelector('#spark-prestige-button').addEventListener('click', () =>
 document.querySelector('#data-prestige-button').addEventListener('click', () => {
   const cost = pointCost(DATA_PRESTIGE_COST);
   if (lt(state.balance, cost)) return;
-  const reward = applyCurrencyGain(state.balance.div(cost).floor());
+  const reward = dataReward(cost);
   state.data = plus(state.data, reward);
   state.totalDataPrestiges += 1;
   state.balance = D(0);

@@ -23,14 +23,14 @@ input, textarea, select {
     <meta name="theme-color" content="#ffffff" w-tid="9"/>
     <link rel="icon" href="data:," w-tid="11"/>
     <title w-tid="13">Generic Incremental</title>
-    <link rel="stylesheet" href="./style.css?v=deep-settings-ui" w-tid="15"/>
-    <script type="module" src="./game.js?v=deep-settings-ui" w-tid="17"></script>
+    <link rel="stylesheet" href="./style.css?v=fishening" w-tid="15"/>
+    <script type="module" src="./game.js?v=fishening" w-tid="17"></script>
   </head>
   <body w-tid="19">
     <main class="game-shell" w-tid="21">
       <header w-tid="23"><h1 w-tid="25">Generic Incremental</h1><span id="run-label" w-tid="27">NEW RUN</span></header>
       <section class="economy" w-tid="29">
-        <div w-tid="31"><div class="label" id="balance-label" w-tid="33">AVAILABLE P$</div><div class="balance currency-points" id="balance" w-tid="35">0</div><div class="rate" id="rate-line" w-tid="37"><span id="rate" w-tid="39">0</span> P$ per second</div></div>
+        <div w-tid="31"><div class="label" id="balance-label" w-tid="33">AVAILABLE P$</div><div class="balance currency-points" id="balance" w-tid="35">0</div><div class="rate" id="rate-line" w-tid="37"><span id="rate" w-tid="39">0</span> P$ per second</div><div class="rate" id="mainline-soft-cap" hidden></div></div>
         <button id="work-button" type="button" w-tid="41">Make a sale · +P$1</button>
       </section>
       <section class="milestone" w-tid="43">
@@ -129,6 +129,20 @@ input, textarea, select {
             </div>
             <button id="fishing-action" type="button" aria-describedby="fishing-status">Cast line</button>
           </article>
+          <div id="fish-upgrades" hidden>
+            <article class="upgrade fish-upgrade" id="upgrade-fish-1">
+              <div><h3>1🐟. Bigger catches</h3><p>+1 Fish Point per catch per level.</p><div class="effect">Level <span id="fish-gain-level">0</span> / 2</div></div>
+              <button id="buy-fish-1" type="button" disabled>5 🐟</button>
+            </article>
+            <article class="upgrade fish-upgrade" id="upgrade-fish-2">
+              <div><h3>2🐟. Red Fish</h3><p>Rare bites with less time to reel in. Worth 1.5× a regular fish.</p></div>
+              <button id="buy-fish-2" type="button" disabled>10 🐟</button>
+            </article>
+            <article class="upgrade fish-upgrade" id="upgrade-fish-3">
+              <div><h3>3🐟. Alpha bait</h3><p>Multiplies α gain by 1 + (Fish Points ÷ 50).</p><div class="effect">Current multiplier ×<span id="fish-alpha-multiplier">1</span></div></div>
+              <button id="buy-fish-3" type="button" disabled>25 🐟</button>
+            </article>
+          </div>
         </div>
         <div id="darkmatter-upgrades" hidden w-tid="479">
           <article class="upgrade dark-upgrade locked" id="upgrade-darkmatter-1" w-tid="481"><div w-tid="483"><h3 w-tid="485">−1. First contact</h3><p w-tid="487">Begin generating <span data-matter-name>Dark Matter</span>.</p><div class="effect" w-tid="489">+0.1 ⊠ / sec</div></div><button id="buy-darkmatter-1" type="button" disabled w-tid="491">Free</button></article>
@@ -176,6 +190,37 @@ input, textarea, select {
             <div><h3>7T. Max Buy</h3><p>Requires 4T. Unlocks a toggle that buys as many levels of an upgrade as you can afford.</p></div>
             <button id="buy-max-buy" type="button" disabled>25 tokens</button>
           </article>
+          <article class="upgrade token-upgrade" id="upgrade-garbage">
+            <div><h3>8T. Garbage</h3><p>Permanently unlocks a tool for discarding currency.</p></div>
+            <button id="buy-garbage" type="button" disabled>1e900 tokens</button>
+          </article>
+          <form class="upgrade token-upgrade" id="garbage-form" hidden>
+            <h3>Garbage</h3>
+            <div class="garbage-fields">
+              <label>Currency
+                <select id="garbage-currency">
+                  <option value="balance">Points (P$)</option>
+                  <option value="tokens">Tokens</option>
+                  <option value="credits">Credits (C$)</option>
+                  <option value="data">Data (𝔻)</option>
+                  <option value="spark">Spark (⊹)</option>
+                  <option value="ascendance">Ascendance (ᛥ)</option>
+                  <option value="alpha">Alpha (α)</option>
+                  <option value="darkMatter" data-matter-name>Dark Matter</option>
+                  <option value="cubeClicks">Cube Clicks (CC)</option>
+                  <option value="fishPoints">Fish Points (🐟)</option>
+                </select>
+              </label>
+              <label>Amount
+                <input id="garbage-amount" type="text" placeholder="e.g. 1e900" autocomplete="off" spellcheck="false">
+              </label>
+            </div>
+            <div class="effect">Available <strong id="garbage-balance">0</strong></div>
+            <div class="garbage-fields">
+              <button id="garbage-delete" type="submit">Delete amount</button>
+              <button id="garbage-all" type="button">Delete all</button>
+            </div>
+          </form>
           <div id="automation-upgrades" w-tid="753"></div>
         </div>
         <div id="credit-upgrades" hidden w-tid="755">

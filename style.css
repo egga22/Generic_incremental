@@ -133,3 +133,49 @@ body.dark-screen #deep-settings {
   border-color: #145d12;
   color: #fff;
 }
+
+.fish-upgrade {
+  background: #e1f3ff;
+  border-color: #83b9da;
+}
+.fish-upgrade :is(h3, p, .effect) { color: #164764; }
+.fish-upgrade button { border-color: #83b9da; }
+body.dark-screen .fish-upgrade {
+  background: #112b3b;
+  border-color: #416780;
+}
+body.dark-screen .fish-upgrade :is(h3, p, .effect) { color: #d1ecff; }
+#fishing-pond[data-red-bite] #fishing-action {
+  background: #913b30;
+  border-color: #913b30;
+  color: #fff;
+}
+#garbage-form {
+  display: grid;
+  gap: 8px;
+}
+#garbage-form h3 { margin: 0; }
+.garbage-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.garbage-fields label {
+  display: grid;
+  flex: 1 1 160px;
+  gap: 4px;
+  min-width: 0;
+}
+.garbage-fields :is(input, select) {
+  width: 100%;
+  padding: 6px;
+  color: CanvasText;
+  background: Canvas;
+  border: 1px solid #aaa;
+  border-radius: 3px;
+}
+body.dark-screen #garbage-form {
+  background: #181212;
+  border-color: #674d4d;
+}
+body.dark-screen :is(#garbage-form .effect, #mainline-soft-cap) { color: #ddd; }
