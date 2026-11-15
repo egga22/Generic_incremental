@@ -134,6 +134,8 @@ body.dark-screen #deep-settings {
   color: #fff;
 }
 
+#fish-upgrades { margin-inline-start: 24px; }
+
 .fish-upgrade {
   background: #e1f3ff;
   border-color: #83b9da;
