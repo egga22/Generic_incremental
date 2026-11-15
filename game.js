@@ -336,7 +336,9 @@ function cubeNextCost() { return D(2).pow(priceLevel('cubeLevel', state.cubeLeve
 function cubeClicksToNext() { return cubeNextCost().minus(state.cubeClicks).max(0); }
 const ROULETTE_RED = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
 function casinoStake() {
-  const raw = document.querySelector('#casino-stake').value.trim();
+  const raw = document.querySelector('#casino-stake').value.trim().toLowerCase();
+  const constants = { e: Math.E, pi: Math.PI, 'π': Math.PI };
+  if (Object.hasOwn(constants, raw)) return D(constants[raw]);
   if (!/^(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(raw)) return D(0);
   const stake = D(raw);
   return stake.isFinite() && stake.gte(1) ? stake : D(0);

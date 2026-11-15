@@ -291,3 +291,23 @@ vm.runInContext(`state.gainZeroActive = true; spinRoulette(); dealBlackjack();`,
 assert(cs.alpha.eq(90), 'null gain blocks casino');
 cs.gainZeroActive=false;
 console.log('Casino checks passed: roulette payouts, zero/00, invalid stakes, blackjack dealer, push, bust, restrictions and saves.');
+
+// Constant stakes share the same parser for roulette and blackjack.
+for (const [input, value] of [['e',Math.E], ['π',Math.PI], ['pi',Math.PI], [' PI ',Math.PI], ['E',Math.E]]) {
+  doc.querySelector('#casino-stake').value = input;
+  vm.runInContext(`state.alpha = D(100); state.blackjackActive = false; render();`, context);
+  assert(!doc.querySelector('#roulette-spin').disabled, `roulette accepts ${input}`);
+  assert(!doc.querySelector('#blackjack-deal').disabled, `blackjack accepts ${input}`);
+  assert(vm.runInContext('casinoStake()', context).eq(a.D(value)), `constant value ${input}`);
+  vm.runInContext(`Math.random = () => 0; spinRoulette(); Math.random = casinoRandom;`, context);
+  assert(cs.alpha.eq(a.D(100).minus(value)), `roulette deducts constant ${input}`);
+}
+vm.runInContext(`state.alpha = D(100); document.querySelector('#casino-stake').value = 'π'; Math.random = () => .5; dealBlackjack(); Math.random = casinoRandom;`, context);
+assert(cs.alpha.eq(a.D(100).minus(Math.PI)) || !cs.blackjackActive, 'blackjack uses constant stake');
+if (cs.blackjackActive) assert(cs.blackjackStake.eq(a.D(Math.PI)), 'blackjack holds exact parsed stake');
+assert(a.isValidSave(JSON.parse(a.serializeState())), 'constant stake save round trip');
+for (const invalid of ['pie', 'Math.PI', '2*pi', 'e+1']) {
+  doc.querySelector('#casino-stake').value = invalid;
+  assert(vm.runInContext('casinoStake().eq(0)', context), `reject unsupported expression ${invalid}`);
+}
+console.log('Casino constant stakes passed: e, π, pi, case/whitespace, both games and saves.');
