@@ -38,6 +38,7 @@ Object.assign(initialState, {
   fortuneMultiplier: 1, fortuneLast: '', fortuneStreak: 0, fortuneRefunds: 0,
   fortuneRerolled: false, fortuneBoost: false, fortuneBoostUntil: 0,
   fortuneBase: 0, fortuneResult: 'The mechanism is waiting.',
+  dieShards: 0, dieRolls: 0, dieWins: 0, dieFaces: [], dieUpgrades: [0, 0, 0], dieStance: 'balanced', dieHistory: [],
   icosahedronUnlocked: false, icosahedronReadyAt: 0, icosahedronResult: 'Ready for your first roll.',
   cubeLoadouts: ['', '', ''], researchBranch: 'none', researchLevel: 0,
   completedCombos: [], achievements: [], achievementTheme: 'default',
@@ -1400,6 +1401,7 @@ document.querySelector('#credit-tab').addEventListener('click', () => { if (stat
 document.querySelector('#data-tab').addEventListener('click', () => { if (state.totalDataPrestiges || gt(state.data, 0) || state.dataLore.some(Boolean)) chooseTab('data'); });
 document.querySelector('#spark-tab').addEventListener('click', () => { if (state.sparkPrestiges || gt(state.spark, 0)) chooseTab('spark'); });
 document.querySelector('#cube-tab').addEventListener('click', () => { if (state.cubeUnlocked) chooseTab('cube'); });
+document.querySelector('#icosahedron-tab').addEventListener('click', () => { if (state.icosahedronUnlocked) chooseTab('icosahedron'); });
 document.querySelector('#pyramid-tab').addEventListener('click', () => { if (state.pyramidUnlocked) chooseTab('pyramid'); });
 document.querySelector('#alpha-tab').addEventListener('click', () => { if (state.alphaUnlocked) chooseTab('alpha'); });
 document.querySelector('#darkmatter-tab').addEventListener('click', () => { if (state.darkMatterUnlocked) chooseTab('darkmatter'); });
@@ -1575,21 +1577,35 @@ function rollIcosahedron() {
   const now = Date.now();
   if (!icosahedronAllowed() || now < state.icosahedronReadyAt) return;
   const faceIndex = Math.floor(Math.random() * 20), face = ICOSAHEDRON_FACES[faceIndex];
-  state.icosahedronReadyAt = now + 300000;
+  const stance = state.dieStance;
+  const reward = (stance === 'guarded' ? .6 : stance === 'daring' ? 1.5 : 1) * (1 + state.dieUpgrades[1] * .2) * (1 + Math.floor(state.dieFaces.length / 5) * .1);
+  const loss = (stance === 'guarded' ? .5 : stance === 'daring' ? 1.5 : 1) * (1 - state.dieUpgrades[2] * .15);
+  state.icosahedronReadyAt = now + (300 - state.dieUpgrades[0] * 30) * 1000;
   let amount;
   if (face.kind === 'cube') {
-    amount = cubeClicksToNext().times(face.percent / 100);
+    amount = cubeClicksToNext().times(face.percent / 100).times(reward);
     addCubeClicks(amount);
   } else {
     const key = face.kind === 'points' ? 'balance' : face.kind;
     amount = face.seconds ? rate().times(face.seconds) : D(state[key]).times(face.percent / 100);
     if (!face.loss && !face.seconds) amount = amount.max(1);
+    amount = amount.times(face.loss ? loss : reward);
     state[key] = face.loss ? minus(state[key], amount) : plus(state[key], amount);
     if (face.kind === 'points' && !face.loss) {
       state.runEarned = plus(state.runEarned, amount); state.lifetime = plus(state.lifetime, amount);
     }
   }
   state.icosahedronResult = `Face ${faceIndex + 1}: ${face.label}. ${face.loss ? 'Lost' : 'Gained'} ${fmt(amount)} ${face.kind === 'cube' ? 'Cube clicks' : face.kind}.`;
+  let shards = stance === 'daring' ? 2 : 1;
+  if (!state.dieFaces.includes(faceIndex + 1)) {
+    state.dieFaces.push(faceIndex + 1);
+    shards += 2;
+    if (state.dieFaces.length % 5 === 0) shards += 5;
+  }
+  state.dieShards += shards; state.dieRolls += 1;
+  if (!face.loss) state.dieWins += 1;
+  state.dieHistory.unshift(`${state.icosahedronResult} +${shards} shards (${stance}).`);
+  state.dieHistory = state.dieHistory.slice(0, 8);
   render(); save();
 }
 function renderIcosahedron() {
@@ -1599,7 +1615,27 @@ function renderIcosahedron() {
   const buy = document.getElementById('buy-icosahedron-unlock');
   buy.disabled = !ready || state.icosahedronUnlocked || lt(state.credits, ICOSAHEDRON_COST);
   buy.textContent = state.icosahedronUnlocked ? 'Unlocked' : '1e1000 C$';
-  document.getElementById('icosahedron-panel').hidden = !state.icosahedronUnlocked;
+  document.getElementById('icosahedron-panel').hidden = !state.icosahedronUnlocked || activeTab !== 'icosahedron';
+  document.getElementById('icosahedron-tab').hidden = !state.icosahedronUnlocked;
+  document.getElementById('icosahedron-tab').classList.toggle('active', activeTab === 'icosahedron');
+  document.getElementById('icosahedron-stats').textContent = `${state.dieShards} shards · ${state.dieRolls} rolls · ${state.dieWins} positive rolls · ${state.dieFaces.length}/20 faces · Collection bonus +${Math.floor(state.dieFaces.length / 5) * 10}%`;
+  document.getElementById('icosahedron-stance').value = state.dieStance;
+  document.querySelector('#icosahedron-stance option[value="daring"]').disabled = state.dieFaces.length < 5;
+  document.querySelectorAll('[data-die-upgrade]').forEach(button => {
+    const i = Number(button.dataset.dieUpgrade), level = state.dieUpgrades[i];
+    button.textContent = `Level ${level}/5 · ${level === 5 ? 'Maxed' : `${5 * 2 ** level} shards`}`;
+    button.disabled = !icosahedronAllowed() || level >= 5 || state.dieShards < 5 * 2 ** level;
+  });
+  const collection = document.getElementById('icosahedron-collection');
+  collection.replaceChildren(...ICOSAHEDRON_FACES.map((face, i) => {
+    const cell = document.createElement('span'), found = state.dieFaces.includes(i + 1);
+    cell.textContent = `${i + 1}${found ? ' ✓' : ' ·'}`; cell.className = found ? 'collected' : '';
+    cell.title = `Face ${i + 1}: ${face.label}${found ? ' (collected)' : ' (undiscovered)'}`;
+    return cell;
+  }));
+  document.getElementById('icosahedron-history').replaceChildren(...(state.dieHistory.length ? state.dieHistory : ['No rolls yet.']).map(text => {
+    const row = document.createElement('li'); row.textContent = text; return row;
+  }));
   const remaining = Math.max(0, Math.ceil((state.icosahedronReadyAt - Date.now()) / 1000));
   const roll = document.getElementById('roll-icosahedron');
   roll.disabled = !icosahedronAllowed() || remaining > 0;
@@ -1609,10 +1645,20 @@ function renderIcosahedron() {
 document.getElementById('icosahedron-effects').innerHTML = ICOSAHEDRON_FACES.map(face => `<li>${face.label}</li>`).join('');
 document.getElementById('buy-icosahedron-unlock').addEventListener('click', () => {
   if (!state.cubeUnlocked || !state.pyramidUnlocked || state.icosahedronUnlocked || lt(state.credits, ICOSAHEDRON_COST)) return;
-  state.credits = minus(state.credits, ICOSAHEDRON_COST); state.icosahedronUnlocked = true;
+  state.credits = minus(state.credits, ICOSAHEDRON_COST); state.icosahedronUnlocked = true; activeTab = 'icosahedron';
   render(); save();
 });
 document.getElementById('roll-icosahedron').addEventListener('click', rollIcosahedron);
+document.getElementById('icosahedron-stance').addEventListener('change', event => {
+  const stance = event.target.value;
+  if (!icosahedronAllowed() || !['balanced', 'guarded', 'daring'].includes(stance) || stance === 'daring' && state.dieFaces.length < 5) { render(); return; }
+  state.dieStance = stance; render(); save();
+});
+document.querySelectorAll('[data-die-upgrade]').forEach(button => button.addEventListener('click', () => {
+  const i = Number(button.dataset.dieUpgrade), level = state.dieUpgrades[i], cost = 5 * 2 ** level;
+  if (!icosahedronAllowed() || level >= 5 || state.dieShards < cost) return;
+  state.dieShards -= cost; state.dieUpgrades[i] += 1; render(); save();
+}));
 
 document.querySelector('#buy-free-run').addEventListener('click', () => {
   if (state.freeRunUpgrades || lt(state.credits, 100)) return;
@@ -2140,6 +2186,10 @@ function isValidSave(snapshot) {
     if (key === 'expedition') return validExpedition(value);
     if (key === 'expeditionBest') return Number.isInteger(value) && value >= 0 && value <= 8;
     if (key === 'expeditionUpgrades') return Array.isArray(value) && value.length === 3 && value.every(n => Number.isInteger(n) && n >= 0 && n <= 20);
+    if (key === 'dieStance') return ['balanced', 'guarded', 'daring'].includes(value) && (value !== 'daring' || snapshot.dieFaces?.length >= 5);
+    if (key === 'dieFaces') return Array.isArray(value) && value.length <= 20 && new Set(value).size === value.length && value.every(n => Number.isInteger(n) && n >= 1 && n <= 20);
+    if (key === 'dieUpgrades') return Array.isArray(value) && value.length === 3 && value.every(n => Number.isInteger(n) && n >= 0 && n <= 5);
+    if (key === 'dieHistory') return Array.isArray(value) && value.length <= 8 && value.every(text => typeof text === 'string' && text.length <= 400);
     const fallback = initialState[key];
     if (['blackjackDeck', 'blackjackPlayer', 'blackjackDealer'].includes(key)) return Array.isArray(value) && value.length <= 52 && new Set(value).size === value.length && value.every(n => Number.isInteger(n) && n >= 0 && n < 52);
     if (key === 'alphaTerms') return value === null || isSaveObject(value) && Object.keys(value).length === 3 && ['base', 'e', 'pi'].every(k => typeof value[k] === 'string' && value[k].trim() !== '' && D(value[k]).isFinite());

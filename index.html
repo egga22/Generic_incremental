@@ -50,7 +50,7 @@ input, textarea, select {
           <button class="sections-toggle" id="sections-toggle" type="button" aria-expanded="false" w-tid="63">Sections <span aria-hidden="true" w-tid="65">⌄</span></button>
           <button id="max-buy-toggle" type="button" aria-pressed="false" hidden>Max Buy</button>
         </div>
-        <div class="upgrade-tabs" id="upgrade-tabs" hidden w-tid="67"><button class="tab active" id="run-tab" type="button" w-tid="69">Run upgrades</button><button class="tab" id="token-tab" type="button" hidden w-tid="71">Token upgrades</button><button class="tab" id="credit-tab" type="button" hidden w-tid="73">Credit upgrades</button><button class="tab" id="data-tab" type="button" hidden w-tid="75">Data 𝔻</button><button class="tab" id="spark-tab" type="button" hidden w-tid="77">Spark ⊹</button><button class="tab" id="cube-tab" type="button" hidden w-tid="79">The Cube</button><button class="tab" id="pyramid-tab" type="button" hidden w-tid="81">The Pyramid</button><button class="tab" id="alpha-tab" type="button" hidden w-tid="83">α upgrades</button><button class="tab" id="darkmatter-tab" type="button" hidden w-tid="85"><span data-matter-name>Dark Matter</span> ⊠</button><button class="tab" id="ascendance-tab" type="button" hidden w-tid="87">Ascendance ᛥ</button></div>
+        <div class="upgrade-tabs" id="upgrade-tabs" hidden w-tid="67"><button class="tab active" id="run-tab" type="button" w-tid="69">Run upgrades</button><button class="tab" id="token-tab" type="button" hidden w-tid="71">Token upgrades</button><button class="tab" id="credit-tab" type="button" hidden w-tid="73">Credit upgrades</button><button class="tab" id="data-tab" type="button" hidden w-tid="75">Data 𝔻</button><button class="tab" id="spark-tab" type="button" hidden w-tid="77">Spark ⊹</button><button class="tab" id="cube-tab" type="button" hidden w-tid="79">The Cube</button><button class="tab" id="icosahedron-tab" type="button" hidden>The Icosahedron</button><button class="tab" id="pyramid-tab" type="button" hidden w-tid="81">The Pyramid</button><button class="tab" id="alpha-tab" type="button" hidden w-tid="83">α upgrades</button><button class="tab" id="darkmatter-tab" type="button" hidden w-tid="85"><span data-matter-name>Dark Matter</span> ⊠</button><button class="tab" id="ascendance-tab" type="button" hidden w-tid="87">Ascendance ᛥ</button></div>
         <div id="run-upgrades" w-tid="89">
         <article class="upgrade zero-upgrade" id="upgrade-gain-zero" w-tid="91">
           <div w-tid="93"><h3 w-tid="95">0. Null gain</h3><p w-tid="97">Free. Multiplies all currency gain by ×0. Turning it off sets P$ to 1 and resets upgrade prices without changing levels. ONLY USE IN CASE OF EMERGENCY.</p><div class="effect" w-tid="99">All currency gain ×<span id="gain-zero-factor" w-tid="101">1</span></div></div>
@@ -298,12 +298,25 @@ input, textarea, select {
             <div><h3>10C. The Icosahedron</h3><p>Requires 4C and 7C. Unlocks a twenty-sided die with good and bad effects.</p><div class="effect">Roll once every 5 minutes · persists through resets</div></div>
             <button id="buy-icosahedron-unlock" type="button" disabled>1e1000 C$</button>
           </article>
+
+        </div>
           <section id="icosahedron-panel" hidden>
-            <h3>The Icosahedron</h3><img class="icosahedron-image" src="icosahedron.svg" width="240" height="240" alt="A regular icosahedron, a solid with twenty triangular faces"><p>20 equally likely faces. First roll is ready immediately. Unlock and cooldown persist through resets; time offline counts. Disabled during Pyramid trials and Null gain.</p>
+            <h3>The Icosahedron</h3><img class="icosahedron-image" src="icosahedron.svg" width="240" height="240" alt="A regular icosahedron, a solid with twenty triangular faces"><p>20 equally likely faces. First roll is ready immediately. Earn shards on every roll, including losses. Unlock and cooldown persist through resets; time offline counts. Disabled during Pyramid trials and Null gain.</p>
+            <p id="icosahedron-stats" class="effect"></p>
+            <label for="icosahedron-stance">Roll stance</label>
+            <select id="icosahedron-stance"><option value="balanced">Balanced · normal rewards and losses</option><option value="guarded">Guarded · 60% rewards, half losses</option><option value="daring">Daring · 150% rewards and losses, +1 shard (5 faces required)</option></select>
+            <p>Every roll: 1 shard. New face: +2 shards. Each 5 distinct faces: +5 shards and +10% positive roll rewards. Daring unlocks at 5 faces. All die progress survives prestige.</p>
+            <h4>Shard workshop</h4><p>Spend shards to improve future rolls. Each upgrade has 5 levels; costs start at 5 shards and double each level.</p>
+            <div class="die-workshop">
+              <article><h4>Quick tumble</h4><p>−30 seconds cooldown per level (minimum 150 seconds). Applies to future rolls.</p><button type="button" data-die-upgrade="0"></button></article>
+              <article><h4>Polished faces</h4><p>+20% positive roll rewards per level.</p><button type="button" data-die-upgrade="1"></button></article>
+              <article><h4>Cushioned landing</h4><p>−15% roll losses per level (up to 75% reduction).</p><button type="button" data-die-upgrade="2"></button></article>
+            </div>
+            <h4>Face collection</h4><div id="icosahedron-collection" class="die-collection"></div>
             <details><summary>All roll effects (5% each)</summary><ol id="icosahedron-effects"></ol></details>
             <button id="roll-icosahedron" type="button">Roll</button><p id="icosahedron-result" role="status" aria-live="polite"></p>
+            <h4>Recent rolls</h4><ol id="icosahedron-history" aria-label="Recent rolls, newest first"></ol>
           </section>
-        </div>
         <div id="data-upgrades" hidden w-tid="873">
           <article class="upgrade data-upgrade" id="upgrade-data-1" w-tid="875"><div w-tid="877"><h3 w-tid="879">1D. Points record</h3><p w-tid="881">Purchase to uncover the foundry’s notes on Points and P$.</p><div class="effect" id="data-lore-1" hidden w-tid="883"></div></div><button id="buy-data-1" type="button" w-tid="885">5 𝔻 · P$ 1e210</button></article>
           <article class="upgrade data-upgrade" id="upgrade-data-2" w-tid="887"><div w-tid="889"><h3 w-tid="891">2D. Token record</h3><p w-tid="893">Purchase to uncover the foundry’s notes on Tokens.</p><div class="effect" id="data-lore-2" hidden w-tid="895"></div></div><button id="buy-data-2" type="button" w-tid="897">10 𝔻 · 1e230 Tokens</button></article>

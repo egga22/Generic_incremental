@@ -300,3 +300,12 @@ body.hard-mode .hard-mode-wall:has(+ section[hidden]) { display: none; }
 .expedition-routes button { width: 100%; }
 
 .icosahedron-image { display: block; width: min(240px, 100%); height: auto; margin: 1rem auto; }
+
+.die-workshop { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: .75rem; }
+.die-workshop article { border: 1px solid #548c99; border-radius: 10px; padding: 1rem; }
+.die-collection { display: grid; grid-template-columns: repeat(5, 1fr); gap: .5rem; margin: 1rem 0; }
+.die-collection span { padding: .6rem; text-align: center; border: 1px solid #548c99; border-radius: 6px; opacity: .5; }
+.die-collection .collected { background: #154c5b; color: #c7f6ff; opacity: 1; }
+#icosahedron-panel { padding: 1rem 0; }
+#icosahedron-history li { margin-bottom: .5rem; }
+#icosahedron-stance { max-width: 100%; }

@@ -585,3 +585,43 @@ a.resetCreditRun(); assert(!thinkState.pointUpgrade21Bought);
 thinkState.pointUpgrade21Bought=true; a.resetAscendanceRun(); assert(!thinkState.pointUpgrade21Bought);
 Object.assign(thinkState,thinkStart);
 console.log('Think on it checks passed');
+
+// Icosahedron workshop and collection progression.
+const ds=a.state, dieBefore={...ds};
+ds.icosahedronUnlocked=true; ds.activeChallenge=''; ds.gainZeroActive=false;
+ds.dieFaces=[]; ds.dieUpgrades=[0,0,0]; ds.dieShards=0; ds.dieRolls=0; ds.dieWins=0; ds.dieHistory=[]; ds.dieStance='balanced';
+const dieStance=doc.getElementById('icosahedron-stance');
+doc.getElementById('icosahedron-tab').click();
+assert(!doc.getElementById('icosahedron-panel').hidden);
+assert(doc.getElementById('credit-upgrades').hidden);
+dieStance.value='daring'; dieStance.dispatchEvent(new dom.window.Event('change')); assert.equal(ds.dieStance,'balanced');
+for(let i=0;i<5;i++) {
+ ds.icosahedronReadyAt=0; context.Math.random=()=> (i+.5)/20; a.render(); rollDie.click();
+}
+assert.equal(ds.dieShards,20); assert.equal(ds.dieFaces.length,5); assert.equal(ds.dieRolls,5);
+assert.equal(doc.querySelectorAll('.die-collection .collected').length,5);
+ds.icosahedronReadyAt=0; context.Math.random=()=>.025; a.render(); rollDie.click(); assert.equal(ds.dieShards,21,'repeat faces do not repay discovery bonus');
+dieStance.value='daring'; dieStance.dispatchEvent(new dom.window.Event('change')); assert.equal(ds.dieStance,'daring');
+const quick=doc.querySelector('[data-die-upgrade="0"]'); quick.click(); assert.equal(ds.dieUpgrades[0],1); assert.equal(ds.dieShards,16);
+const priorDeadline=ds.icosahedronReadyAt; assert(priorDeadline>Date.now(),'workshop does not erase cooldown');
+ds.dieFaces=Array.from({length:20},(_,i)=>i+1); ds.dieStance='guarded'; ds.dieUpgrades=[5,0,5]; ds.credits=a.D(1000);
+ds.icosahedronReadyAt=0; context.Math.random=()=>19.5/20; a.render(); const beforeLoss=ds.credits; rollDie.click();
+assert(ds.credits.eq(beforeLoss.times(.95)), 'guarded and cushioning reduce 40% loss to 5%');
+assert(ds.icosahedronReadyAt>Date.now()+149000 && ds.icosahedronReadyAt<=Date.now()+150000);
+assert.equal(ds.dieShards,17,'losses still award shards');
+for(let i=0;i<10;i++) { ds.icosahedronReadyAt=0; a.render(); rollDie.click(); }
+assert.equal(ds.dieHistory.length,8);
+ds.dieStance='balanced'; ds.dieUpgrades=[5,5,5]; ds.tokens=a.D(1000); ds.icosahedronReadyAt=0;
+context.Math.random=()=>3.5/20; a.render(); rollDie.click();
+assert(Math.abs(ds.tokens.toNumber()-1280)<1e-8, 'polish and full collection multiply positive rewards');
+const maxShards=ds.dieShards; quick.click(); assert.equal(ds.dieShards,maxShards); assert.equal(ds.dieUpgrades[0],5);
+ds.dieUpgrades=[0,5,5]; ds.dieShards=0; a.render(); quick.click(); assert.equal(ds.dieUpgrades[0],0);
+ds.dieUpgrades=[5,5,5];
+const shardsBeforeReset=ds.dieShards; a.resetCreditRun(); a.resetAscendanceRun();
+assert.equal(ds.dieShards,shardsBeforeReset); assert.equal(ds.dieFaces.length,20); assert.equal(ds.dieUpgrades[0],5);
+assert(a.isValidSave(JSON.parse(a.serializeState())));
+assert(!a.isValidSave({dieFaces:[1,1]})); assert(!a.isValidSave({dieFaces:[21]}));
+assert(!a.isValidSave({dieUpgrades:[6,0,0]})); assert(!a.isValidSave({dieStance:'daring',dieFaces:[]}));
+ds.activeChallenge='deduction1'; a.render(); const blockedShards=ds.dieShards; quick.click(); rollDie.click(); assert.equal(ds.dieShards,blockedShards);
+context.Math.random=oldRandom; Object.assign(ds,dieBefore); a.render();
+console.log('Icosahedron expansion passed: tab, collection, shards, stances, workshop, cooldown, losses, history, resets and validation.');
