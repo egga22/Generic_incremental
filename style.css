@@ -223,3 +223,14 @@ body.dark-screen .progress-disc[data-visual="ring"]::after { background: #090909
 .progress-letters b { display: block; font: 600 24px/1.4 monospace; color: var(--progress-ink); }
 .progress-color { height: 36px; border-radius: 3px; background: var(--progress-color); }
 .prestige-progress[data-style="pro"] { display: grid; gap: 10px; }
+
+#alpha-casino { margin-bottom: 1rem; }
+#alpha-casino input, #alpha-casino select {
+  font: inherit;
+  color: var(--ink, inherit);
+  border: 1px solid var(--settings-border, #888);
+  border-radius: 4px;
+}
+#alpha-casino input { width: min(12rem, 100%); }
+#blackjack-cards { font-size: 1.1rem; overflow-wrap: anywhere; }
+#casino-result { min-height: 2.5em; }

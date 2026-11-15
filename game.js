@@ -11,7 +11,7 @@ const MAINLINE_SOFT_CAP = '1e1000';
 const MAINLINE_CURRENCIES = {
   points: 'balance', tokens: 'tokens', credits: 'credits', data: 'data', spark: 'spark', ascendance: 'ascendance'
 };
-const CURRENCY_KEYS = ['balance', 'runEarned', 'lifetime', 'tokens', 'credits', 'data', 'cubeClicks', 'alpha', 'ascendance', 'darkMatter', 'darkMatterCoinBoost', 'spark', 'fishPoints', 'fortuneBase'];
+const CURRENCY_KEYS = ['balance', 'runEarned', 'lifetime', 'tokens', 'credits', 'data', 'cubeClicks', 'alpha', 'ascendance', 'darkMatter', 'darkMatterCoinBoost', 'spark', 'fishPoints', 'fortuneBase', 'blackjackStake'];
 const D = value => value instanceof Decimal ? value : new Decimal(value ?? 0);
 function upgradeLevelMax() { return BASE_MAX_UPGRADE_LEVEL + (state?.cyan15Bought ? 250 : 0); }
 const lt = (a, b) => D(a).lt(b);
@@ -22,6 +22,7 @@ const plus = (a, b) => D(a).plus(b);
 const minus = (a, b) => D(a).minus(b);
 const initialState = { balance: 0, runEarned: 0, lifetime: 0, printer: false, press: false, multiplierLevel: 0, incomeLevel: 0, powerLevel: 0, clickLevel: 0, logLevel: 0, exponentLevel: 0, exponentCapLevel: 0, capLevel: 0, tokens: 0, totalPrestiges: 0, tokenResetCount: 0, tokenMultiplierLevel: 0, discountLevel: 0, tokenBoostLevel: 0, expansionUnlocked: false, maxBuyUnlocked: false, maxBuyActive: false, tokenCreditLevel: 0, tokenDiscountLevel: 0, credits: 0, totalCreditPrestiges: 0, data: 0, totalDataPrestiges: 0, dataLore: Array(5).fill(false), gainZeroBought: false, gainZeroActive: false, priceOrigins: {}, creditEngine: false, creditExponentLevel: 0, heavyMint: false, cubeUnlocked: false, cubeLevel: 0, cubeClicks: 0, cubeTarget: 'points', freeRunUpgrades: false, passiveTokens: false, alphaUnlocked: false, alpha: 0, alphaGainPurchases: 0, alphaBoostLevel: 0, alphaCapLevel: 0, alphaNeutralBought: false, alphaGeneratorBought: false, fishingUnlocked: false, fishPoints: 0, fishGainLevel: 0, redFishLevel: 0, fishAlphaLevel: 0, garbageUnlocked: false, darkMatterUnlocked: false, darkMatter: 0, darkMatter1Bought: false, darkMatter2Bought: false, darkMatter2Level: 0, darkMatter3Bought: false, darkMatter4Bought: false, darkMatterCoinBoost: 1, darkMatterFlipTimer: 0, darkMatterFlipDuration: 1, pyramidUnlocked: false, activeChallenge: '', challengeEndsAt: 0, completedChallenges: [], creditChallengeBoost: false, automationsUnlocked: false, automationBought: Array(12).fill(false), automationActive: Array(12).fill(false), ascendance: 0, totalAscendances: 0, ascCurrencyBoost: false, ascCreditExponent: false, ascCubePowerLevel: 0, ascCubeAutoclicker: false, ascCubeAscendance: false, ascCubeAlpha: false, ascPointDiscountLevel: 0, ascTotalLevelBoost: false, ascAllCurrencyLevel: 0, ascMainlinePowerLevel: 0, spark: 0, sparkPrestiges: 0, sparkUpgrade1Level: 0, sparkUpgrade2Level: 0, sparkUpgrade3Level: 0, pointUpgrade16Bought: false, pointUpgrade17Bought: false, pointUpgrade18Bought: false, pointUpgrade19Bought: false, pointUpgrade20Bought: false, cyan13Bought: false, cyan14Level: 0, cyan15Bought: false, cyanSquareCounts: [0, 0, 0] };
 Object.assign(initialState, {
+  americanRoulette: false, blackjackStake: 0, blackjackDeck: [], blackjackPlayer: [], blackjackDealer: [], blackjackActive: false,
   prestigeAnimation: 'bar',
   copyrightMode: false, kirbyUnlocked: false, kirbyAbility: 'beam',
   kirbyBeam: false, kirbyMirror: false, kirbyFullness: 0,
@@ -333,6 +334,86 @@ function tokenAscendanceReward() {
 function creditExponentCost(level = state.creditExponentLevel) { return D(2).times(D(2).pow(priceLevel('creditExponentLevel', level))); }
 function cubeNextCost() { return D(2).pow(priceLevel('cubeLevel', state.cubeLevel)); }
 function cubeClicksToNext() { return cubeNextCost().minus(state.cubeClicks).max(0); }
+const ROULETTE_RED = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+function casinoStake() {
+  const raw = document.querySelector('#casino-stake').value.trim();
+  if (!/^(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(raw)) return D(0);
+  const stake = D(raw);
+  return stake.isFinite() && stake.gte(1) ? stake : D(0);
+}
+function casinoAvailable() {
+  return state.alphaUnlocked && !state.gainZeroActive && !state.activeChallenge && !saveConflict;
+}
+function renderCasino() {
+  const stake = casinoStake(), ready = casinoAvailable();
+  document.querySelector('#american-roulette').checked = state.americanRoulette;
+  document.querySelector('#roulette-rules').textContent = state.americanRoulette ? 'American wheel: 38 pockets, including green 0 and 00.' : 'European wheel: 37 pockets, including green 0.';
+  const numbers = document.querySelector('#roulette-number');
+  if (numbers.options.length !== (state.americanRoulette ? 38 : 37)) {
+    const selected = numbers.value;
+    numbers.replaceChildren(...Array.from({length: 37}, (_, n) => new Option(String(n), String(n))));
+    if (state.americanRoulette) numbers.add(new Option('00', '00'));
+    numbers.value = selected === '00' && !state.americanRoulette ? '0' : selected || '0';
+  }
+  document.querySelector('#roulette-spin').disabled = !ready || stake.lt(1) || stake.gt(state.alpha);
+  document.querySelector('#blackjack-deal').disabled = !ready || state.blackjackActive || stake.lt(1) || stake.gt(state.alpha);
+  for (const action of ['hit', 'stand']) document.querySelector(`#blackjack-${action}`).disabled = !ready || !state.blackjackActive;
+  const player = state.blackjackPlayer.map(cardName).join(' · ');
+  const dealer = state.blackjackActive ? `${cardName(state.blackjackDealer[0])} · Hidden` : state.blackjackDealer.map(cardName).join(' · ');
+  document.querySelector('#blackjack-cards').textContent = player ? `You: ${player} (${handTotal(state.blackjackPlayer)}). Dealer: ${dealer}${state.blackjackActive ? '' : ` (${handTotal(state.blackjackDealer)})`}.` : 'No hand in play.';
+}
+function spinRoulette() {
+  const stake = casinoStake(), bet = document.querySelector('#roulette-bet').value;
+  const number = document.querySelector('#roulette-number').value;
+  if (!casinoAvailable() || stake.lt(1) || stake.gt(state.alpha) || !['red','black','number'].includes(bet)) return;
+  const roll = Math.floor(Math.random() * (state.americanRoulette ? 38 : 37));
+  const pocket = roll === 37 ? '00' : String(roll);
+  const color = roll === 0 || roll === 37 ? 'green' : ROULETTE_RED.includes(roll) ? 'red' : 'black';
+  const won = bet === 'number' ? number === pocket : bet === color;
+  const payout = won ? stake.times(bet === 'number' ? 36 : 2) : D(0);
+  state.alpha = state.alpha.minus(stake).plus(payout);
+  document.querySelector('#casino-result').textContent = `Roulette: ${pocket} ${color}. ${won ? `Won ${fmt(payout)} α including stake.` : `Lost ${fmt(stake)} α.`}`;
+  render(); save();
+}
+function cardName(card) { return `${['A','2','3','4','5','6','7','8','9','10','J','Q','K'][card % 13]}${['♠','♥','♦','♣'][Math.floor(card / 13)]}`; }
+function handTotal(cards) {
+  let total = 0, aces = 0;
+  for (const card of cards) { const rank = card % 13; total += rank === 0 ? 11 : Math.min(rank + 1, 10); if (rank === 0) aces++; }
+  while (total > 21 && aces-- > 0) total -= 10;
+  return total;
+}
+function settleBlackjack(multiplier, message) {
+  state.alpha = state.alpha.plus(state.blackjackStake.times(multiplier));
+  state.blackjackActive = false;
+  document.querySelector('#casino-result').textContent = `Blackjack: ${message} Payout ${fmt(state.blackjackStake.times(multiplier))} α including stake.`;
+  state.blackjackStake = D(0);
+}
+function dealBlackjack() {
+  const stake = casinoStake();
+  if (!casinoAvailable() || state.blackjackActive || stake.lt(1) || stake.gt(state.alpha)) return;
+  state.blackjackDeck = Array.from({length:52}, (_, i) => i);
+  for (let i = 51; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [state.blackjackDeck[i], state.blackjackDeck[j]] = [state.blackjackDeck[j], state.blackjackDeck[i]]; }
+  state.alpha = state.alpha.minus(stake); state.blackjackStake = stake; state.blackjackActive = true;
+  state.blackjackPlayer = [state.blackjackDeck.pop(), state.blackjackDeck.pop()];
+  state.blackjackDealer = [state.blackjackDeck.pop(), state.blackjackDeck.pop()];
+  const playerNatural = handTotal(state.blackjackPlayer) === 21, dealerNatural = handTotal(state.blackjackDealer) === 21;
+  if (playerNatural || dealerNatural) settleBlackjack(playerNatural ? dealerNatural ? 1 : 2.5 : 0, playerNatural ? dealerNatural ? 'Both blackjack. Push.' : 'Natural blackjack!' : 'Dealer blackjack.');
+  else document.querySelector('#casino-result').textContent = `Stake ${fmt(stake)} α placed. Hit or stand.`;
+  render(); save();
+}
+function playBlackjack(action) {
+  if (!casinoAvailable() || !state.blackjackActive || !['hit','stand'].includes(action)) return;
+  if (action === 'hit') state.blackjackPlayer.push(state.blackjackDeck.pop());
+  const player = handTotal(state.blackjackPlayer);
+  if (player > 21) settleBlackjack(0, 'Bust.');
+  else if (action === 'stand' || player === 21) {
+    while (handTotal(state.blackjackDealer) < 17) state.blackjackDealer.push(state.blackjackDeck.pop());
+    const dealer = handTotal(state.blackjackDealer);
+    settleBlackjack(dealer > 21 || player > dealer ? 2 : player === dealer ? 1 : 0, dealer > 21 ? 'Dealer busts. You win!' : player > dealer ? 'You win!' : player === dealer ? 'Push.' : 'Dealer wins.');
+  }
+  render(); save();
+}
+
 function alphaBoostPrice() { return D(25).times(D(1.5).pow(priceLevel('alphaBoostLevel', state.alphaBoostLevel))).ceil(); }
 function alphaCapPrice() { return D(100).times(D(1.5).pow(priceLevel('alphaCapLevel', state.alphaCapLevel))).ceil(); }
 function darkMatterRate() { return !state.gainZeroActive && state.darkMatter1Bought ? D(0.1).times(D(2).pow(state.darkMatter2Level)).times(state.darkMatter3Bought ? state.darkMatterCoinBoost : 1) : D(0); }
@@ -869,6 +950,7 @@ function render() {
   document.querySelector('#ascendance-tab').classList.toggle('active', activeTab === 'ascendance');
   document.querySelector('#data-tab').classList.toggle('active', activeTab === 'data');
   document.querySelector('#spark-tab').classList.toggle('active', activeTab === 'spark');
+  renderCasino();
   document.querySelector('#alpha-gain-amount').textContent = fmt(applyAlphaGain(1 + state.alphaBoostLevel).times(cubeMultiplier('alpha')));
   document.querySelector('#alpha-boost-level').textContent = state.alphaBoostLevel;
   const alphaBoostMax = 50 + state.alphaCapLevel * 2;
@@ -1142,6 +1224,11 @@ for (let i = 0; i < dataUpgradeInfo.length; i += 1) {
     render(); save();
   });
 }
+document.querySelector('#casino-stake').addEventListener('input', renderCasino);
+document.querySelector('#roulette-spin').addEventListener('click', spinRoulette);
+document.querySelector('#blackjack-deal').addEventListener('click', dealBlackjack);
+for (const action of ['hit','stand']) document.querySelector(`#blackjack-${action}`).addEventListener('click', () => playBlackjack(action));
+document.querySelector('#american-roulette').addEventListener('change', event => { state.americanRoulette = event.target.checked; render(); save(); });
 document.querySelector('#buy-alpha-unlock').addEventListener('click', () => { if (!state.printer || state.alphaUnlocked) return; state.alphaUnlocked = true; toast('Alpha upgrades unlocked'); render(); save(); });
 document.querySelector('#buy-alpha-gain').addEventListener('click', () => { if (!state.alphaUnlocked) return; const gain = applyAlphaGain(1 + state.alphaBoostLevel).times(cubeMultiplier('alpha')); state.alphaGainPurchases += 1; state.alpha = plus(state.alpha, gain); toast(`+${fmt(gain)} α`); render(); save(); });
 document.querySelector('#buy-alpha-generator').addEventListener('click', () => { if (!state.alphaUnlocked || state.alphaGeneratorBought || lt(state.alpha, 10)) return; state.alpha = minus(state.alpha, 10); state.alphaGeneratorBought = true; toast('Alpha generator started'); render(); save(); });
@@ -1773,6 +1860,7 @@ function isValidSave(snapshot) {
         && D(value).isFinite() && D(value).gte(0);
     }
     const fallback = initialState[key];
+    if (['blackjackDeck', 'blackjackPlayer', 'blackjackDealer'].includes(key)) return Array.isArray(value) && value.length <= 52 && new Set(value).size === value.length && value.every(n => Number.isInteger(n) && n >= 0 && n < 52);
     if (key === 'prestigeAnimation') return PRESTIGE_STYLES.includes(value);
     if (key === 'kirbyAbility') return ['beam', 'mirror', 'spark', 'stone', 'fisher'].includes(value);
     if (key === 'kirbyStoneTarget') return ['points', 'tokens', 'credits', 'ascendance', 'alpha'].includes(value);

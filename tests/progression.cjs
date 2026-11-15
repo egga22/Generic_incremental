@@ -241,3 +241,53 @@ for (let i=16;i<=20;i++) {
   assert(chainState[`pointUpgrade${i}Bought`]);
 }
 console.log('Upgrades 16–20 prerequisite chain passed.');
+const cs = a.state;
+// Casino: deterministic outcomes, stake guards, persisted rules and hands.
+vm.runInContext(`
+state.alphaUnlocked = true; state.activeChallenge = ''; state.gainZeroActive = false;
+state.alpha = D(100); state.americanRoulette = false;
+document.querySelector('#casino-stake').value = '10'; render();
+globalThis.casinoRandom = Math.random; Math.random = () => 1.5 / 37;
+document.querySelector('#roulette-bet').value = 'red'; spinRoulette();
+`, context);
+assert(cs.alpha.eq(110), 'red win returns 2x stake');
+vm.runInContext(`Math.random = () => 0; spinRoulette();`, context);
+assert(cs.alpha.eq(100), 'European zero loses color bets');
+const american = doc.querySelector('#american-roulette'); american.checked = true;
+american.dispatchEvent(new dom.window.Event('change'));
+assert(cs.americanRoulette); assert.equal(doc.querySelector('#roulette-number').options.length,38);
+vm.runInContext(`Math.random = () => .999; document.querySelector('#roulette-bet').value = 'number'; document.querySelector('#roulette-number').value = '00'; spinRoulette();`,context);
+assert(cs.alpha.eq(450), 'American double zero pays 36x');
+for (const bad of ['0','-1','Infinity','NaN','1e999999999999999999999999','garbage','451']) {
+  doc.querySelector('#casino-stake').value = bad;
+  const before = cs.alpha.toString(); doc.querySelector('#roulette-spin').click();
+  assert.equal(cs.alpha.toString(), before, `reject stake ${bad}`);
+}
+vm.runInContext(`
+document.querySelector('#casino-stake').value = '10';
+state.blackjackActive = false; dealBlackjack();
+Math.random = casinoRandom;
+`, context);
+assert(a.isValidSave(JSON.parse(a.serializeState())), 'casino save round trip');
+// Set up known hands to isolate dealer rules, aces, pushes and repeated settlement.
+vm.runInContext(`
+state.alpha = D(90); state.blackjackStake = D(10); state.blackjackActive = true;
+state.blackjackPlayer = [9, 7]; state.blackjackDealer = [0, 5]; state.blackjackDeck = [12];
+playBlackjack('stand');
+`,context);
+assert(cs.alpha.eq(110), 'dealer stands on soft 17, player 18 wins');
+vm.runInContext(`playBlackjack('stand');`,context); assert(cs.alpha.eq(110), 'cannot settle twice');
+vm.runInContext(`
+state.alpha = D(90); state.blackjackStake = D(10); state.blackjackActive = true;
+state.blackjackPlayer = [9, 7]; state.blackjackDealer = [9, 7]; state.blackjackDeck = [];
+playBlackjack('stand');
+`,context); assert(cs.alpha.eq(100), 'push refunds stake');
+vm.runInContext(`
+state.alpha = D(90); state.blackjackStake = D(10); state.blackjackActive = true;
+state.blackjackPlayer = [9, 7]; state.blackjackDealer = [9, 7]; state.blackjackDeck = [12];
+playBlackjack('hit');
+`,context); assert(cs.alpha.eq(90), 'bust forfeits stake');
+vm.runInContext(`state.gainZeroActive = true; spinRoulette(); dealBlackjack();`,context);
+assert(cs.alpha.eq(90), 'null gain blocks casino');
+cs.gainZeroActive=false;
+console.log('Casino checks passed: roulette payouts, zero/00, invalid stakes, blackjack dealer, push, bust, restrictions and saves.');
