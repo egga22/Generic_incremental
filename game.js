@@ -838,7 +838,7 @@ function render() {
   const divisor = currency ? mainlineGainDivisor(currency) : D(1);
   limit.hidden = divisor.lte(1);
   if (!limit.hidden) limit.textContent = `Gain divided by ${fmt(divisor)} · ÷2 per power of 10 above 1e1000`;
-  document.querySelector('#work-button').textContent = state.gainZeroActive ? 'Restore currency gains ×1' : `Make a sale · +P$${fmt(saleGain())}`;
+  document.querySelector('#work-button').textContent = state.gainZeroActive ? 'Restore currency gains ×1' : `Generic Button · +P$${fmt(saleGain())}`;
   document.querySelector('#run-earned').textContent = fmt(state.runEarned);
   document.querySelector('#prestige-tokens').textContent = fmt(state.tokens);
   document.querySelector('#credit-balance').textContent = fmt(state.credits);
