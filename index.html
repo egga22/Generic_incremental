@@ -192,6 +192,7 @@ input, textarea, select {
           <article class="upgrade asc-upgrade locked" id="upgrade-asc-7" w-tid="617"><div w-tid="619"><h3 w-tid="621">7A. Total mastery</h3><p w-tid="623">Requires 2A. Multiplies P$ gain by the total level of upgrades bought.</p><div class="effect" w-tid="625">×<span id="asc-total-level-multiplier" w-tid="627">1</span> P$ gain · One time</div></div><button id="buy-asc-7" type="button" disabled w-tid="629">1e10 ᛥ</button></article>
           <article class="upgrade asc-upgrade" id="upgrade-asc-8" w-tid="631"><div w-tid="633"><h3 w-tid="635">8A. All things doubled</h3><p w-tid="637">Doubles gains of all mainline currencies below ᛥ per level. Bonus currencies α and ⊠ are unaffected. Price increases ×10 per buy.</p><div class="effect" w-tid="639">×<span id="asc-all-currency-multiplier" w-tid="641">1</span> all previous currency gains · Level <span id="asc-all-currency-level" w-tid="643">0</span> / 50</div></div><button id="buy-asc-8" type="button" w-tid="645">1e12 ᛥ</button></article>
           <article class="upgrade asc-upgrade" id="upgrade-asc-9" w-tid="647"><div w-tid="649"><h3 w-tid="651">9A. Mainline exponent</h3><p w-tid="653">Raises all mainline currency gains below ᛥ to the power of 1.3 per level, compounding. Bonus currencies α and ⊠ are unaffected. Price increases ×1,000,000 per buy.</p><div class="effect" w-tid="655">Gain<sup w-tid="657"><span id="asc-mainline-power" w-tid="659">1</span></sup> · Level <span id="asc-mainline-power-level" w-tid="661">0</span> / 10</div></div><button id="buy-asc-9" type="button" w-tid="663">1e600 ᛥ</button></article>
+          <article class="upgrade asc-upgrade" id="upgrade-asc-10"><div><h3>10A. Scary Mode</h3><p>Puts SCARY across your screen in a huge font. It is really annoying. Stays unlocked through resets; toggle it in Settings.</p></div><button id="buy-asc-10" type="button">1e666 ᛥ</button></article>
         </div>
         <div id="token-upgrades" hidden w-tid="665">
           <article class="upgrade token-upgrade" id="upgrade-token-multiplier" w-tid="667">
@@ -366,6 +367,7 @@ input, textarea, select {
         <button type="submit" class="deep-settings-close" aria-label="Close settings" autofocus>×</button>
       </form>
       <div class="deep-settings-content">
+        <label id="scary-mode-setting" hidden><input id="scary-mode" type="checkbox" checked> Scary Mode overlay</label>
         <label for="hard-mode"><input id="hard-mode" type="checkbox" aria-describedby="hard-mode-help"> Hard Mode</label>
         <p id="hard-mode-help">Puts a 20,000-pixel brick wall between each main section. An obnoxiously long scroll. Turn this off here to remove the walls.</p>
         <label for="american-roulette"><input id="american-roulette" type="checkbox"> American roulette (adds green 00)</label>
@@ -384,6 +386,7 @@ input, textarea, select {
         <p id="prestige-animation-help">Hyper Timer styles, driven by your current prestige goal. Letters advance from AAA to ZZZ; Color shifts from blue to green. Pro Mode shows Multi Bar, Letters, and Color together. No animation hides the visual. Your goal stays visible.</p>
       </div>
     </dialog>
+    <div id="scary-overlay" hidden aria-hidden="true">SCARY</div>
     <div class="toast" id="toast" role="status" aria-live="polite" w-tid="1139"></div>
   </body>
 </html>

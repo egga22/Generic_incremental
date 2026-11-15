@@ -70,6 +70,25 @@ s.gainZeroActive=false;
 a.render(); timers.forEach(fn => fn());
 console.log('Progression checks passed: startup, saves, research, combined trials, loadouts, burst, reserves, milestones, achievements, tick.');
 
+// Scary Mode: purchase, overlay, settings, and persistence.
+s.scaryModeLevel=0; s.scaryModeActive=true; s.ascendance=a.D('1e665'); a.render();
+assert(doc.getElementById('scary-overlay').hidden);
+doc.getElementById('buy-asc-10').click(); assert.equal(s.scaryModeLevel,0);
+s.ascendance=a.D('1e666'); a.render(); doc.getElementById('buy-asc-10').click();
+assert.equal(s.scaryModeLevel,1); assert(s.ascendance.eq(0));
+assert(!doc.getElementById('scary-overlay').hidden);
+assert(!doc.getElementById('scary-mode-setting').hidden);
+s.ascendance=a.D('1e667'); doc.getElementById('buy-asc-10').click();
+assert(s.ascendance.eq('1e667'), 'Scary Mode cannot be purchased twice');
+doc.getElementById('scary-mode').click(); assert(doc.getElementById('scary-overlay').hidden);
+assert.equal(s.scaryModeActive,false);
+a.resetAscendanceRun(); a.render(); assert.equal(s.scaryModeLevel,1);
+assert(doc.getElementById('scary-overlay').hidden, 'disabled preference survives reset');
+const scarySave=JSON.parse(a.serializeState());
+assert(a.isValidSave(scarySave)); assert.equal(scarySave.scaryModeLevel,1); assert.equal(scarySave.scaryModeActive,false);
+doc.getElementById('scary-mode').click(); assert(!doc.getElementById('scary-overlay').hidden);
+console.log('Scary Mode passed: price, single purchase, overlay, toggle, resets, and saved state.');
+
 // Fortune unlock requires deliberate prestige routing, and remains retryable.
 s.fortuneUnlocked=false; s.fortuneClue=0; s.cubeUnlocked=true; s.activeChallenge='';
 s.balance=a.D('1e900'); s.totalCreditPrestiges=20; a.render();

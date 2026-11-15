@@ -20,7 +20,7 @@ const gt = (a, b) => D(a).gt(b);
 const gte = (a, b) => D(a).gte(b);
 const plus = (a, b) => D(a).plus(b);
 const minus = (a, b) => D(a).minus(b);
-const initialState = { balance: 0, runEarned: 0, lifetime: 0, printer: false, press: false, multiplierLevel: 0, incomeLevel: 0, powerLevel: 0, clickLevel: 0, logLevel: 0, exponentLevel: 0, exponentCapLevel: 0, capLevel: 0, tokens: 0, totalPrestiges: 0, tokenResetCount: 0, tokenMultiplierLevel: 0, discountLevel: 0, tokenBoostLevel: 0, expansionUnlocked: false, maxBuyUnlocked: false, maxBuyActive: false, tokenCreditLevel: 0, tokenDiscountLevel: 0, credits: 0, totalCreditPrestiges: 0, data: 0, totalDataPrestiges: 0, dataLore: Array(5).fill(false), gainZeroBought: false, gainZeroActive: false, priceOrigins: {}, creditEngine: false, creditExponentLevel: 0, heavyMint: false, cubeUnlocked: false, cubeLevel: 0, cubeClicks: 0, cubeTarget: 'points', freeRunUpgrades: false, passiveTokens: false, alphaUnlocked: false, alpha: 0, alphaGainPurchases: 0, alphaBoostLevel: 0, alphaCapLevel: 0, alphaNeutralBought: false, alphaGeneratorBought: false, fishingUnlocked: false, fishPoints: 0, fishGainLevel: 0, redFishLevel: 0, fishAlphaLevel: 0, garbageUnlocked: false, darkMatterUnlocked: false, darkMatter: 0, darkMatter1Bought: false, darkMatter2Bought: false, darkMatter2Level: 0, darkMatter3Bought: false, darkMatter4Bought: false, darkMatterCoinBoost: 1, darkMatterFlipTimer: 0, darkMatterFlipDuration: 1, pyramidUnlocked: false, activeChallenge: '', challengeEndsAt: 0, completedChallenges: [], creditChallengeBoost: false, automationsUnlocked: false, automationBought: Array(12).fill(false), automationActive: Array(12).fill(false), ascendance: 0, totalAscendances: 0, ascCurrencyBoost: false, ascCreditExponent: false, ascCubePowerLevel: 0, ascCubeAutoclicker: false, ascCubeAscendance: false, ascCubeAlpha: false, ascPointDiscountLevel: 0, ascTotalLevelBoost: false, ascAllCurrencyLevel: 0, ascMainlinePowerLevel: 0, spark: 0, sparkPrestiges: 0, sparkUpgrade1Level: 0, sparkUpgrade2Level: 0, sparkUpgrade3Level: 0, pointUpgrade16Bought: false, pointUpgrade17Bought: false, pointUpgrade18Bought: false, pointUpgrade19Bought: false, pointUpgrade20Bought: false, cyan13Bought: false, cyan14Level: 0, cyan15Bought: false, cyanSquareCounts: [0, 0, 0] };
+const initialState = { balance: 0, runEarned: 0, lifetime: 0, printer: false, press: false, multiplierLevel: 0, incomeLevel: 0, powerLevel: 0, clickLevel: 0, logLevel: 0, exponentLevel: 0, exponentCapLevel: 0, capLevel: 0, tokens: 0, totalPrestiges: 0, tokenResetCount: 0, tokenMultiplierLevel: 0, discountLevel: 0, tokenBoostLevel: 0, expansionUnlocked: false, maxBuyUnlocked: false, maxBuyActive: false, tokenCreditLevel: 0, tokenDiscountLevel: 0, credits: 0, totalCreditPrestiges: 0, data: 0, totalDataPrestiges: 0, dataLore: Array(5).fill(false), gainZeroBought: false, gainZeroActive: false, priceOrigins: {}, creditEngine: false, creditExponentLevel: 0, heavyMint: false, cubeUnlocked: false, cubeLevel: 0, cubeClicks: 0, cubeTarget: 'points', freeRunUpgrades: false, passiveTokens: false, alphaUnlocked: false, alpha: 0, alphaGainPurchases: 0, alphaBoostLevel: 0, alphaCapLevel: 0, alphaNeutralBought: false, alphaGeneratorBought: false, fishingUnlocked: false, fishPoints: 0, fishGainLevel: 0, redFishLevel: 0, fishAlphaLevel: 0, garbageUnlocked: false, darkMatterUnlocked: false, darkMatter: 0, darkMatter1Bought: false, darkMatter2Bought: false, darkMatter2Level: 0, darkMatter3Bought: false, darkMatter4Bought: false, darkMatterCoinBoost: 1, darkMatterFlipTimer: 0, darkMatterFlipDuration: 1, pyramidUnlocked: false, activeChallenge: '', challengeEndsAt: 0, completedChallenges: [], creditChallengeBoost: false, automationsUnlocked: false, automationBought: Array(12).fill(false), automationActive: Array(12).fill(false), ascendance: 0, totalAscendances: 0, ascCurrencyBoost: false, ascCreditExponent: false, ascCubePowerLevel: 0, ascCubeAutoclicker: false, ascCubeAscendance: false, ascCubeAlpha: false, ascPointDiscountLevel: 0, ascTotalLevelBoost: false, ascAllCurrencyLevel: 0, ascMainlinePowerLevel: 0, scaryModeLevel: 0, scaryModeActive: true, spark: 0, sparkPrestiges: 0, sparkUpgrade1Level: 0, sparkUpgrade2Level: 0, sparkUpgrade3Level: 0, pointUpgrade16Bought: false, pointUpgrade17Bought: false, pointUpgrade18Bought: false, pointUpgrade19Bought: false, pointUpgrade20Bought: false, cyan13Bought: false, cyan14Level: 0, cyan15Bought: false, cyanSquareCounts: [0, 0, 0] };
 Object.assign(initialState, {
   casinoUnlocked: false,
   alphaTerms: null, blackjackStakeKind: 'base',
@@ -553,7 +553,8 @@ const levelUpgrades = {
   ascendance: {
     'asc-3': { key: 'ascCubePowerLevel', max: () => 5, cost: () => D(10), ready: () => state.ascCurrencyBoost && state.cubeUnlocked, message: 'Cube click power doubled' },
     'asc-8': { key: 'ascAllCurrencyLevel', max: () => 50, cost: ascAllCurrencyCost, message: 'All previous currency gains doubled' },
-    'asc-9': { key: 'ascMainlinePowerLevel', max: () => 10, cost: ascMainlinePowerCost, message: 'Mainline currency gains raised to a higher power' }
+    'asc-9': { key: 'ascMainlinePowerLevel', max: () => 10, cost: ascMainlinePowerCost, message: 'Mainline currency gains raised to a higher power' },
+    'asc-10': { key: 'scaryModeLevel', max: () => 1, cost: () => D('1e666'), message: 'SCARY' }
   }
 };
 const upgradeCurrencies = { run: 'balance', token: 'tokens', credit: 'credits', spark: 'spark', ascendance: 'ascendance', alpha: 'fishPoints' };
@@ -801,6 +802,9 @@ function renderPrestigeProgress(fraction) {
 }
 
 function render() {
+  document.getElementById('scary-overlay').hidden = !state.scaryModeLevel || !state.scaryModeActive;
+  document.getElementById('scary-mode-setting').hidden = !state.scaryModeLevel;
+  document.getElementById('scary-mode').checked = state.scaryModeActive;
   document.getElementById('hard-mode').checked = state.hardMode;
   document.body.classList.toggle('hard-mode', state.hardMode);
   renderKirby();
@@ -2078,5 +2082,10 @@ document.querySelectorAll('[data-kirby-ability]').forEach(b => b.addEventListene
 document.getElementById('kirby-hypernova').addEventListener('click', () => {
   if (!kirbyAvailable() || state.kirbyFullness < 100 || Date.now() < state.kirbyNapUntil || !kirbyAbilities()[state.kirbyAbility]) return;
   state.kirbyFullness = 0; state.kirbyBurstUntil = Date.now() + 30000; state.kirbyNapUntil = state.kirbyBurstUntil + 60000;
+  render(); save();
+});
+
+document.getElementById('scary-mode').addEventListener('change', event => {
+  state.scaryModeActive = event.target.checked;
   render(); save();
 });

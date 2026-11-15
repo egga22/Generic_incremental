@@ -260,3 +260,22 @@ body.hard-mode .hard-mode-wall {
 }
 
 body.hard-mode .hard-mode-wall:has(+ section[hidden]) { display: none; }
+
+/* Deliberately intrusive, but clicks still reach the game underneath. */
+#scary-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  user-select: none;
+  font-size: 27vw;
+  font-weight: 1000;
+  line-height: 1;
+  letter-spacing: -.06em;
+  color: #e00000;
+  text-shadow: 4px 4px 0 #000, -2px -2px 0 #000;
+  opacity: .85;
+}
+#scary-overlay[hidden] { display: none; }
