@@ -625,3 +625,36 @@ assert(!a.isValidSave({dieUpgrades:[6,0,0]})); assert(!a.isValidSave({dieStance:
 ds.activeChallenge='deduction1'; a.render(); const blockedShards=ds.dieShards; quick.click(); rollDie.click(); assert.equal(ds.dieShards,blockedShards);
 context.Math.random=oldRandom; Object.assign(ds,dieBefore); a.render();
 console.log('Icosahedron expansion passed: tab, collection, shards, stances, workshop, cooldown, losses, history, resets and validation.');
+
+// NPC tab, milestone requests, persistence, and save compatibility.
+const ns = a.state;
+const beforeNPCs = {...ns};
+ns.npcProgress = [0, 0, 0]; ns.npcTalks = [0, 0, 0];
+ns.printer = false; ns.totalPrestiges = 0; ns.totalCreditPrestiges = 0; ns.totalAscendances = 0;
+ns.pyramidUnlocked = false;
+doc.getElementById('npc-tab').click();
+assert(!doc.getElementById('npc-panel').hidden);
+assert(doc.getElementById('run-upgrades').hidden);
+assert(doc.querySelector('[data-npc-quest="0"]').disabled);
+assert(!doc.querySelector('[data-npc-talk="1"]'), 'unmet NPC has no interactions');
+doc.querySelector('[data-npc-talk="0"]').click();
+assert.equal(ns.npcTalks[0], 1);
+ns.printer = true; a.render(); doc.querySelector('[data-npc-quest="0"]').click();
+assert.equal(ns.npcProgress[0], 1);
+assert(doc.querySelector('[data-npc-quest="0"]').disabled, 'next request is separately gated');
+ns.totalPrestiges = 1; a.render();
+assert(doc.querySelector('[data-npc-talk="1"]'), 'Orin arrives at Token prestige');
+doc.querySelector('[data-npc-quest="0"]').click();
+ns.cubeUnlocked = true; a.render(); doc.querySelector('[data-npc-quest="0"]').click();
+assert.equal(ns.npcProgress[0], 3);
+assert(!doc.querySelector('[data-npc-quest="0"]'), 'completed requests cannot repeat');
+a.resetCreditRun(); a.resetAscendanceRun();
+assert.equal(ns.npcProgress[0], 3, 'relationships survive resets');
+assert.equal(ns.npcTalks[0], 1, 'conversation survives resets');
+assert(a.isValidSave(JSON.parse(a.serializeState())), 'NPC state saves');
+assert(!a.isValidSave({balance:0,runEarned:0,npcProgress:[4,0,0]}));
+assert(!a.isValidSave({balance:0,runEarned:0,npcTalks:[0]}));
+assert(a.isValidSave({balance:0,runEarned:0}), 'pre-NPC saves remain valid');
+doc.getElementById('run-tab').click(); assert(doc.getElementById('npc-panel').hidden);
+Object.assign(ns, beforeNPCs);
+console.log('NPC checks passed: tab, arrivals, dialogue, quest gates, one-time completion, resets, and save validation.');

@@ -22,6 +22,7 @@ const plus = (a, b) => D(a).plus(b);
 const minus = (a, b) => D(a).minus(b);
 const initialState = { balance: 0, runEarned: 0, lifetime: 0, printer: false, press: false, multiplierLevel: 0, incomeLevel: 0, powerLevel: 0, clickLevel: 0, logLevel: 0, exponentLevel: 0, exponentCapLevel: 0, capLevel: 0, tokens: 0, totalPrestiges: 0, tokenResetCount: 0, tokenMultiplierLevel: 0, discountLevel: 0, tokenBoostLevel: 0, expansionUnlocked: false, maxBuyUnlocked: false, maxBuyActive: false, tokenCreditLevel: 0, tokenDiscountLevel: 0, credits: 0, totalCreditPrestiges: 0, data: 0, totalDataPrestiges: 0, dataLore: Array(5).fill(false), gainZeroBought: false, gainZeroActive: false, priceOrigins: {}, creditEngine: false, creditExponentLevel: 0, heavyMint: false, cubeUnlocked: false, cubeLevel: 0, cubeClicks: 0, cubeTarget: 'points', freeRunUpgrades: false, passiveTokens: false, alphaUnlocked: false, alpha: 0, alphaGainPurchases: 0, alphaBoostLevel: 0, alphaCapLevel: 0, alphaNeutralBought: false, alphaGeneratorBought: false, fishingUnlocked: false, fishPoints: 0, fishGainLevel: 0, redFishLevel: 0, fishAlphaLevel: 0, garbageUnlocked: false, darkMatterUnlocked: false, darkMatter: 0, darkMatter1Bought: false, darkMatter2Bought: false, darkMatter2Level: 0, darkMatter3Bought: false, darkMatter4Bought: false, darkMatterCoinBoost: 1, darkMatterFlipTimer: 0, darkMatterFlipDuration: 1, pyramidUnlocked: false, activeChallenge: '', challengeEndsAt: 0, completedChallenges: [], creditChallengeBoost: false, automationsUnlocked: false, automationBought: Array(12).fill(false), automationActive: Array(12).fill(false), ascendance: 0, totalAscendances: 0, ascCurrencyBoost: false, ascCreditExponent: false, ascCubePowerLevel: 0, ascCubeAutoclicker: false, ascCubeAscendance: false, ascCubeAlpha: false, ascPointDiscountLevel: 0, ascTotalLevelBoost: false, ascAllCurrencyLevel: 0, ascMainlinePowerLevel: 0, scaryModeLevel: 0, scaryModeActive: true, spark: 0, sparkPrestiges: 0, sparkUpgrade1Level: 0, sparkUpgrade2Level: 0, sparkUpgrade3Level: 0, pointUpgrade16Bought: false, pointUpgrade17Bought: false, pointUpgrade18Bought: false, pointUpgrade19Bought: false, pointUpgrade20Bought: false, pointUpgrade21Bought: false, cyan13Bought: false, cyan14Level: 0, cyan15Bought: false, cyanSquareCounts: [0, 0, 0] };
 Object.assign(initialState, {
+  npcProgress: [0, 0, 0], npcTalks: [0, 0, 0],
   expedition: null, expeditionSeals: 0, expeditionBest: 0, expeditionUpgrades: [0, 0, 0],
   casinoUnlocked: false,
   alphaTerms: null, blackjackStakeKind: 'base',
@@ -46,6 +47,29 @@ Object.assign(initialState, {
   automationPresets: ['off', 'off'], automationSeconds: [30, 60],
   automationReserve: [10, 10], automationLastReset: [0, 0]
 });
+const NPCS = [
+  { name: 'Mira', role: 'Foundry mechanic', arrival: 'Here from the start', unlocked: () => true,
+    lines: ['Every foundry starts with one machine. Get yours running, and we can build something worth keeping.', 'A reset is a new blueprint. Bring what you learned into the next run.', 'You kept the machines alive through all that change. I think we make a good team.'],
+    quests: [
+      ['Start your printer', () => state.printer, 'The first hum of a printer. That never gets old.'],
+      ['Reach your first Token prestige', () => state.totalPrestiges > 0, 'You let the old workshop go. Now we have room to grow.'],
+      ['Unlock the Cube', () => state.cubeUnlocked, 'A machine with no obvious moving parts. Finally, a challenge for both of us.']
+    ] },
+  { name: 'Orin', role: 'Reset cartographer', arrival: 'Arrives after your first Token prestige', unlocked: () => state.totalPrestiges > 0 || state.totalCreditPrestiges > 0 || state.totalAscendances > 0,
+    lines: ['I map the roads between resets. The destination matters, but so does what you carry forward.', 'Credits open a longer road. Check your next reward before leaving this run.', 'My maps used to end here. Thanks to you, I need another notebook.'],
+    quests: [
+      ['Reach your first Credit prestige', () => state.totalCreditPrestiges > 0, 'The first crossing is on the map. I knew you would find it.'],
+      ['Reach your first Data prestige', () => state.totalDataPrestiges > 0, 'Now we can read the landscape instead of just walking through it.'],
+      ['Ascend for the first time', () => state.totalAscendances > 0, 'You found a road above the map. Let me walk the next stretch with you.']
+    ] },
+  { name: 'Vela', role: 'Pyramid archivist', arrival: 'Arrives when the Pyramid unlocks', unlocked: () => state.pyramidUnlocked,
+    lines: ['The Pyramid remembers every trial you finish. I keep the stories the stones leave out.', 'Combined trials ask you to plan around two constraints. Read both before you enter.', 'There is an empty shelf in the archive. I have reserved it for your next discovery.'],
+    quests: [
+      ['Complete any Pyramid trial', () => state.completedChallenges.length > 0, 'One inscription restored. One story that will not be forgotten.'],
+      ['Complete three different Pyramid trials', () => state.completedChallenges.length >= 3, 'Three stories, each won a different way. You are learning to read the stones.'],
+      ['Complete a combined Pyramid trial', () => state.completedCombos.length > 0, 'Two constraints, one solution. Your name belongs in the archive.']
+    ] }
+];
 let savedSnapshot;
 let saveConflict = false;
 const savedState = loadState();
@@ -1015,6 +1039,7 @@ function render() {
   document.querySelector('#ascendance-tab').classList.toggle('active', activeTab === 'ascendance');
   document.querySelector('#data-tab').classList.toggle('active', activeTab === 'data');
   document.querySelector('#spark-tab').classList.toggle('active', activeTab === 'spark');
+  renderNPCs();
   renderCasino();
   document.querySelector('#alpha-gain-amount').textContent = fmt(applyAlphaGain(1 + state.alphaBoostLevel).times(cubeMultiplier('alpha')));
   document.querySelector('#alpha-boost-level').textContent = state.alphaBoostLevel;
@@ -1394,7 +1419,40 @@ document.querySelector('#max-buy-toggle').addEventListener('click', () => {
   toast(state.maxBuyActive ? 'Max Buy on' : 'Max Buy off'); render(); save();
 });
 document.querySelector('#sections-toggle').addEventListener('click', () => { const tabs = document.querySelector('#upgrade-tabs'); tabs.hidden = !tabs.hidden; document.querySelector('#sections-toggle').setAttribute('aria-expanded', String(!tabs.hidden)); });
+function renderNPCs() {
+  const panel = document.getElementById('npc-panel');
+  panel.hidden = activeTab !== 'npc';
+  document.getElementById('npc-tab').classList.toggle('active', activeTab === 'npc');
+  if (panel.hidden) return;
+  const bonds = ['New acquaintance', 'Familiar face', 'Trusted friend', 'Close friend'];
+  document.getElementById('npc-list').innerHTML = NPCS.map((npc, i) => {
+    const progress = state.npcProgress[i];
+    if (!npc.unlocked() && progress === 0) return `<article class="upgrade"><div><h3>${npc.name} · ${npc.role}</h3><p>${npc.arrival}</p></div></article>`;
+    const quest = npc.quests[progress];
+    const talks = state.npcTalks[i];
+    const dialogue = talks ? npc.lines[(talks - 1) % npc.lines.length] : 'Someone new to talk to. Say hello.';
+    return `<article class="upgrade npc-card"><div><h3>${npc.name} · ${npc.role}</h3><p class="effect">${bonds[progress]} · ${progress}/3 requests completed</p><blockquote>${dialogue}</blockquote>${progress ? `<p>${npc.quests[progress - 1][2]}</p>` : ''}<p>${quest ? `Request: ${quest[0]}. Reward: ${bonds[progress + 1]}.` : 'All requests complete. You are always welcome to stop by for a conversation.'}</p><button type="button" data-npc-talk="${i}">Talk to ${npc.name}</button> ${quest ? `<button type="button" data-npc-quest="${i}" ${quest[1]() ? '' : 'disabled'}>Complete request</button>` : ''}</div></article>`;
+  }).join('');
+}
+document.getElementById('npc-list').addEventListener('click', event => {
+  const button = event.target.closest('button');
+  if (!button) return;
+  const talking = button.hasAttribute('data-npc-talk');
+  const i = Number(talking ? button.dataset.npcTalk : button.dataset.npcQuest);
+  const npc = NPCS[i];
+  if (!npc || (!npc.unlocked() && state.npcProgress[i] === 0)) return;
+  if (talking) state.npcTalks[i] = state.npcTalks[i] % 999999 + 1;
+  else {
+    const quest = npc.quests[state.npcProgress[i]];
+    if (!quest || !quest[1]()) return;
+    state.npcProgress[i]++;
+    toast(`${npc.name}: ${quest[2]}`);
+  }
+  render(); save();
+});
+
 function chooseTab(tab) { activeTab = tab; document.querySelector('#upgrade-tabs').hidden = true; document.querySelector('#sections-toggle').setAttribute('aria-expanded', 'false'); render(); }
+document.querySelector('#npc-tab').addEventListener('click', () => chooseTab('npc'));
 document.querySelector('#run-tab').addEventListener('click', () => chooseTab('run'));
 document.querySelector('#token-tab').addEventListener('click', () => { if (state.totalPrestiges || gt(state.tokens, 0) || state.garbageUnlocked) chooseTab('token'); });
 document.querySelector('#credit-tab').addEventListener('click', () => { if (state.totalCreditPrestiges || gt(state.credits, 0)) chooseTab('credit'); });
@@ -2183,6 +2241,7 @@ function isValidSave(snapshot) {
       return (typeof value === 'string' && value.trim() !== '' || typeof value === 'number')
         && D(value).isFinite() && D(value).gte(0);
     }
+    if (['npcProgress', 'npcTalks'].includes(key)) return Array.isArray(value) && value.length === 3 && value.every(n => Number.isSafeInteger(n) && n >= 0 && n <= (key === 'npcProgress' ? 3 : 1000000));
     if (key === 'expedition') return validExpedition(value);
     if (key === 'expeditionBest') return Number.isInteger(value) && value >= 0 && value <= 8;
     if (key === 'expeditionUpgrades') return Array.isArray(value) && value.length === 3 && value.every(n => Number.isInteger(n) && n >= 0 && n <= 20);
