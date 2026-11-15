@@ -290,3 +290,5 @@ body.hard-mode .hard-mode-wall:has(+ section[hidden]) { display: none; }
 @media (prefers-reduced-motion: reduce) {
   #fortune-wheel { transition-duration: .1s; }
 }
+
+.icosahedron-image { display: block; width: min(240px, 100%); height: auto; margin: 1rem auto; }

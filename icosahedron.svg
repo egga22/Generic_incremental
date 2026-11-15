@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240"><title>Regular icosahedron with twenty triangular faces</title>
+<polygon points="93.70,157.01 93.70,49.21 188.76,104.34" fill="hsl(190,65%,15.4%)" stroke="#b6f4ff" stroke-width="1.5" stroke-linejoin="round"/>
+<polygon points="93.70,157.01 172.54,203.99 188.76,104.34" fill="hsl(190,65%,19.6%)" stroke="#b6f4ff" stroke-width="1.5" stroke-linejoin="round"/>
+<polygon points="93.70,157.01 93.70,49.21 18.73,114.79" fill="hsl(190,65%,21.0%)" stroke="#b6f4ff" stroke-width="1.5" stroke-linejoin="round"/>
+<polygon points="93.70,49.21 172.54,29.55 188.76,104.34" fill="hsl(190,65%,25.9%)" stroke="#b6f4ff" stroke-width="1.5" stroke-linejoin="round"/>
+<polygon points="93.70,157.01 67.46,210.45 172.54,203.99" fill="hsl(190,65%,27.9%)" stroke="#b6f4ff" stroke-width="1.5" stroke-linejoin="round"/>
+<polygon points="93.70,157.01 67.46,210.45 18.73,114.79" fill="hsl(190,65%,28.7%)" stroke="#b6f4ff" stroke-width="1.5" stroke-linejoin="round"/>
+<polygon points="172.54,203.99 188.76,104.34 221.27,125.21" fill="hsl(190,65%,32.7%)" stroke="#b6f4ff" stroke-width="1.5" stroke-linejoin="round"/>
+<polygon points="93.70,49.21 67.46,36.01 18.73,114.79" fill="hsl(190,65%,35.0%)" stroke="#b6f4ff" stroke-width="1.5" stroke-linejoin="round"/>
+<polygon points="172.54,29.55 188.76,104.34 221.27,125.21" fill="hsl(190,65%,36.6%)" stroke="#b6f4ff" stroke-width="1.5" stroke-linejoin="round"/>
+<polygon points="93.70,49.21 67.46,36.01 172.54,29.55" fill="hsl(190,65%,38.0%)" stroke="#b6f4ff" stroke-width="1.5" stroke-linejoin="round"/>
+<polygon points="146.30,190.79 67.46,210.45 172.54,203.99" fill="hsl(190,65%,46.0%)" stroke="#b6f4ff" stroke-width="1.5" stroke-linejoin="round"/>
+<polygon points="67.46,210.45 18.73,114.79 51.24,135.66" fill="hsl(190,65%,47.4%)" stroke="#b6f4ff" stroke-width="1.5" stroke-linejoin="round"/>
+<polygon points="146.30,190.79 172.54,203.99 221.27,125.21" fill="hsl(190,65%,49.0%)" stroke="#b6f4ff" stroke-width="1.5" stroke-linejoin="round"/>
+<polygon points="67.46,36.01 18.73,114.79 51.24,135.66" fill="hsl(190,65%,51.3%)" stroke="#b6f4ff" stroke-width="1.5" stroke-linejoin="round"/>
+<polygon points="146.30,82.99 172.54,29.55 221.27,125.21" fill="hsl(190,65%,55.3%)" stroke="#b6f4ff" stroke-width="1.5" stroke-linejoin="round"/>
+<polygon points="146.30,82.99 67.46,36.01 172.54,29.55" fill="hsl(190,65%,56.1%)" stroke="#b6f4ff" stroke-width="1.5" stroke-linejoin="round"/>
+<polygon points="146.30,190.79 67.46,210.45 51.24,135.66" fill="hsl(190,65%,58.1%)" stroke="#b6f4ff" stroke-width="1.5" stroke-linejoin="round"/>
+<polygon points="146.30,190.79 146.30,82.99 221.27,125.21" fill="hsl(190,65%,63.0%)" stroke="#b6f4ff" stroke-width="1.5" stroke-linejoin="round"/>
+<polygon points="146.30,82.99 67.46,36.01 51.24,135.66" fill="hsl(190,65%,64.4%)" stroke="#b6f4ff" stroke-width="1.5" stroke-linejoin="round"/>
+<polygon points="146.30,190.79 146.30,82.99 51.24,135.66" fill="hsl(190,65%,68.6%)" stroke="#b6f4ff" stroke-width="1.5" stroke-linejoin="round"/>
+</svg>

@@ -111,6 +111,7 @@ input, textarea, select {
         <article class="upgrade locked" id="upgrade-point-18" w-tid="349"><div w-tid="351"><h3 w-tid="353">18. Golden ratio</h3><p w-tid="355">Requires 17. Multiplies all P$ gain by 1000.</p><div class="effect" w-tid="357">×1000 P$ gain</div></div><button id="buy-point-18" type="button" disabled w-tid="359">P$ 1e220</button></article>
         <article class="upgrade locked" id="upgrade-point-19" w-tid="361"><div w-tid="363"><h3 w-tid="365">19. Cascade engine</h3><p w-tid="367">Requires 18. Multiplies all P$ gain by one million.</p><div class="effect" w-tid="369">×1,000,000 P$ gain</div></div><button id="buy-point-19" type="button" disabled w-tid="371">P$ 1e240</button></article>
         <article class="upgrade locked" id="upgrade-point-20" w-tid="373"><div w-tid="375"><h3 w-tid="377">20. Event horizon</h3><p w-tid="379">Requires 19. Multiplies all P$ gain by one trillion.</p><div class="effect" w-tid="381">×1e12 P$ gain</div></div><button id="buy-point-20" type="button" disabled w-tid="383">P$ 1e260</button></article>
+        <article class="upgrade locked" id="upgrade-point-21"><div><h3>21. Think on it...</h3><p>Requires 20. Divides all P$ gain by 1/2 (multiplying it by 2).</p><div class="effect">P$ gain ÷½ · ×2</div></div><button id="buy-point-21" type="button" disabled>P$ 1e280</button></article>
         </div>
         <div id="alpha-upgrades" hidden w-tid="385">
           <article class="upgrade alpha-upgrade" id="upgrade-alpha-gain" w-tid="387"><div w-tid="389"><h3 w-tid="391">1α. Alpha gain</h3><p w-tid="393">Gain alpha when bought.</p><div class="effect" w-tid="395">+<span id="alpha-gain-amount" w-tid="397">1</span> α per purchase</div></div><button id="buy-alpha-gain" type="button" w-tid="399">Gain α</button></article>
@@ -298,7 +299,7 @@ input, textarea, select {
             <button id="buy-icosahedron-unlock" type="button" disabled>1e1000 C$</button>
           </article>
           <section id="icosahedron-panel" hidden>
-            <h3>The Icosahedron</h3><p>20 equally likely faces. First roll is ready immediately. Unlock and cooldown persist through resets; time offline counts. Disabled during Pyramid trials and Null gain.</p>
+            <h3>The Icosahedron</h3><img class="icosahedron-image" src="icosahedron.svg" width="240" height="240" alt="A regular icosahedron, a solid with twenty triangular faces"><p>20 equally likely faces. First roll is ready immediately. Unlock and cooldown persist through resets; time offline counts. Disabled during Pyramid trials and Null gain.</p>
             <details><summary>All roll effects (5% each)</summary><ol id="icosahedron-effects"></ol></details>
             <button id="roll-icosahedron" type="button">Roll</button><p id="icosahedron-result" role="status" aria-live="polite"></p>
           </section>

@@ -490,3 +490,21 @@ assert(dieState.icosahedronUnlocked); assert.equal(dieState.icosahedronReadyAt,d
 const dieSave=JSON.parse(a.serializeState()); assert(a.isValidSave(dieSave)); assert.equal(dieSave.icosahedronReadyAt,deadline);
 dieState.icosahedronReadyAt=Date.now()-1; a.render(); assert(!rollDie.disabled, 'elapsed wall-clock cooldown enables rolling');
 console.log('Icosahedron checks passed');
+
+// Upgrade 21 follows 20, doubles gain, saves, and resets with Points upgradethinkState.
+const thinkState=a.state;
+const thinkStart = {...thinkState};
+thinkState.pointUpgrade20Bought=false; thinkState.pointUpgrade21Bought=false; thinkState.balance=a.D('1e282'); a.render();
+const thinkButton=doc.getElementById('buy-point-21');
+assert(thinkButton.disabled); thinkButton.click(); assert(!thinkState.pointUpgrade21Bought);
+thinkState.pointUpgrade20Bought=true; thinkState.ascPointDiscountLevel=0; a.render();
+const thinkRate=a.rate(), thinkBalance=thinkState.balance;
+thinkButton.click(); assert(thinkState.pointUpgrade21Bought);
+assert(thinkState.balance.eq(thinkBalance.minus('1e280')));
+assert(a.rate().eq(thinkRate.times(2)), '21 doubles permanent production');
+assert(thinkButton.disabled); thinkButton.click(); assert(thinkState.balance.eq(thinkBalance.minus('1e280')));
+assert(a.isValidSave(JSON.parse(a.serializeState())));
+a.resetCreditRun(); assert(!thinkState.pointUpgrade21Bought);
+thinkState.pointUpgrade21Bought=true; a.resetAscendanceRun(); assert(!thinkState.pointUpgrade21Bought);
+Object.assign(thinkState,thinkStart);
+console.log('Think on it checks passed');
