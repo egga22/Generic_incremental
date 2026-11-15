@@ -244,7 +244,7 @@ console.log('Upgrades 16–20 prerequisite chain passed.');
 const cs = a.state;
 // Casino: deterministic outcomes, stake guards, persisted rules and hands.
 vm.runInContext(`
-state.alphaUnlocked = true; state.activeChallenge = ''; state.gainZeroActive = false;
+state.alphaUnlocked = true; state.casinoUnlocked = true; state.activeChallenge = ''; state.gainZeroActive = false;
 state.alpha = D(100); state.americanRoulette = false;
 document.querySelector('#casino-stake').value = '10'; render();
 globalThis.casinoRandom = Math.random; Math.random = () => 1.5 / 37;
@@ -345,3 +345,24 @@ assert(a.isValidSave(JSON.parse(a.serializeState())), 'symbolic save valid');
 assert(!a.isValidSave({balance:0,runEarned:0,alphaTerms:{base:'0',e:'Infinity',pi:'0'}}));
 assert(!a.isValidSave({balance:0,runEarned:0,blackjackStakeKind:'invalid'}));
 console.log('Symbolic Alpha passed: mixed balances, ordinary gains, exact cancellations, blackjack payouts, reloads and validation.');
+
+// Casino license is a paid, permanent prerequisite, including handler-level checks.
+vm.runInContext(`
+state.alphaUnlocked = true; state.casinoUnlocked = false; state.blackjackActive = false;
+state.alpha = D(249); state.alphaTerms = null; document.querySelector('#casino-stake').value = '1'; render();
+`,context);
+assert(doc.querySelector('#alpha-casino').hidden, 'casino hidden before license');
+assert(doc.querySelector('#buy-casino').disabled, 'license unaffordable');
+vm.runInContext(`spinRoulette(); dealBlackjack();`,context);
+assert(cs.alpha.eq(249) && !cs.blackjackActive, 'cannot gamble before license');
+vm.runInContext(`state.alphaUnlocked = false; state.alpha = D(300);`,context);
+doc.querySelector('#buy-casino').disabled=false; doc.querySelector('#buy-casino').click();
+assert(!cs.casinoUnlocked && cs.alpha.eq(300), 'license requires Alpha unlock');
+vm.runInContext(`state.alphaUnlocked = true; state.alpha = D(250); render();`,context);
+doc.querySelector('#buy-casino').click();
+assert(cs.casinoUnlocked && cs.alpha.eq(0), 'license costs exactly 250 alpha');
+assert(!doc.querySelector('#alpha-casino').hidden, 'licensed casino visible');
+assert(doc.querySelector('#buy-casino').disabled, 'cannot buy twice');
+assert(a.isValidSave(JSON.parse(a.serializeState())), 'license saves');
+a.resetAscendanceRun(); assert(cs.casinoUnlocked, 'license survives Ascendance');
+console.log('Casino license passed: cost, prerequisites, visibility, handlers, saves and permanent unlock.');

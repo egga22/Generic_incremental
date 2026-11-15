@@ -22,6 +22,7 @@ const plus = (a, b) => D(a).plus(b);
 const minus = (a, b) => D(a).minus(b);
 const initialState = { balance: 0, runEarned: 0, lifetime: 0, printer: false, press: false, multiplierLevel: 0, incomeLevel: 0, powerLevel: 0, clickLevel: 0, logLevel: 0, exponentLevel: 0, exponentCapLevel: 0, capLevel: 0, tokens: 0, totalPrestiges: 0, tokenResetCount: 0, tokenMultiplierLevel: 0, discountLevel: 0, tokenBoostLevel: 0, expansionUnlocked: false, maxBuyUnlocked: false, maxBuyActive: false, tokenCreditLevel: 0, tokenDiscountLevel: 0, credits: 0, totalCreditPrestiges: 0, data: 0, totalDataPrestiges: 0, dataLore: Array(5).fill(false), gainZeroBought: false, gainZeroActive: false, priceOrigins: {}, creditEngine: false, creditExponentLevel: 0, heavyMint: false, cubeUnlocked: false, cubeLevel: 0, cubeClicks: 0, cubeTarget: 'points', freeRunUpgrades: false, passiveTokens: false, alphaUnlocked: false, alpha: 0, alphaGainPurchases: 0, alphaBoostLevel: 0, alphaCapLevel: 0, alphaNeutralBought: false, alphaGeneratorBought: false, fishingUnlocked: false, fishPoints: 0, fishGainLevel: 0, redFishLevel: 0, fishAlphaLevel: 0, garbageUnlocked: false, darkMatterUnlocked: false, darkMatter: 0, darkMatter1Bought: false, darkMatter2Bought: false, darkMatter2Level: 0, darkMatter3Bought: false, darkMatter4Bought: false, darkMatterCoinBoost: 1, darkMatterFlipTimer: 0, darkMatterFlipDuration: 1, pyramidUnlocked: false, activeChallenge: '', challengeEndsAt: 0, completedChallenges: [], creditChallengeBoost: false, automationsUnlocked: false, automationBought: Array(12).fill(false), automationActive: Array(12).fill(false), ascendance: 0, totalAscendances: 0, ascCurrencyBoost: false, ascCreditExponent: false, ascCubePowerLevel: 0, ascCubeAutoclicker: false, ascCubeAscendance: false, ascCubeAlpha: false, ascPointDiscountLevel: 0, ascTotalLevelBoost: false, ascAllCurrencyLevel: 0, ascMainlinePowerLevel: 0, spark: 0, sparkPrestiges: 0, sparkUpgrade1Level: 0, sparkUpgrade2Level: 0, sparkUpgrade3Level: 0, pointUpgrade16Bought: false, pointUpgrade17Bought: false, pointUpgrade18Bought: false, pointUpgrade19Bought: false, pointUpgrade20Bought: false, cyan13Bought: false, cyan14Level: 0, cyan15Bought: false, cyanSquareCounts: [0, 0, 0] };
 Object.assign(initialState, {
+  casinoUnlocked: false,
   alphaTerms: null, blackjackStakeKind: 'base',
   americanRoulette: false, blackjackStake: 0, blackjackDeck: [], blackjackPlayer: [], blackjackDealer: [], blackjackActive: false,
   prestigeAnimation: 'bar',
@@ -273,7 +274,7 @@ function addCubeClicks(amount) {
 }
 function totalUpgradeLevels() {
   const levels = [state.multiplierLevel,state.incomeLevel,state.powerLevel,state.clickLevel,state.logLevel,state.exponentLevel,state.exponentCapLevel,state.capLevel,state.tokenMultiplierLevel,state.discountLevel,state.tokenBoostLevel,state.tokenCreditLevel,state.tokenDiscountLevel,state.creditExponentLevel,state.sparkUpgrade1Level,state.sparkUpgrade2Level,state.sparkUpgrade3Level,state.alphaGainPurchases,state.alphaBoostLevel,state.alphaCapLevel,state.ascCubePowerLevel,state.ascPointDiscountLevel,state.cyan14Level,state.darkMatter2Level];
-  const bought = [state.printer,state.press,state.expansionUnlocked,state.maxBuyUnlocked,state.creditEngine,state.heavyMint,state.cubeUnlocked,state.freeRunUpgrades,state.passiveTokens,state.alphaUnlocked,state.alphaNeutralBought,state.alphaGeneratorBought,state.darkMatterUnlocked,state.darkMatter1Bought,state.darkMatter3Bought,state.darkMatter4Bought,state.pyramidUnlocked,state.creditChallengeBoost,state.automationsUnlocked,state.ascCurrencyBoost,state.ascCreditExponent,state.ascCubeAutoclicker,state.ascCubeAscendance,state.ascCubeAlpha,state.ascTotalLevelBoost,state.pointUpgrade16Bought,state.pointUpgrade17Bought,state.pointUpgrade18Bought,state.pointUpgrade19Bought,state.pointUpgrade20Bought,state.cyan13Bought,state.cyan15Bought];
+  const bought = [state.printer,state.press,state.expansionUnlocked,state.maxBuyUnlocked,state.creditEngine,state.heavyMint,state.cubeUnlocked,state.freeRunUpgrades,state.passiveTokens,state.alphaUnlocked,state.casinoUnlocked,state.alphaNeutralBought,state.alphaGeneratorBought,state.darkMatterUnlocked,state.darkMatter1Bought,state.darkMatter3Bought,state.darkMatter4Bought,state.pyramidUnlocked,state.creditChallengeBoost,state.automationsUnlocked,state.ascCurrencyBoost,state.ascCreditExponent,state.ascCubeAutoclicker,state.ascCubeAscendance,state.ascCubeAlpha,state.ascTotalLevelBoost,state.pointUpgrade16Bought,state.pointUpgrade17Bought,state.pointUpgrade18Bought,state.pointUpgrade19Bought,state.pointUpgrade20Bought,state.cyan13Bought,state.cyan15Bought];
   return levels.reduce((sum, level) => sum + (Number(level) || 0), state.automationBought.filter(Boolean).length + state.dataLore.filter(Boolean).length + bought.filter(Boolean).length + state.ascAllCurrencyLevel + state.ascMainlinePowerLevel);
 }
 function pointMultiplier() { return D(state.creditEngine ? 25 : 1).times(state.heavyMint ? 5 : 1).times(cubeMultiplier('points')).times(state.ascTotalLevelBoost ? D(totalUpgradeLevels()).max(1) : 1).times(state.pointUpgrade16Bought ? 10 : 1).times(state.pointUpgrade17Bought ? 100 : 1).times(state.pointUpgrade18Bought ? 1000 : 1).times(state.pointUpgrade19Bought ? 1e6 : 1).times(state.pointUpgrade20Bought ? 1e12 : 1); }
@@ -373,6 +374,7 @@ function casinoStakeKind() {
 function casinoStakeLabel(amount, kind) {
   return symbolicAmount({ base: kind === 'base' ? amount : 0, e: kind === 'e' ? amount : 0, pi: kind === 'pi' ? amount : 0 });
 }
+const CASINO_UNLOCK_COST = D(250);
 const ROULETTE_RED = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
 function casinoStake() {
   const raw = document.querySelector('#casino-stake').value.trim().toLowerCase();
@@ -383,9 +385,14 @@ function casinoStake() {
   return stake.isFinite() && stake.gte(1) ? stake : D(0);
 }
 function casinoAvailable() {
-  return state.alphaUnlocked && !state.gainZeroActive && !state.activeChallenge && !saveConflict;
+  return state.alphaUnlocked && state.casinoUnlocked && !state.gainZeroActive && !state.activeChallenge && !saveConflict;
 }
 function renderCasino() {
+  document.querySelector('#alpha-casino').hidden = !state.alphaUnlocked || !state.casinoUnlocked;
+  const unlock = document.querySelector('#buy-casino');
+  unlock.disabled = !state.alphaUnlocked || state.casinoUnlocked || lt(state.alpha, CASINO_UNLOCK_COST);
+  unlock.textContent = state.casinoUnlocked ? 'Unlocked' : `${fmt(CASINO_UNLOCK_COST)} α`;
+  document.querySelector('#upgrade-casino').classList.toggle('locked', !state.alphaUnlocked);
   const stake = casinoStake(), ready = casinoAvailable();
   document.querySelector('#american-roulette').checked = state.americanRoulette;
   document.querySelector('#roulette-rules').textContent = state.americanRoulette ? 'American wheel: 38 pockets, including green 0 and 00.' : 'European wheel: 37 pockets, including green 0.';
@@ -1273,6 +1280,13 @@ for (let i = 0; i < dataUpgradeInfo.length; i += 1) {
     render(); save();
   });
 }
+document.querySelector('#buy-casino').addEventListener('click', () => {
+  if (!state.alphaUnlocked || state.casinoUnlocked || lt(state.alpha, CASINO_UNLOCK_COST)) return;
+  changeAlpha(CASINO_UNLOCK_COST.neg());
+  state.casinoUnlocked = true;
+  toast('Alpha Casino unlocked');
+  render(); save();
+});
 document.querySelector('#casino-stake').addEventListener('input', renderCasino);
 document.querySelector('#roulette-spin').addEventListener('click', spinRoulette);
 document.querySelector('#blackjack-deal').addEventListener('click', dealBlackjack);
