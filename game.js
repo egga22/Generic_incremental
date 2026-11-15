@@ -25,7 +25,7 @@ Object.assign(initialState, {
   casinoUnlocked: false,
   alphaTerms: null, blackjackStakeKind: 'base',
   americanRoulette: false, blackjackStake: 0, blackjackDeck: [], blackjackPlayer: [], blackjackDealer: [], blackjackActive: false,
-  prestigeAnimation: 'bar',
+  prestigeAnimation: 'bar', hardMode: false,
   copyrightMode: false, kirbyUnlocked: false, kirbyAbility: 'beam',
   kirbyBeam: false, kirbyMirror: false, kirbyFullness: 0,
   kirbyFeedAt: 0, kirbySwitchAt: 0, kirbyBurstUntil: 0, kirbyNapUntil: 0,
@@ -801,6 +801,8 @@ function renderPrestigeProgress(fraction) {
 }
 
 function render() {
+  document.getElementById('hard-mode').checked = state.hardMode;
+  document.body.classList.toggle('hard-mode', state.hardMode);
   renderKirby();
   renderExpansion();
   renderTheme();
@@ -2043,6 +2045,18 @@ importFile.addEventListener('change', async () => {
 document.getElementById('prestige-animation').addEventListener('change', event => {
   if (!PRESTIGE_STYLES.includes(event.target.value)) return;
   state.prestigeAnimation = event.target.value;
+  render(); save();
+});
+
+// Walls belong to the visible page sections; hidden progression panels add no scroll.
+document.querySelectorAll('.game-shell > section:not(.economy)').forEach(section => {
+  const wall = document.createElement('div');
+  wall.className = 'hard-mode-wall';
+  wall.setAttribute('aria-hidden', 'true');
+  section.before(wall);
+});
+document.getElementById('hard-mode').addEventListener('change', event => {
+  state.hardMode = event.target.checked;
   render(); save();
 });
 

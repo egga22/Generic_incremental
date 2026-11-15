@@ -239,3 +239,24 @@ body.dark-screen .progress-disc[data-visual="ring"]::after { background: #090909
 #fortune-hint-shop summary { cursor: pointer; }
 #fortune-hint-shop li { margin: .65rem 0; }
 #buy-fortune-hint { margin: .5rem 0; padding: .6rem; }
+
+/* A deliberately unreasonable scroll, with no effect on progression. */
+.hard-mode-wall { display: none; }
+body.hard-mode .hard-mode-wall {
+  display: block;
+  height: 20000px;
+  flex: 0 0 100%;
+  grid-column: 1 / -1;
+  width: 100%;
+  margin-bottom: 24px;
+  border: 2px solid #654336;
+  background-color: #985b45;
+  background-image: linear-gradient(335deg, #653f32 23px, transparent 23px),
+    linear-gradient(155deg, #653f32 23px, transparent 23px),
+    linear-gradient(335deg, #653f32 23px, transparent 23px),
+    linear-gradient(155deg, #653f32 23px, transparent 23px);
+  background-size: 58px 58px;
+  background-position: 0 2px, 4px 35px, 29px 31px, 33px 6px;
+}
+
+body.hard-mode .hard-mode-wall:has(+ section[hidden]) { display: none; }
