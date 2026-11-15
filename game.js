@@ -123,7 +123,15 @@ function save() {
 }
 function incomeBase() { return (state.printer ? 1 : 0) + (state.press ? 1 : 0) + state.incomeLevel * (state.incomeLevel + 1) / 2; }
 function currencyGainMultiplier() { return state.gainZeroActive ? 0 : D(100).pow(state.ascCurrencyBoost ? 1 : 0).times(D(2).pow(state.ascAllCurrencyLevel)); }
-function applyCurrencyGain(amount) { return state.gainZeroActive ? D(0) : D(amount).pow(D(1.3).pow(state.ascMainlinePowerLevel)).times(D(100).pow(state.ascCurrencyBoost ? 1 : 0)).times(D(2).pow(state.ascAllCurrencyLevel)); }
+function applyCurrencyGain(amount) {
+  if (state.gainZeroActive) return D(0);
+  const powered = D(amount).pow(D(1.3).pow(state.ascMainlinePowerLevel));
+  if (state.activeChallenge !== 'additionpower') return powered.times(D(100).pow(state.ascCurrencyBoost ? 1 : 0)).times(D(2).pow(state.ascAllCurrencyLevel));
+  return applyGainUpgrades(powered, [
+    [D(100).pow(state.ascCurrencyBoost ? 1 : 0), D(state.ascCurrencyBoost ? 100 : 0)],
+    [D(2).pow(state.ascAllCurrencyLevel), D(2).times(state.ascAllCurrencyLevel)]
+  ]);
+}
 function mainlineGainDivisor(currency) {
   const balance = state[currency];
   return balance.gt(MAINLINE_SOFT_CAP) ? D(2).pow(balance.log10().minus(1000)) : D(1);
@@ -215,22 +223,79 @@ function renderKirby() {
   document.getElementById('kirby-hypernova').disabled = !available || napping || state.kirbyFullness < 100 || !kirbyAbilities()[state.kirbyAbility];
 }
 function rate() {
-  let value = D(incomeBase()).times(D(1.1).pow(state.multiplierLevel)).times(D(1.3).pow(state.powerLevel)).times(D(2).pow(state.tokenMultiplierLevel)).times(D(1.5).pow(state.tokenBoostLevel)).times(1 + state.totalPrestiges * 0.5).times(pointMultiplier()).times(state.researchBranch === 'production' ? D(2).pow(state.researchLevel) : 1).times(Date.now() < state.sparkBurstUntil ? state.sparkBurstPower : 1);
-  if (state.logLevel) value = value.times(state.balance.max(10).log10().max(1).pow(state.logLevel));
+  if (state.activeChallenge !== 'additionpower') {
+    let value = D(incomeBase()).times(D(1.1).pow(state.multiplierLevel)).times(D(1.3).pow(state.powerLevel)).times(D(2).pow(state.tokenMultiplierLevel)).times(D(1.5).pow(state.tokenBoostLevel)).times(1 + state.totalPrestiges * 0.5).times(pointMultiplier()).times(state.researchBranch === 'production' ? D(2).pow(state.researchLevel) : 1).times(Date.now() < state.sparkBurstUntil ? state.sparkBurstPower : 1);
+    if (state.logLevel) value = value.times(state.balance.max(10).log10().max(1).pow(state.logLevel));
+    if (state.exponentLevel && value.gt(0)) value = value.pow(D(1.1).pow(state.exponentLevel));
+    const exponent = challengeExponent();
+    const challenged = exponent < 1 && value.gt(0) ? value.pow(exponent) : value;
+    return softenGain(applyCurrencyGain(challenged.times(sparkRateMultiplier())), 'balance').times(Date.now() < state.fortuneBoostUntil && !state.activeChallenge ? 2 : 1).times(kirbyBonus('beam')).times(kirbyBonus('stone')).times(expeditionMultiplier(0));
+  }
+  if (state.gainZeroActive) return D(0);
+  let value = applyGainUpgrades(incomeBase(), [
+    [D(1.1).pow(state.multiplierLevel), D(1.1).times(state.multiplierLevel)],
+    [D(1.3).pow(state.powerLevel), D(1.3).times(state.powerLevel)],
+    [D(2).pow(state.tokenMultiplierLevel), D(2).times(state.tokenMultiplierLevel)],
+    [D(1.5).pow(state.tokenBoostLevel), D(1.5).times(state.tokenBoostLevel)],
+    [D(1 + state.totalPrestiges * 0.5), D(state.totalPrestiges * 0.5)],
+    ...pointGainUpgrades(),
+    [D(state.researchBranch === 'production' ? 2 : 1).pow(state.researchLevel), D(state.researchBranch === 'production' ? 2 * state.researchLevel : 0)]
+  ]);
+  if (Date.now() < state.sparkBurstUntil) value = value.times(state.sparkBurstPower);
+  if (state.logLevel) {
+    const logMultiplier = state.balance.max(10).log10().max(1);
+    value = applyGainUpgrades(value, [[logMultiplier.pow(state.logLevel), logMultiplier.times(state.logLevel)]]);
+  }
   if (state.exponentLevel && value.gt(0)) value = value.pow(D(1.1).pow(state.exponentLevel));
   const exponent = challengeExponent();
   const challenged = exponent < 1 && value.gt(0) ? value.pow(exponent) : value;
-  return softenGain(applyCurrencyGain(challenged.times(sparkRateMultiplier())), 'balance').times(Date.now() < state.fortuneBoostUntil && !state.activeChallenge ? 2 : 1).times(kirbyBonus('beam')).times(kirbyBonus('stone')).times(expeditionMultiplier(0));
+  const sparkGain = applyGainUpgrades(challenged, [
+    [D(1.1).pow(state.sparkUpgrade1Level), D(1.1).times(state.sparkUpgrade1Level)],
+    [D(2).pow(state.sparkUpgrade2Level), D(2).times(state.sparkUpgrade2Level)],
+    [D(10).pow(state.sparkUpgrade3Level), D(10).times(state.sparkUpgrade3Level)]
+  ]);
+  const softened = softenGain(applyCurrencyGain(sparkGain), 'balance')
+    .times(Date.now() < state.fortuneBoostUntil && !state.activeChallenge ? 2 : 1)
+    .times(kirbyBonus('beam'))
+    .times(kirbyBonus('stone'));
+  return applyGainUpgrades(softened, [[expeditionMultiplier(0), D(1.1).times(state.expeditionUpgrades[0])]]);
 }
-const challengeNames = { expedition: 'Pyramid Expedition', deduction1: 'Deduction I', deduction2: 'Deduction II', deduction3: 'Deduction III', time1: 'Time Limit I', time2: 'Time Limit II', time3: 'Time Limit III' };
+function applyGainUpgrades(amount, upgrades) {
+  return upgrades.reduce((gain, [multiplier, additive]) => gain.plus(additive), D(amount));
+}
+function pointGainUpgrades() {
+  const cubePoints = state.cubeUnlocked && state.cubeTarget === 'points' ? D(state.cubeLevel).max(1) : D(1);
+  const totalLevels = totalUpgradeLevels();
+  return [
+    [D(state.creditEngine ? 25 : 1), D(state.creditEngine ? 25 : 0)],
+    [D(state.heavyMint ? 5 : 1), D(state.heavyMint ? 5 : 0)],
+    [cubePoints, cubePoints.gt(1) ? cubePoints : D(0)],
+    [D(state.ascTotalLevelBoost ? Math.max(1, totalLevels) : 1), D(state.ascTotalLevelBoost ? totalLevels : 0)],
+    [D(state.pointUpgrade16Bought ? 10 : 1), D(state.pointUpgrade16Bought ? 10 : 0)],
+    [D(state.pointUpgrade17Bought ? 100 : 1), D(state.pointUpgrade17Bought ? 100 : 0)],
+    [D(state.pointUpgrade18Bought ? 1000 : 1), D(state.pointUpgrade18Bought ? 1000 : 0)],
+    [D(state.pointUpgrade19Bought ? 1e6 : 1), D(state.pointUpgrade19Bought ? 1e6 : 0)],
+    [D(state.pointUpgrade20Bought ? 1e12 : 1), D(state.pointUpgrade20Bought ? 1e12 : 0)],
+    [D(state.pointUpgrade21Bought ? 2 : 1), D(state.pointUpgrade21Bought ? 2 : 0)]
+  ];
+}
+const challengeNames = { expedition: 'Pyramid Expedition', deduction1: 'Deduction I', deduction2: 'Deduction II', deduction3: 'Deduction III', time1: 'Time Limit I', time2: 'Time Limit II', time3: 'Time Limit III', additionpower: 'Addition Power', time4: 'Time Limit IV' };
 for (const deduction of ['deduction1', 'deduction2', 'deduction3']) {
   for (const time of ['time1', 'time2', 'time3']) challengeNames[`${deduction}+${time}`] = `${challengeNames[deduction]} + ${challengeNames[time]}`;
 }
 function saleGain() {
+  if (state.activeChallenge === 'additionpower') {
+    const gained = applyGainUpgrades(D(1 + state.clickLevel * 2), pointGainUpgrades()).pow(challengeExponent());
+    return softenGain(applyCurrencyGain(gained), 'balance');
+  }
   return softenGain(applyCurrencyGain(D(1 + state.clickLevel * 2).times(pointMultiplier()).pow(challengeExponent())), 'balance');
 }
 function challengeExponent() { if (state.expedition?.room) return Math.min(1, expeditionRoom().exponent + state.expedition.relics[0] * .03); return ({ deduction1: .9, deduction2: .8, deduction3: .7 })[state.activeChallenge.split('+')[0]] || 1; }
-function challengeDuration(id) { const base = ({ time1: 7, time2: 6, time3: 5 })[id.split('+').at(-1)] || 0; return base ? base + state.cyan14Level : 0; }
+function challengeDuration(id) {
+  if (id === 'time4') return 5 / 60;
+  const base = ({ time1: 7, time2: 6, time3: 5 })[id.split('+').at(-1)] || 0;
+  return base ? base + state.cyan14Level : 0;
+}
 function resetCreditRun() {
   clearFortuneChain(true);
   // Permanent upgrades, including Automations and the Pyramid, stay bought across this reset.
@@ -286,9 +351,24 @@ function tokenIncomeRate() {
   return softenGain(applyCurrencyGain(state.balance.div(state.tokenResetCount * 1000).times(challengeGainMultiplier())), 'tokens');
 }
 function tokenReward() {
-  let reward = state.balance.div(nextGoal()).floor().times(D(1.25).pow(state.tokenBoostLevel));
+  let reward = state.balance.div(nextGoal()).floor();
+  if (state.activeChallenge === 'additionpower') {
+    reward = applyGainUpgrades(reward, [[D(1.25).pow(state.tokenBoostLevel), D(1.25).times(state.tokenBoostLevel)]]);
+  } else reward = reward.times(D(1.25).pow(state.tokenBoostLevel));
   if (state.creditExponentLevel) reward = reward.pow(D(1.01).pow(state.creditExponentLevel));
-  return softenGain(applyCurrencyGain(reward.times(state.researchBranch === 'resets' ? D(2).pow(state.researchLevel) : 1).times(tokenMultiplier()).times(challengeGainMultiplier())), 'tokens').times(kirbyBonus('mirror')).times(expeditionMultiplier(1));
+  const researchMultiplier = state.researchBranch === 'resets' ? D(2).pow(state.researchLevel) : D(1);
+  const tokenMultiplierUpgrades = [
+    [D(state.creditEngine ? 25 : 1), D(state.creditEngine ? 25 : 0)],
+    [D(state.heavyMint ? 5 : 1), D(state.heavyMint ? 5 : 0)],
+    [cubeMultiplier('tokens'), cubeMultiplier('tokens').gt(1) ? cubeMultiplier('tokens') : D(0)]
+  ];
+  const rewardMultiplier = state.activeChallenge === 'additionpower'
+    ? applyGainUpgrades(reward, [
+      [researchMultiplier, researchMultiplier.gt(1) ? researchMultiplier : D(0)],
+      ...tokenMultiplierUpgrades
+    ]).times(challengeGainMultiplier())
+    : reward.times(researchMultiplier).times(tokenMultiplier()).times(challengeGainMultiplier());
+  return softenGain(applyCurrencyGain(rewardMultiplier), 'tokens').times(kirbyBonus('mirror')).times(expeditionMultiplier(1));
 }
 function cubeMultiplier(target) {
   const unlocked = state.cubeUnlocked && (target === 'ascendance' ? state.ascCubeAscendance : target === 'alpha' ? state.ascCubeAlpha : true);
@@ -346,7 +426,7 @@ function buyCyanUpgrade(index) {
   if (!cyanUpgradeReady(index) || level >= max || lt(state.balance, cost)) return;
   state.balance = minus(state.balance, cost);
   if (index === 0) state.cyan13Bought = true;
-  if (index === 1) { state.cyan14Level += 1; if (state.activeChallenge && challengeDuration(state.activeChallenge)) state.challengeEndsAt += 60000; }
+  if (index === 1) { state.cyan14Level += 1; if (state.activeChallenge && state.activeChallenge !== 'time4' && challengeDuration(state.activeChallenge)) state.challengeEndsAt += 60000; }
   if (index === 2) state.cyan15Bought = true;
   for (let other = 0; other < 3; other += 1) if (other !== index) state.cyanSquareCounts[other] += 1;
   toast(`Cyan upgrade ${13 + index} bought`); render(); save();
@@ -605,7 +685,7 @@ function clampUpgradeLevels() {
   const excessTrialLevels = state.cyan14Level - 2;
   if (excessTrialLevels > 0) {
     state.cyan14Level = 2;
-    if (challengeDuration(state.activeChallenge)) {
+    if (state.activeChallenge !== 'time4' && challengeDuration(state.activeChallenge)) {
       state.challengeEndsAt -= excessTrialLevels * 60000;
     }
   }
@@ -1472,7 +1552,7 @@ document.querySelector('#ascendance-tab').addEventListener('click', () => { if (
 document.querySelectorAll('.challenge button').forEach(button => button.addEventListener('click', () => {
   if (!state.pyramidUnlocked || state.activeChallenge || state.completedChallenges.includes(button.dataset.challenge)) return;
   const id = button.dataset.challenge; state.credits = D(0); resetCreditRun(); state.activeChallenge = id;
-  const minutes = challengeDuration(id); state.challengeEndsAt = minutes ? Date.now() + minutes * 60000 : 0; activeTab = 'pyramid';
+  const duration = challengeDuration(id); state.challengeEndsAt = duration ? Date.now() + duration * 60000 : 0; activeTab = 'pyramid';
   toast(`${challengeNames[id]} started · Credits reset`); save(); render();
 }));
 document.querySelectorAll('.cube-target').forEach(button => button.addEventListener('click', () => {
