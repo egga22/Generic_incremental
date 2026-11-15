@@ -20,6 +20,13 @@ const gte = (a, b) => D(a).gte(b);
 const plus = (a, b) => D(a).plus(b);
 const minus = (a, b) => D(a).minus(b);
 const initialState = { balance: 0, runEarned: 0, lifetime: 0, printer: false, press: false, multiplierLevel: 0, incomeLevel: 0, powerLevel: 0, clickLevel: 0, logLevel: 0, exponentLevel: 0, exponentCapLevel: 0, capLevel: 0, tokens: 0, totalPrestiges: 0, tokenResetCount: 0, tokenMultiplierLevel: 0, discountLevel: 0, tokenBoostLevel: 0, expansionUnlocked: false, maxBuyUnlocked: false, maxBuyActive: false, tokenCreditLevel: 0, tokenDiscountLevel: 0, credits: 0, totalCreditPrestiges: 0, data: 0, totalDataPrestiges: 0, dataLore: Array(5).fill(false), gainZeroBought: false, gainZeroActive: false, priceOrigins: {}, creditEngine: false, creditExponentLevel: 0, heavyMint: false, cubeUnlocked: false, cubeLevel: 0, cubeClicks: 0, cubeTarget: 'points', freeRunUpgrades: false, passiveTokens: false, alphaUnlocked: false, alpha: 0, alphaGainPurchases: 0, alphaBoostLevel: 0, alphaCapLevel: 0, alphaNeutralBought: false, alphaGeneratorBought: false, fishingUnlocked: false, fishPoints: 0, fishGainLevel: 0, redFishLevel: 0, fishAlphaLevel: 0, garbageUnlocked: false, darkMatterUnlocked: false, darkMatter: 0, darkMatter1Bought: false, darkMatter2Bought: false, darkMatter2Level: 0, darkMatter3Bought: false, darkMatter4Bought: false, darkMatterCoinBoost: 1, darkMatterFlipTimer: 0, darkMatterFlipDuration: 1, pyramidUnlocked: false, activeChallenge: '', challengeEndsAt: 0, completedChallenges: [], creditChallengeBoost: false, automationsUnlocked: false, automationBought: Array(12).fill(false), automationActive: Array(12).fill(false), ascendance: 0, totalAscendances: 0, ascCurrencyBoost: false, ascCreditExponent: false, ascCubePowerLevel: 0, ascCubeAutoclicker: false, ascCubeAscendance: false, ascCubeAlpha: false, ascPointDiscountLevel: 0, ascTotalLevelBoost: false, ascAllCurrencyLevel: 0, ascMainlinePowerLevel: 0, spark: 0, sparkPrestiges: 0, sparkUpgrade1Level: 0, sparkUpgrade2Level: 0, sparkUpgrade3Level: 0, pointUpgrade16Bought: false, pointUpgrade17Bought: false, pointUpgrade18Bought: false, pointUpgrade19Bought: false, pointUpgrade20Bought: false, cyan13Bought: false, cyan14Level: 0, cyan15Bought: false, cyanSquareCounts: [0, 0, 0] };
+Object.assign(initialState, {
+  cubeLoadouts: ['', '', ''], researchBranch: 'none', researchLevel: 0,
+  completedCombos: [], achievements: [], achievementTheme: 'default',
+  sparkCharge: 0, sparkBurstUntil: 0, sparkBurstPower: 1,
+  automationPresets: ['off', 'off'], automationSeconds: [30, 60],
+  automationReserve: [10, 10], automationLastReset: [0, 0]
+});
 let savedSnapshot;
 let saveConflict = false;
 const savedState = loadState();
@@ -105,7 +112,7 @@ function restoreCurrencyGain() {
 }
 function sparkRateMultiplier() { return D(1.1).pow(state.sparkUpgrade1Level).times(D(2).pow(state.sparkUpgrade2Level)).times(D(10).pow(state.sparkUpgrade3Level)); }
 function rate() {
-  let value = D(incomeBase()).times(D(1.1).pow(state.multiplierLevel)).times(D(1.3).pow(state.powerLevel)).times(D(2).pow(state.tokenMultiplierLevel)).times(D(1.5).pow(state.tokenBoostLevel)).times(1 + state.totalPrestiges * 0.5).times(pointMultiplier());
+  let value = D(incomeBase()).times(D(1.1).pow(state.multiplierLevel)).times(D(1.3).pow(state.powerLevel)).times(D(2).pow(state.tokenMultiplierLevel)).times(D(1.5).pow(state.tokenBoostLevel)).times(1 + state.totalPrestiges * 0.5).times(pointMultiplier()).times(state.researchBranch === 'production' ? D(2).pow(state.researchLevel) : 1).times(Date.now() < state.sparkBurstUntil ? state.sparkBurstPower : 1);
   if (state.logLevel) value = value.times(state.balance.max(10).log10().max(1).pow(state.logLevel));
   if (state.exponentLevel && value.gt(0)) value = value.pow(D(1.1).pow(state.exponentLevel));
   const exponent = challengeExponent();
@@ -113,11 +120,14 @@ function rate() {
   return softenGain(applyCurrencyGain(challenged.times(sparkRateMultiplier())), 'balance');
 }
 const challengeNames = { deduction1: 'Deduction I', deduction2: 'Deduction II', deduction3: 'Deduction III', time1: 'Time Limit I', time2: 'Time Limit II', time3: 'Time Limit III' };
+for (const deduction of ['deduction1', 'deduction2', 'deduction3']) {
+  for (const time of ['time1', 'time2', 'time3']) challengeNames[`${deduction}+${time}`] = `${challengeNames[deduction]} + ${challengeNames[time]}`;
+}
 function saleGain() {
   return softenGain(applyCurrencyGain(D(1 + state.clickLevel * 2).times(pointMultiplier()).pow(challengeExponent())), 'balance');
 }
-function challengeExponent() { return ({ deduction1: .9, deduction2: .8, deduction3: .7 })[state.activeChallenge] || 1; }
-function challengeDuration(id) { const base = ({ time1: 7, time2: 6, time3: 5 })[id] || 0; return base ? base + state.cyan14Level : 0; }
+function challengeExponent() { return ({ deduction1: .9, deduction2: .8, deduction3: .7 })[state.activeChallenge.split('+')[0]] || 1; }
+function challengeDuration(id) { const base = ({ time1: 7, time2: 6, time3: 5 })[id.split('+').at(-1)] || 0; return base ? base + state.cyan14Level : 0; }
 function resetCreditRun() {
   // Permanent upgrades, including Automations and the Pyramid, stay bought across this reset.
   state.tokens = D(0); state.totalPrestiges = 0; state.balance = D(0); state.runEarned = D(0);
@@ -128,6 +138,7 @@ function resetCreditRun() {
   state.tokenCreditLevel = 0; state.tokenDiscountLevel = 0;
   state.maxBuyUnlocked = false; state.maxBuyActive = false;
   state.pointUpgrade16Bought = false; state.pointUpgrade17Bought = false; state.pointUpgrade18Bought = false; state.pointUpgrade19Bought = false; state.pointUpgrade20Bought = false;
+  applyAscendanceMilestones();
   resetPriceOrigins(['multiplierLevel', 'incomeLevel', 'powerLevel', 'clickLevel', 'discountLevel', 'tokenBoostLevel', 'tokenCreditLevel', 'tokenDiscountLevel', 'exponentCapLevel', 'logLevel', 'exponentLevel', 'capLevel']);
 }
 function resetAscendanceRun() {
@@ -148,6 +159,8 @@ function resetAscendanceRun() {
   state.activeChallenge = ''; state.challengeEndsAt = 0; state.creditChallengeBoost = false;
   state.automationsUnlocked = false; state.automationBought = Array(12).fill(false);
   state.automationActive = Array(12).fill(false);
+  state.researchBranch = 'none'; state.researchLevel = 0;
+  applyAscendanceMilestones();
 }
 function nextGoal() { return 500 * (state.totalPrestiges + 1); }
 const DATA_PRESTIGE_COST = D('1e200');
@@ -159,7 +172,7 @@ const dataUpgradeInfo = [
   { cost: 30, currency: 'data', lore: 'Data is the record left behind when P$ is cleared. It remembers what the foundry has learned without carrying the old balance forward.' },
   { cost: 40, currency: 'data', lore: 'The Pyramid was built as a test of repeatability. Its trials strip away accumulated credit, and each completed challenge leaves a permanent mark in the record.' }
 ];
-function challengeGainMultiplier() { return state.creditChallengeBoost ? state.completedChallenges.length + 1 : 1; }
+function challengeGainMultiplier() { return (state.creditChallengeBoost ? state.completedChallenges.length + 1 : 1) * (1 + state.completedCombos.length * .1); }
 function tokenIncomeRate() {
   if (!state.passiveTokens || state.tokenResetCount <= 0) return D(0);
   return softenGain(applyCurrencyGain(state.balance.div(state.tokenResetCount * 1000).times(challengeGainMultiplier())), 'tokens');
@@ -167,7 +180,7 @@ function tokenIncomeRate() {
 function tokenReward() {
   let reward = state.balance.div(nextGoal()).floor().times(D(1.25).pow(state.tokenBoostLevel));
   if (state.creditExponentLevel) reward = reward.pow(D(1.01).pow(state.creditExponentLevel));
-  return softenGain(applyCurrencyGain(reward.times(tokenMultiplier()).times(challengeGainMultiplier())), 'tokens');
+  return softenGain(applyCurrencyGain(reward.times(state.researchBranch === 'resets' ? D(2).pow(state.researchLevel) : 1).times(tokenMultiplier()).times(challengeGainMultiplier())), 'tokens');
 }
 function cubeMultiplier(target) {
   const unlocked = state.cubeUnlocked && (target === 'ascendance' ? state.ascCubeAscendance : target === 'alpha' ? state.ascCubeAlpha : true);
@@ -190,7 +203,7 @@ function totalUpgradeLevels() {
 }
 function pointMultiplier() { return D(state.creditEngine ? 25 : 1).times(state.heavyMint ? 5 : 1).times(cubeMultiplier('points')).times(state.ascTotalLevelBoost ? D(totalUpgradeLevels()).max(1) : 1).times(state.pointUpgrade16Bought ? 10 : 1).times(state.pointUpgrade17Bought ? 100 : 1).times(state.pointUpgrade18Bought ? 1000 : 1).times(state.pointUpgrade19Bought ? 1e6 : 1).times(state.pointUpgrade20Bought ? 1e12 : 1); }
 function tokenMultiplier() { return D(state.creditEngine ? 25 : 1).times(state.heavyMint ? 5 : 1).times(cubeMultiplier('tokens')); }
-function creditMultiplier() { return applyCurrencyGain(cubeMultiplier('credits').times(state.tokenCreditLevel || 1).times(challengeGainMultiplier())); }
+function creditMultiplier() { return applyCurrencyGain(D(state.researchBranch === 'resets' ? 2 : 1).pow(state.researchLevel).times(cubeMultiplier('credits').times(state.tokenCreditLevel || 1).times(challengeGainMultiplier()))); }
 function tokenCostMultiplier() { return D(state.heavyMint ? 7.5 : 1).div(state.priceOrigins?.tokenCostMultiplier || 1); }
 function tokenAmplifierCost() { return D(3).times(tokenCostMultiplier()); }
 function discountTokenCost() { return D(3).times(tokenCostMultiplier()); }
@@ -543,6 +556,7 @@ garbageForm.addEventListener('submit', event => {
 garbageAll.addEventListener('click', () => discardCurrency(true));
 
 function render() {
+  renderExpansion();
   renderTheme();
   renderFishing();
   renderGarbage();
@@ -1139,9 +1153,11 @@ document.querySelector('#work-button').addEventListener('click', () => {
   state.lifetime = plus(state.lifetime, amount);
   render();
 });
-document.querySelector('#prestige-button').addEventListener('click', () => {
+document.querySelector('#prestige-button').addEventListener('click', performTokenPrestige);
+function performTokenPrestige() {
   if (lt(state.balance, nextGoal())) return;
   const reward = tokenReward();
+  state.automationLastReset[0] = Date.now();
   state.tokens = plus(state.tokens, reward);
   state.totalPrestiges += 1;
   state.tokenResetCount += 1;
@@ -1159,12 +1175,15 @@ document.querySelector('#prestige-button').addEventListener('click', () => {
   state.capLevel = 0;
   state.pointUpgrade16Bought = false; state.pointUpgrade17Bought = false; state.pointUpgrade18Bought = false; state.pointUpgrade19Bought = false; state.pointUpgrade20Bought = false;
   resetPriceOrigins(['multiplierLevel', 'incomeLevel', 'powerLevel', 'clickLevel', 'logLevel', 'exponentLevel', 'exponentCapLevel', 'capLevel']);
+  applyAscendanceMilestones();
   toast(`Fresh start. +${fmt(reward)} tokens earned!`);
   save();
   render();
-});
-document.querySelector('#credit-prestige-button').addEventListener('click', () => {
+}
+document.querySelector('#credit-prestige-button').addEventListener('click', performCreditPrestige);
+function performCreditPrestige() {
   if (lt(state.tokens, '1e33')) return;
+  state.automationLastReset[1] = Date.now();
   const completing = state.activeChallenge;
   const reward = completing ? D(0) : creditPrestigeReward();
   state.credits = plus(state.credits, reward);
@@ -1172,7 +1191,8 @@ document.querySelector('#credit-prestige-button').addEventListener('click', () =
   resetCreditRun();
   if (completing) {
     if (!state.challengeEndsAt || Date.now() <= state.challengeEndsAt) {
-      if (!state.completedChallenges.includes(completing)) state.completedChallenges.push(completing);
+      if (completing.includes('+')) { if (!state.completedCombos.includes(completing)) state.completedCombos.push(completing); }
+      else if (!state.completedChallenges.includes(completing)) state.completedChallenges.push(completing);
       toast(`${challengeNames[completing]} complete · No credits earned`);
     } else toast(`${challengeNames[completing]} failed · Time expired`);
     state.activeChallenge = ''; state.challengeEndsAt = 0; activeTab = 'pyramid';
@@ -1181,7 +1201,7 @@ document.querySelector('#credit-prestige-button').addEventListener('click', () =
     toast(`Credit prestige. +${fmt(reward)} C$ earned!`);
   }
   save(); render();
-});
+}
 document.querySelector('#spark-prestige-button').addEventListener('click', () => {
   const cost = sparkPrestigeCost();
   if (lt(state.balance, cost)) return;
@@ -1262,10 +1282,120 @@ document.querySelector('#buy-passive-tokens').addEventListener('click', () => {
   save();
 });
 
+// Expansion progress uses additive save fields so older saves retain their progress.
+const ACHIEVEMENTS = {
+  neutral: ['A resounding ×1', 'Buy Neutral multiplier.', () => state.alphaNeutralBought],
+  cube: ['Thinking inside the box', 'Reach Cube level 10.', () => state.cubeLevel >= 10],
+  combo: ['Two problems at once', 'Complete a combined Pyramid trial.', () => state.completedCombos.length > 0],
+  reset: ['Have we met before?', 'Ascend once.', () => state.totalAscendances > 0],
+  burst: ['Acceptable workplace temperature', 'Activate a full-charge Spark burst.', () => false],
+  research: ['Peer reviewed by nobody', 'Reach research level 5.', () => state.researchLevel === 5]
+};
+function awardAchievement(id) {
+  if (!state.achievements.includes(id)) { state.achievements.push(id); toast(`Achievement: ${ACHIEVEMENTS[id][0]}`); }
+}
+function checkAchievements() { for (const [id, info] of Object.entries(ACHIEVEMENTS)) if (info[2]()) awardAchievement(id); }
+function applyAscendanceMilestones() {
+  if (state.totalAscendances >= 1) { state.printer = true; state.press = true; }
+  if (state.totalAscendances >= 3) { state.expansionUnlocked = true; state.maxBuyUnlocked = true; }
+  if (state.totalAscendances >= 5) { state.creditEngine = true; state.cubeUnlocked = true; state.pyramidUnlocked = true; }
+  if (state.totalAscendances >= 10) { state.automationsUnlocked = true; state.automationBought.fill(true); state.automationActive.fill(true); }
+}
+function presetUnlocked(mode) {
+  return mode === 'off' || state.automationsUnlocked && (mode === 'fast' || mode === 'save' && state.completedChallenges.length >= 3 || mode === 'push' && state.totalAscendances >= 1);
+}
+function presetAllowsPurchase(layer, cost, balance) {
+  return state.automationPresets[layer] !== 'save' || D(cost).lte(D(balance).times(1 - state.automationReserve[layer] / 100));
+}
+function runPresetResets(now) {
+  // No automatic trial completion or destructive resets during challenges.
+  if (!state.automationsUnlocked || state.activeChallenge) return;
+  ['prestige-button', 'credit-prestige-button'].forEach((id, layer) => {
+    const mode = state.automationPresets[layer];
+    if (!presetUnlocked(mode) || !['fast', 'push'].includes(mode)) return;
+    const interval = state.automationSeconds[layer] * (mode === 'push' ? 5 : 1) * 1000;
+    const ready = layer ? gte(state.tokens, '1e33') : gte(state.balance, nextGoal());
+    if (ready && now - state.automationLastReset[layer] >= interval) (layer ? performCreditPrestige : performTokenPrestige)();
+  });
+}
+function cubeTargetAvailable(target) { return state.cubeUnlocked && (target === 'ascendance' ? state.ascCubeAscendance : target === 'alpha' ? state.ascCubeAlpha : ['points', 'tokens', 'credits'].includes(target)); }
+function loadoutSlots() { return state.totalAscendances >= 3 ? 3 : state.totalAscendances >= 1 ? 2 : 1; }
+const expansionPanel = document.createElement('section');
+expansionPanel.id = 'expansion-panel';
+expansionPanel.className = 'expansion-panel';
+document.querySelector('.prestige').before(expansionPanel);
+expansionPanel.innerHTML = `
+<details open><summary>Discoveries &amp; mastery</summary>
+<div id="loadout-feature"><h3>Cube loadouts</h3><p>Save a target, then restore it in one click. Slots unlock with the Cube, 1 Ascendance, and 3 Ascendances. Cube levels and clicks are shared.</p><div id="loadout-slots"></div></div>
+<div id="combo-feature"><h3>Combined Pyramid trials</h3><p>Pair completed trials. Reach 1e33 tokens under both restrictions, then credit prestige. Each unique pair adds +10% to token and credit rewards. Starting clears credits and the credit run.</p><label>Deduction <select id="combo-deduction">${[1,2,3].map(i => `<option value="deduction${i}">Deduction ${i}</option>`).join('')}</select></label>
+<label>Time limit <select id="combo-time">${[1,2,3].map(i => `<option value="time${i}">Time Limit ${i}</option>`).join('')}</select></label><button id="start-combo">Start combined trial</button><p id="combo-progress"></p></div>
+<div id="research-feature"><h3>Data research</h3><p>Requires all five lore records. Choose one branch: Production doubles P$/sec per level; Resets doubles token and credit reset rewards per level; Automation adds one autobuyer pass per tick per level. Levels cost 10, 20, 40, 80, 160 Data. Switch branches freely; Ascendance clears research and refunds nothing.</p><select id="research-branch"><option value="none">Choose research</option><option value="production">Production</option><option value="resets">Resets</option><option value="automation">Automation</option></select><button id="buy-research">Research</button><p id="research-progress"></p></div>
+<div id="preset-feature"><h3>Automation presets</h3><p>Uses purchased, active autobuyers. Fast resets unlocks with Automations; Save for next upgrade after 3 trials; Long push after 1 Ascendance. Off keeps ordinary autobuyers running. Fast resets uses your interval; Long push waits 5× longer. Save mode keeps a reserve and never resets. Trials always disable automatic resets.</p>${['P$ → tokens','Tokens → credits'].map((name, i) => `<fieldset><legend>${name}</legend><select id="preset-${i}"><option value="off">Off</option><option value="fast">Fast resets</option><option value="save">Save for next upgrade</option><option value="push">Long push</option></select><label>Reset interval (seconds) <input id="preset-seconds-${i}" type="number" min="5" max="3600"></label><label>Reserve % <input id="preset-reserve-${i}" type="number" min="0" max="90"></label></fieldset>`).join('')}</div>
+<div id="burst-feature"><h3>Spark charge &amp; burst</h3><p>Production charges 1% every 3 seconds after your first Spark reset. Spend 25%, 50%, or all stored charge for 30 seconds of ×(1 + charge/25) P$/sec, up to ×5. Charging pauses during bursts.</p><p id="burst-progress"></p>${[25,50,100].map(n => `<button data-burst="${n}">${n === 100 ? 'Spend all charge' : `Spend ${n}%`}</button>`).join('')}</div>
+<h3>Ascendance milestones</h3><p id="asc-milestones"></p>
+<h3>Questionable achievements</h3><p>Three achievements unlock Gold; all six unlock Violet. Rewards are cosmetic.</p><ul id="achievement-list"></ul><label>Theme <select id="achievement-theme"><option value="default">Default</option><option value="gold">Gold</option><option value="violet">Violet</option></select></label>
+</details>`;
+function renderExpansion() {
+  for (const [id, visible] of [['loadout',state.cubeUnlocked],['combo',state.pyramidUnlocked],['research',state.dataLore.every(Boolean)],['preset',state.automationsUnlocked],['burst',state.sparkPrestiges > 0]]) document.getElementById(`${id}-feature`).hidden = !visible;
+  document.getElementById('loadout-slots').innerHTML = Array.from({length:3}, (_,i) => `<p>Slot ${i+1}: ${state.cubeLoadouts[i] || 'Empty'} <button data-save-loadout="${i}" ${i >= loadoutSlots() ? 'disabled' : ''}>Save current target</button> <button data-load-loadout="${i}" ${i >= loadoutSlots() || !cubeTargetAvailable(state.cubeLoadouts[i]) ? 'disabled' : ''}>Load</button></p>`).join('');
+  document.getElementById('combo-progress').textContent = `${state.completedCombos.length}/9 pairs complete: ${state.completedCombos.map(id => challengeNames[id]).join(', ') || 'none'}`;
+  const combo = `${document.getElementById('combo-deduction').value}+${document.getElementById('combo-time').value}`;
+  document.getElementById('start-combo').disabled = !!state.activeChallenge || state.completedCombos.includes(combo) || !combo.split('+').every(id => state.completedChallenges.includes(id));
+  document.getElementById('research-branch').value = state.researchBranch;
+  document.getElementById('research-progress').textContent = `Level ${state.researchLevel}/5 · ${state.researchBranch}`;
+  document.getElementById('buy-research').textContent = state.researchLevel >= 5 ? 'Research complete' : `${10 * 2 ** state.researchLevel} Data`;
+  document.getElementById('buy-research').disabled = state.researchLevel >= 5 || state.researchBranch === 'none' || lt(state.data, 10 * 2 ** state.researchLevel);
+  for (let i = 0; i < 2; i++) {
+    const select = document.getElementById(`preset-${i}`); select.value = state.automationPresets[i];
+    for (const option of select.options) option.disabled = !presetUnlocked(option.value);
+    for (const [suffix, values] of [['seconds',state.automationSeconds],['reserve',state.automationReserve]]) { const input = document.getElementById(`preset-${suffix}-${i}`); if (document.activeElement !== input) input.value = values[i]; }
+  }
+  const bursting = Date.now() < state.sparkBurstUntil;
+  document.getElementById('burst-progress').textContent = `${state.sparkCharge.toFixed(1)}% charged${bursting ? ` · ×${state.sparkBurstPower} burst: ${Math.ceil((state.sparkBurstUntil-Date.now())/1000)}s` : ''}`;
+  expansionPanel.querySelectorAll('[data-burst]').forEach(b => { b.disabled = bursting || state.sparkCharge < (Number(b.dataset.burst) === 100 ? 1 : Number(b.dataset.burst)); });
+  document.getElementById('asc-milestones').textContent = [[1,'Start resets with both printers'],[3,'Keep Expansion and Max Buy'],[5,'Start with Credit engine, Cube, and Pyramid'],[10,'Start with all automations']].map(([n,label]) => `${state.totalAscendances >= n ? '✓' : '○'} ${n}: ${label}`).join(' · ');
+  document.getElementById('achievement-list').innerHTML = Object.entries(ACHIEVEMENTS).map(([id, info]) => `<li>${state.achievements.includes(id) ? '✓' : '○'} ${info[0]} — ${info[1]}</li>`).join('');
+  const theme = document.getElementById('achievement-theme'); theme.value = state.achievementTheme;
+  theme.options[1].disabled = state.achievements.length < 3; theme.options[2].disabled = state.achievements.length < 6;
+  document.body.dataset.achievementTheme = state.achievementTheme;
+}
+expansionPanel.addEventListener('click', event => {
+  const button = event.target.closest('button'); if (!button || button.disabled) return;
+  if (button.dataset.saveLoadout !== undefined && state.cubeUnlocked) state.cubeLoadouts[Number(button.dataset.saveLoadout)] = state.cubeTarget;
+  if (button.dataset.loadLoadout !== undefined) { const target = state.cubeLoadouts[Number(button.dataset.loadLoadout)]; if (cubeTargetAvailable(target)) state.cubeTarget = target; }
+  if (button.id === 'start-combo' && state.pyramidUnlocked && !state.activeChallenge) {
+    const id = `${document.getElementById('combo-deduction').value}+${document.getElementById('combo-time').value}`;
+    if (state.completedCombos.includes(id) || !id.split('+').every(v => state.completedChallenges.includes(v))) return;
+    state.credits = D(0); resetCreditRun(); state.activeChallenge = id; state.challengeEndsAt = Date.now() + challengeDuration(id) * 60000; activeTab = 'pyramid';
+  }
+  if (button.id === 'buy-research' && state.dataLore.every(Boolean) && state.researchBranch !== 'none' && state.researchLevel < 5) {
+    const cost = 10 * 2 ** state.researchLevel; if (gte(state.data, cost)) { state.data = minus(state.data, cost); state.researchLevel++; }
+  }
+  if (button.dataset.burst && state.sparkPrestiges > 0 && Date.now() >= state.sparkBurstUntil) {
+    const amount = Number(button.dataset.burst) === 100 ? state.sparkCharge : Number(button.dataset.burst);
+    if (amount < 1 || amount > state.sparkCharge) return;
+    if (amount === 100) awardAchievement('burst');
+    state.sparkCharge -= amount; state.sparkBurstPower = 1 + amount / 25; state.sparkBurstUntil = Date.now() + 30000;
+  }
+  checkAchievements(); save(); render();
+});
+expansionPanel.addEventListener('change', event => {
+  const el = event.target;
+  if (el.id === 'research-branch' && state.dataLore.every(Boolean)) state.researchBranch = el.value;
+  for (let i=0;i<2;i++) {
+    if (el.id === `preset-${i}` && presetUnlocked(el.value)) { state.automationPresets[i] = el.value; state.automationLastReset[i] = Date.now(); }
+    if (el.id === `preset-seconds-${i}`) state.automationSeconds[i] = Math.max(5, Math.min(3600, Number(el.value) || 30));
+    if (el.id === `preset-reserve-${i}`) state.automationReserve[i] = Math.max(0, Math.min(90, Number(el.value) || 0));
+  }
+  if (el.id === 'achievement-theme' && (el.value === 'default' || el.value === 'gold' && state.achievements.length >= 3 || el.value === 'violet' && state.achievements.length >= 6)) state.achievementTheme = el.value;
+  save(); render();
+});
+applyAscendanceMilestones();
+
 let lastTick = Date.now();
 function runAutomations() {
   const buyPointsUpgrade = (index, unlocked, alreadyBought, cost, action, free = false) => {
-    if (!state.automationActive[index] || !unlocked || alreadyBought || lt(state.balance, cost)) return;
+    if (!presetAllowsPurchase(0, cost, state.balance) || !state.automationActive[index] || !unlocked || alreadyBought || lt(state.balance, cost)) return;
     if (!free) state.balance = minus(state.balance, cost);
     action();
   };
@@ -1279,10 +1409,10 @@ function runAutomations() {
   buyPointsUpgrade(7, state.expansionUnlocked, state.exponentLevel >= exponentMax(), exponentCost(), () => { state.exponentLevel += 1; });
   buyPointsUpgrade(8, state.expansionUnlocked, state.capLevel >= upgradeLevelMax(), capCost(), () => { state.capLevel += 1; }, state.freeRunUpgrades);
   buyPointsUpgrade(9, state.expansionUnlocked && state.creditExponentLevel > 0, state.exponentCapLevel >= 5, exponentCapCost(), () => { state.exponentCapLevel += 1; });
-  if (state.automationActive[10] && gte(state.tokens, tokenAmplifierCost()) && state.tokenMultiplierLevel < 10) {
+  if (presetAllowsPurchase(1, tokenAmplifierCost(), state.tokens) && state.automationActive[10] && gte(state.tokens, tokenAmplifierCost()) && state.tokenMultiplierLevel < 10) {
     state.tokens = minus(state.tokens, tokenAmplifierCost()); state.tokenMultiplierLevel += 1;
   }
-  if (state.automationActive[11] && state.tokenBoostLevel > 0 && gte(state.tokens, expansionCost()) && !state.expansionUnlocked) {
+  if (presetAllowsPurchase(1, expansionCost(), state.tokens) && state.automationActive[11] && state.tokenBoostLevel > 0 && gte(state.tokens, expansionCost()) && !state.expansionUnlocked) {
     state.tokens = minus(state.tokens, expansionCost()); state.expansionUnlocked = true;
   }
 }
@@ -1291,6 +1421,10 @@ setInterval(() => {
   const elapsed = Math.max(0, (now - lastTick) / 1000);
   lastTick = now;
   runAutomations();
+  if (state.researchBranch === 'automation') for (let i = 0; i < state.researchLevel; i++) runAutomations();
+  runPresetResets(now);
+  if (state.sparkPrestiges > 0 && rate().gt(0) && now >= state.sparkBurstUntil) state.sparkCharge = Math.min(100, state.sparkCharge + elapsed / 3);
+  checkAchievements();
   if (state.cubeUnlocked && state.ascCubeAutoclicker) addCubeClicks(cubeClickGain().times(elapsed));
   const earned = rate().times(elapsed);
   if (state.activeChallenge && state.challengeEndsAt && now >= state.challengeEndsAt) { const name = challengeNames[state.activeChallenge]; state.activeChallenge = ''; state.challengeEndsAt = 0; toast(`${name} failed · Time expired`); }
@@ -1336,6 +1470,16 @@ function isValidSave(snapshot) {
         && D(value).isFinite() && D(value).gte(0);
     }
     const fallback = initialState[key];
+    if (key === 'cubeLoadouts') return Array.isArray(value) && value.length === 3 && value.every(v => ['', 'points', 'tokens', 'credits', 'ascendance', 'alpha'].includes(v));
+    if (key === 'researchBranch') return ['none', 'production', 'resets', 'automation'].includes(value);
+    if (key === 'researchLevel') return Number.isInteger(value) && value >= 0 && value <= 5;
+    if (key === 'completedCombos') return Array.isArray(value) && value.every(v => v.includes('+') && Object.hasOwn(challengeNames, v));
+    if (key === 'achievements') return Array.isArray(value) && value.every(v => Object.hasOwn(ACHIEVEMENTS, v));
+    if (key === 'achievementTheme') return ['default', 'gold', 'violet'].includes(value);
+    if (key === 'automationPresets') return Array.isArray(value) && value.length === 2 && value.every(v => ['off', 'fast', 'save', 'push'].includes(v));
+    if (['automationSeconds', 'automationReserve', 'automationLastReset'].includes(key)) return Array.isArray(value) && value.length === 2 && value.every(v => Number.isFinite(v) && v >= 0) && (key !== 'automationReserve' || value.every(v => v <= 90)) && (key !== 'automationSeconds' || value.every(v => v >= 5 && v <= 3600));
+    if (key === 'sparkCharge') return Number.isFinite(value) && value >= 0 && value <= 100;
+    if (key === 'sparkBurstPower') return Number.isFinite(value) && value >= 1 && value <= 5;
     if (key === 'priceOrigins') {
       return isSaveObject(value) && Object.values(value).every(n => Number.isFinite(n) && n >= 0);
     }

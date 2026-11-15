@@ -1,0 +1,6 @@
+{
+  "name": "generic-incremental",
+  "private": true,
+  "scripts": { "test": "node tests/progression.cjs" },
+  "devDependencies": { "jsdom": "^27.4.0" }
+}

@@ -179,3 +179,14 @@ body.dark-screen #garbage-form {
   border-color: #674d4d;
 }
 body.dark-screen :is(#garbage-form .effect, #mainline-soft-cap) { color: #ddd; }
+
+.expansion-panel { margin: 1rem 0; padding: 1rem; border: 1px solid var(--border, #888); border-radius: 12px; }
+.expansion-panel summary { cursor: pointer; font-weight: 700; }
+.expansion-panel h3 { margin-top: 1.4rem; }
+.expansion-panel p, .expansion-panel li { line-height: 1.5; }
+.expansion-panel button, .expansion-panel select, .expansion-panel input { margin: .25rem; padding: .5rem; max-width: 100%; }
+.expansion-panel input { width: 6rem; }
+.expansion-panel fieldset { margin: .5rem 0; border: 1px solid #888; border-radius: 8px; }
+.expansion-panel label { display: inline-block; }
+body[data-achievement-theme="gold"] .expansion-panel { border-color: #c79523; box-shadow: 0 0 12px #c7952340; }
+body[data-achievement-theme="violet"] .expansion-panel { border-color: #a073e8; box-shadow: 0 0 12px #a073e840; }
