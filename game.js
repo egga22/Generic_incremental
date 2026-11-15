@@ -295,6 +295,7 @@ function capCost(level = state.capLevel) { return pointCost(D('5e8').times(D(1.5
 function ascPointDiscountCost(level = state.ascPointDiscountLevel) { return D('1e300').times(D(1.5).pow(level)); }
 function ascAllCurrencyCost(level = state.ascAllCurrencyLevel) { return D('1e12').times(D(10).pow(level)); }
 function ascMainlinePowerCost(level = state.ascMainlinePowerLevel) { return D('1e600').times(D(1e6).pow(level)); }
+function highPointUpgradeReady(index) { return index === 16 ? state.expansionUnlocked : state[`pointUpgrade${index - 1}Bought`]; }
 function highPointUpgradeCost(index) { return pointCost(D(['1e180','1e200','1e220','1e240','1e260'][index - 16])); }
 function sparkPrestigeCost() { return pointCost(SPARK_PRESTIGE_COST); }
 function sparkReward(balance) { const ratio = D(balance).div(sparkPrestigeCost()); return ratio.lt(1) ? D(0) : softenGain(ratio.log10().floor().plus(1), 'spark'); }
@@ -792,9 +793,9 @@ function render() {
     const bought = state[`pointUpgrade${i}Bought`];
     const cost = highPointUpgradeCost(i);
     const button = document.querySelector(`#buy-point-${i}`);
-    button.disabled = bought || lt(state.balance, cost);
+    button.disabled = !highPointUpgradeReady(i) || bought || lt(state.balance, cost);
     button.textContent = bought ? 'Bought' : `P$ ${fmt(cost)}`;
-    document.querySelector(`#upgrade-point-${i}`).classList.remove('locked');
+    document.querySelector(`#upgrade-point-${i}`).classList.toggle('locked', !highPointUpgradeReady(i));
   }
   for (let i = 0; i < 3; i += 1) {
     const button = document.querySelector(`#buy-cyan-${13 + i}`);
@@ -1118,7 +1119,7 @@ for (let i = 3; i < 8; i += 1) {
   const upgradeNumber = i + 13;
   document.querySelector(`#buy-point-${upgradeNumber}`).addEventListener('click', () => {
     const cost = highPointUpgradeCost(upgradeNumber);
-    if (state[`pointUpgrade${upgradeNumber}Bought`] || lt(state.balance, cost)) return;
+    if (!highPointUpgradeReady(upgradeNumber) || state[`pointUpgrade${upgradeNumber}Bought`] || lt(state.balance, cost)) return;
     purchase(cost, () => { state[`pointUpgrade${upgradeNumber}Bought`] = true; }, `Upgrade ${upgradeNumber} bought`);
     save();
   });

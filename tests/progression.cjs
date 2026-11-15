@@ -218,3 +218,26 @@ assert.equal(Number(progress.getAttribute('aria-valuenow')), 50, 'uses current p
 vm.runInContext('state.balance = D(0); render();', context);
 assert.equal(Number(progress.getAttribute('aria-valuenow')), 0, 'resets track run balance');
 console.log('Prestige styles passed: all eight choices, save validation, visibility, endpoints, goal tracking, reset persistence.');
+
+// Late P$ upgrades require Expansion plans, then the preceding upgrade.
+const chainState=a.state;
+chainState.balance=a.D('1e300'); chainState.expansionUnlocked=false;
+for (let i=16;i<=20;i++) chainState[`pointUpgrade${i}Bought`]=false;
+for (let i=16;i<=20;i++) {
+  a.render();
+  const button=doc.getElementById(`buy-point-${i}`);
+  assert(button.disabled, `upgrade ${i} locked without prerequisite`);
+  assert(doc.getElementById(`upgrade-point-${i}`).classList.contains('locked'));
+  button.disabled=false; button.click();
+  assert(!chainState[`pointUpgrade${i}Bought`], 'purchase handler rejects missing prerequisite');
+}
+chainState.expansionUnlocked=true;
+for (let i=16;i<=20;i++) {
+  a.render();
+  const button=doc.getElementById(`buy-point-${i}`);
+  assert(!button.disabled, `upgrade ${i} unlocks in sequence`);
+  assert(!doc.getElementById(`upgrade-point-${i}`).classList.contains('locked'));
+  button.click();
+  assert(chainState[`pointUpgrade${i}Bought`]);
+}
+console.log('Upgrades 16–20 prerequisite chain passed.');
