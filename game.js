@@ -1652,7 +1652,7 @@ function chooseTab(tab) {
 }
 document.querySelector('#npc-tab').addEventListener('click', () => {
   if (state.epsilonUnlocked && !state.epsilonEscapeUnlocked) return;
-  travelerAppears = Math.random() < 0.2;
+  travelerAppears = Math.random() < 0.4;
   chooseTab('npc');
 });
 document.querySelector('#traveler-no').addEventListener('click', () => {
