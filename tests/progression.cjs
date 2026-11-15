@@ -12,7 +12,7 @@ context.clearTimeout = () => {};
 vm.runInContext('(function(){' + fs.readFileSync('break_eternity.js','utf8').replace(/export \{[\s\S]*?\};/, 'globalThis.Decimal = y;') + '})();', context);
 let source = fs.readFileSync('game.js','utf8').replace("import Decimal from './break_eternity.js';",'');
 source += `
-globalThis.testAPI = {get state(){return state}, D, rate, tokenReward, creditMultiplier, challengeExponent, challengeDuration, challengeGainMultiplier, resetAscendanceRun, resetCreditRun, runAutomations, runPresetResets, presetAllowsPurchase, isValidSave, serializeState, render, checkAchievements};`;
+globalThis.testAPI = {get state(){return state}, D, rate, tokenReward, creditMultiplier, challengeExponent, challengeDuration, challengeGainMultiplier, resetAscendanceRun, resetCreditRun, runAutomations, runPresetResets, presetAllowsPurchase, isValidSave, serializeState, render, checkAchievements, recordFortuneRitual, spinFortune, bankFortune, fortuneUsed, fortuneCapacity, fortuneSegments, clearFortuneChain, updateFortuneProgress};`;
 vm.runInContext(source, context);
 const a = context.testAPI, s = a.state, doc = dom.window.document;
 assert(a.isValidSave(JSON.parse(a.serializeState())), 'fresh save round trip');
@@ -69,3 +69,73 @@ assert(doc.getElementById('token-ascendance-button').disabled, 'zero gain preven
 s.gainZeroActive=false;
 a.render(); timers.forEach(fn => fn());
 console.log('Progression checks passed: startup, saves, research, combined trials, loadouts, burst, reserves, milestones, achievements, tick.');
+
+// Fortune unlock requires deliberate prestige routing, and remains retryable.
+s.fortuneUnlocked=false; s.fortuneClue=0; s.cubeUnlocked=true; s.activeChallenge='';
+s.balance=a.D('1e900'); s.totalCreditPrestiges=20; a.render();
+assert(!s.fortuneUnlocked, 'ordinary progression does not reveal engine');
+s.cubeTarget='points'; a.recordFortuneRitual('token'); assert.equal(s.fortuneClue,1);
+s.cubeTarget='credits'; a.recordFortuneRitual('token'); assert.equal(s.fortuneClue,0,'mistake restarts route');
+for (const [layer,target] of [['token','points'],['token','tokens'],['credit','credits'],['token','points']]) {
+  s.cubeTarget=target; a.recordFortuneRitual(layer);
+}
+assert(s.fortuneUnlocked); assert.equal(s.fortuneCharges,6);
+a.render(); assert(!doc.getElementById('fortune-panel').hidden);
+s.gainZeroActive=false; s.printer=true;
+// Seed exact segment outcomes; no flaky probabilistic assertions.
+function land(id, reroll=false) {
+  const parts=a.fortuneSegments(), index=parts.findIndex(p=>p.id===id);
+  assert(index>=0); const before=parts.slice(0,index).reduce((n,p)=>n+p.weight,0);
+  context.Math.random=()=> (before+0.5)/(a.fortuneCapacity()+4);
+  a.spinFortune(reroll);
+}
+s.fortuneCharges=50; a.clearFortuneChain();
+land('multiplier'); land('points'); assert.equal(s.fortuneSeconds,30,'prime doubles payout');
+land('points'); assert.equal(s.fortuneSeconds,60,'repeat output streak');
+a.render(); assert(doc.querySelector('[data-fortune-wedge]').disabled,'pot locks editor');
+const balance=s.balance, expected=s.fortuneBase.min(a.rate()).times(s.fortuneSeconds);
+a.bankFortune(); assert(s.balance.eq(balance.plus(expected))); assert(s.fortuneTokens>0);
+const banked=s.fortuneTokens;
+land('tokens'); land('bust'); assert.equal(s.fortunePending,0); assert.equal(s.fortuneTokens,banked);
+land('refund'); land('refund'); land('refund'); assert.equal(s.fortuneRefunds,2,'refund cap');
+a.clearFortuneChain(); s.fortuneFrame=2; land('tokens'); const pot=s.fortunePending;
+land('bust',true); assert.equal(s.fortunePending,pot,'protected reroll preserves pot');
+const charges=s.fortuneCharges; a.spinFortune(true); assert.equal(s.fortuneCharges,charges,'one reroll per chain');
+s.activeChallenge='deduction1'; a.spinFortune(); a.bankFortune(); assert.equal(s.fortunePending,pot,'trials block wheel payouts');
+s.activeChallenge=''; s.gainZeroActive=true; a.bankFortune(); assert.equal(s.fortunePending,pot,'null gain blocks wheel payouts');
+s.gainZeroActive=false;
+a.resetAscendanceRun(); assert(s.fortuneUnlocked); assert.equal(s.fortuneFrame,2); assert.equal(s.fortuneTokens,banked); assert.equal(s.fortunePending,0);
+s.fortuneTokens=200; a.render();
+doc.getElementById('fortune-upgrade-frame').click(); assert.equal(s.fortuneFrame,3);
+assert.equal(s.fortuneTokens,160); doc.getElementById('fortune-add').click(); assert.equal(s.fortuneWedges.length,5);
+const select=doc.querySelector('[data-fortune-wedge="0"]'); select.value='cache'; select.dispatchEvent(new dom.window.Event('change',{bubbles:true}));
+assert.equal(s.fortuneWedges[0],'cache'); assert(a.fortuneUsed()<=a.fortuneCapacity());
+assert(a.isValidSave(JSON.parse(a.serializeState())),'Fortune save round trip');
+for (const invalid of [{fortuneFrame:5},{fortuneQuality:-1},{fortuneClue:5},{fortuneWedges:['fake']},{fortuneSeconds:121},{fortuneCharges:101}]) assert(!a.isValidSave({balance:0,runEarned:0,...invalid}));
+const watermark=s.fortuneMilestone; s.balance=a.D(10).pow((watermark+2)*10); const start=s.fortuneCharges;
+a.updateFortuneProgress(); assert.equal(s.fortuneCharges,Math.min(100,start+2));
+s.balance=a.D(0); a.updateFortuneProgress(); s.balance=a.D(10).pow((watermark+2)*10); a.updateFortuneProgress();
+assert.equal(s.fortuneCharges,Math.min(100,start+2),'resets cannot replay high water rewards');
+console.log('Fortune checks passed: puzzle, recovery, weighted outcomes, combos, banking, bust, refund/reroll caps, restrictions, workshop, persistence, saves, milestones.');
+
+a.clearFortuneChain(); land('blank');
+assert(a.isValidSave(JSON.parse(a.serializeState())),'Idle outcome saves correctly');
+s.fortuneBoostUntil=Date.now()+30000; land('bust'); assert(s.fortuneBoostUntil>Date.now(),'bust preserves banked Overdrive');
+// Reload a real serialized save into a fresh document/runtime.
+const reload = new JSDOM(fs.readFileSync('index.html','utf8'), {url:'https://example.test',runScripts:'outside-only'});
+const rc=reload.getInternalVMContext(); rc.setInterval=()=>1; rc.setTimeout=()=>1; rc.clearTimeout=()=>{};
+rc.localStorage.setItem('pocket-foundry-save-v2',a.serializeState());
+vm.runInContext('(function(){'+fs.readFileSync('break_eternity.js','utf8').replace(/export \{[\s\S]*?\};/,'globalThis.Decimal = y;')+'})();',rc);
+vm.runInContext(source,rc);
+assert(rc.testAPI.state.fortuneUnlocked); assert.equal(rc.testAPI.state.fortuneFrame,3);
+assert.equal(rc.testAPI.state.fortuneWedges[0],'cache'); assert(rc.testAPI.isValidSave(JSON.parse(rc.testAPI.serializeState())));
+console.log('Fortune reload and banked boost checks passed.');
+// Exercise the discovery through the actual prestige buttons, not just the matcher.
+const r=rc.testAPI, rs=r.state, rd=reload.window.document;
+rs.fortuneUnlocked=false; rs.fortuneClue=0; rs.cubeUnlocked=true; rs.activeChallenge=''; rs.gainZeroActive=false;
+for (const [layer,target] of [['token','points'],['token','tokens'],['credit','credits'],['token','points']]) {
+  rs.cubeTarget=target; rs.balance=r.D('1e100'); rs.tokens=r.D('1e40'); r.render();
+  rd.getElementById(layer==='credit'?'credit-prestige-button':'prestige-button').click();
+}
+assert(rs.fortuneUnlocked,'actual prestige route reveals wheel');
+console.log('Fortune discovery verified through prestige controls.');

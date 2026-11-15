@@ -190,3 +190,12 @@ body.dark-screen :is(#garbage-form .effect, #mainline-soft-cap) { color: #ddd; }
 .expansion-panel label { display: inline-block; }
 body[data-achievement-theme="gold"] .expansion-panel { border-color: #c79523; box-shadow: 0 0 12px #c7952340; }
 body[data-achievement-theme="violet"] .expansion-panel { border-color: #a073e8; box-shadow: 0 0 12px #a073e840; }
+
+.fortune-layout { display: flex; align-items: center; flex-wrap: wrap; gap: 1.5rem; }
+#fortune-wheel { width: 180px; height: 180px; flex-shrink: 0; border-radius: 50%; border: 4px solid #888; display: grid; place-items: center; color: white; font-weight: bold; text-shadow: 0 1px 4px #000; }
+#fortune-hint { font-style: italic; line-height: 1.6; }
+#fortune-hint::after { content: ' ◇ ◇ ◇ ◇'; display: block; letter-spacing: .3em; }
+#fortune-hint[data-notches="1"]::after { content: '◆ ◇ ◇ ◇'; }
+#fortune-hint[data-notches="2"]::after { content: '◆ ◆ ◇ ◇'; }
+#fortune-hint[data-notches="3"]::after { content: '◆ ◆ ◆ ◇'; }
+#fortune-wedges select { width: min(100%, 32rem); }

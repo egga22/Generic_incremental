@@ -10,7 +10,7 @@ const MAINLINE_SOFT_CAP = '1e1000';
 const MAINLINE_CURRENCIES = {
   points: 'balance', tokens: 'tokens', credits: 'credits', data: 'data', spark: 'spark', ascendance: 'ascendance'
 };
-const CURRENCY_KEYS = ['balance', 'runEarned', 'lifetime', 'tokens', 'credits', 'data', 'cubeClicks', 'alpha', 'ascendance', 'darkMatter', 'darkMatterCoinBoost', 'spark', 'fishPoints'];
+const CURRENCY_KEYS = ['balance', 'runEarned', 'lifetime', 'tokens', 'credits', 'data', 'cubeClicks', 'alpha', 'ascendance', 'darkMatter', 'darkMatterCoinBoost', 'spark', 'fishPoints', 'fortuneBase'];
 const D = value => value instanceof Decimal ? value : new Decimal(value ?? 0);
 function upgradeLevelMax() { return BASE_MAX_UPGRADE_LEVEL + (state?.cyan15Bought ? 250 : 0); }
 const lt = (a, b) => D(a).lt(b);
@@ -21,6 +21,13 @@ const plus = (a, b) => D(a).plus(b);
 const minus = (a, b) => D(a).minus(b);
 const initialState = { balance: 0, runEarned: 0, lifetime: 0, printer: false, press: false, multiplierLevel: 0, incomeLevel: 0, powerLevel: 0, clickLevel: 0, logLevel: 0, exponentLevel: 0, exponentCapLevel: 0, capLevel: 0, tokens: 0, totalPrestiges: 0, tokenResetCount: 0, tokenMultiplierLevel: 0, discountLevel: 0, tokenBoostLevel: 0, expansionUnlocked: false, maxBuyUnlocked: false, maxBuyActive: false, tokenCreditLevel: 0, tokenDiscountLevel: 0, credits: 0, totalCreditPrestiges: 0, data: 0, totalDataPrestiges: 0, dataLore: Array(5).fill(false), gainZeroBought: false, gainZeroActive: false, priceOrigins: {}, creditEngine: false, creditExponentLevel: 0, heavyMint: false, cubeUnlocked: false, cubeLevel: 0, cubeClicks: 0, cubeTarget: 'points', freeRunUpgrades: false, passiveTokens: false, alphaUnlocked: false, alpha: 0, alphaGainPurchases: 0, alphaBoostLevel: 0, alphaCapLevel: 0, alphaNeutralBought: false, alphaGeneratorBought: false, fishingUnlocked: false, fishPoints: 0, fishGainLevel: 0, redFishLevel: 0, fishAlphaLevel: 0, garbageUnlocked: false, darkMatterUnlocked: false, darkMatter: 0, darkMatter1Bought: false, darkMatter2Bought: false, darkMatter2Level: 0, darkMatter3Bought: false, darkMatter4Bought: false, darkMatterCoinBoost: 1, darkMatterFlipTimer: 0, darkMatterFlipDuration: 1, pyramidUnlocked: false, activeChallenge: '', challengeEndsAt: 0, completedChallenges: [], creditChallengeBoost: false, automationsUnlocked: false, automationBought: Array(12).fill(false), automationActive: Array(12).fill(false), ascendance: 0, totalAscendances: 0, ascCurrencyBoost: false, ascCreditExponent: false, ascCubePowerLevel: 0, ascCubeAutoclicker: false, ascCubeAscendance: false, ascCubeAlpha: false, ascPointDiscountLevel: 0, ascTotalLevelBoost: false, ascAllCurrencyLevel: 0, ascMainlinePowerLevel: 0, spark: 0, sparkPrestiges: 0, sparkUpgrade1Level: 0, sparkUpgrade2Level: 0, sparkUpgrade3Level: 0, pointUpgrade16Bought: false, pointUpgrade17Bought: false, pointUpgrade18Bought: false, pointUpgrade19Bought: false, pointUpgrade20Bought: false, cyan13Bought: false, cyan14Level: 0, cyan15Bought: false, cyanSquareCounts: [0, 0, 0] };
 Object.assign(initialState, {
+  fortuneUnlocked: false, fortuneClue: 0,
+  fortuneCharges: 0, fortuneTokens: 0, fortuneFrame: 0, fortuneQuality: 0,
+  fortuneWedges: ['points', 'tokens', 'multiplier', 'refund'],
+  fortuneMilestone: 0, fortunePending: 0, fortuneSeconds: 0,
+  fortuneMultiplier: 1, fortuneLast: '', fortuneStreak: 0, fortuneRefunds: 0,
+  fortuneRerolled: false, fortuneBoost: false, fortuneBoostUntil: 0,
+  fortuneBase: 0, fortuneResult: 'The mechanism is waiting.',
   cubeLoadouts: ['', '', ''], researchBranch: 'none', researchLevel: 0,
   completedCombos: [], achievements: [], achievementTheme: 'default',
   sparkCharge: 0, sparkBurstUntil: 0, sparkBurstPower: 1,
@@ -117,7 +124,7 @@ function rate() {
   if (state.exponentLevel && value.gt(0)) value = value.pow(D(1.1).pow(state.exponentLevel));
   const exponent = challengeExponent();
   const challenged = exponent < 1 && value.gt(0) ? value.pow(exponent) : value;
-  return softenGain(applyCurrencyGain(challenged.times(sparkRateMultiplier())), 'balance');
+  return softenGain(applyCurrencyGain(challenged.times(sparkRateMultiplier())), 'balance').times(Date.now() < state.fortuneBoostUntil && !state.activeChallenge ? 2 : 1);
 }
 const challengeNames = { deduction1: 'Deduction I', deduction2: 'Deduction II', deduction3: 'Deduction III', time1: 'Time Limit I', time2: 'Time Limit II', time3: 'Time Limit III' };
 for (const deduction of ['deduction1', 'deduction2', 'deduction3']) {
@@ -129,6 +136,7 @@ function saleGain() {
 function challengeExponent() { return ({ deduction1: .9, deduction2: .8, deduction3: .7 })[state.activeChallenge.split('+')[0]] || 1; }
 function challengeDuration(id) { const base = ({ time1: 7, time2: 6, time3: 5 })[id.split('+').at(-1)] || 0; return base ? base + state.cyan14Level : 0; }
 function resetCreditRun() {
+  clearFortuneChain(true);
   // Permanent upgrades, including Automations and the Pyramid, stay bought across this reset.
   state.tokens = D(0); state.totalPrestiges = 0; state.balance = D(0); state.runEarned = D(0);
   state.printer = false; state.press = false; state.multiplierLevel = 0; state.incomeLevel = 0;
@@ -142,6 +150,8 @@ function resetCreditRun() {
   resetPriceOrigins(['multiplierLevel', 'incomeLevel', 'powerLevel', 'clickLevel', 'discountLevel', 'tokenBoostLevel', 'tokenCreditLevel', 'tokenDiscountLevel', 'exponentCapLevel', 'logLevel', 'exponentLevel', 'capLevel']);
 }
 function resetAscendanceRun() {
+  updateFortuneProgress();
+  clearFortuneChain(true);
   state.balance = D(0); state.runEarned = D(0); state.lifetime = D(0);
   state.printer = false; state.press = false; state.multiplierLevel = 0; state.incomeLevel = 0;
   state.powerLevel = 0; state.clickLevel = 0; state.logLevel = 0; state.exponentLevel = 0;
@@ -1166,6 +1176,8 @@ document.querySelector('#work-button').addEventListener('click', () => {
 document.querySelector('#prestige-button').addEventListener('click', performTokenPrestige);
 function performTokenPrestige() {
   if (lt(state.balance, nextGoal())) return;
+  recordFortuneRitual('token');
+  clearFortuneChain(true);
   const reward = tokenReward();
   state.automationLastReset[0] = Date.now();
   state.tokens = plus(state.tokens, reward);
@@ -1198,6 +1210,9 @@ function performCreditPrestige() {
   const reward = completing ? D(0) : creditPrestigeReward();
   state.credits = plus(state.credits, reward);
   state.totalCreditPrestiges += 1;
+  recordFortuneRitual('credit');
+  updateFortuneProgress();
+  if (state.fortuneUnlocked) state.fortuneCharges = Math.min(100, state.fortuneCharges + 1);
   resetCreditRun();
   if (completing) {
     if (!state.challengeEndsAt || Date.now() <= state.challengeEndsAt) {
@@ -1216,6 +1231,7 @@ document.querySelector('#spark-prestige-button').addEventListener('click', () =>
   const cost = sparkPrestigeCost();
   if (lt(state.balance, cost)) return;
   const reward = sparkReward(state.balance);
+  updateFortuneProgress(); clearFortuneChain(true);
   state.spark = plus(state.spark, reward);
   state.sparkPrestiges += 1;
   state.balance = D(0); state.runEarned = D(0);
@@ -1227,6 +1243,7 @@ document.querySelector('#data-prestige-button').addEventListener('click', () => 
   const cost = pointCost(DATA_PRESTIGE_COST);
   if (lt(state.balance, cost)) return;
   const reward = dataReward(cost);
+  updateFortuneProgress(); clearFortuneChain(true);
   state.data = plus(state.data, reward);
   state.totalDataPrestiges += 1;
   state.balance = D(0);
@@ -1302,6 +1319,166 @@ document.querySelector('#buy-passive-tokens').addEventListener('click', () => {
   save();
 });
 
+// The inscription describes a repeatable route, never a missable milestone.
+const FORTUNE_WEDGES = {
+  points: { name: 'Output', space: 2, color: '#4097bf', detail: '15 seconds of production' },
+  cache: { name: 'Cache', space: 3, color: '#5972ce', detail: '35 seconds of production' },
+  tokens: { name: 'Cogs', space: 2, color: '#c39a36', detail: '4 workshop cogs' },
+  multiplier: { name: 'Prime', space: 1, color: '#a779cf', detail: 'Double next payout, up to ×8' },
+  refund: { name: 'Return', space: 1, color: '#479f81', detail: 'Refund a charge, twice per chain' },
+  boost: { name: 'Overdrive', space: 2, color: '#c4794a', detail: 'Bank for ×2 production for 30 seconds' }
+};
+function recordFortuneRitual(layer) {
+  if (!state.cubeUnlocked || state.fortuneUnlocked || state.activeChallenge) return;
+  const route = ['token:points', 'token:tokens', 'credit:credits', 'token:points'];
+  const step = `${layer}:${state.cubeTarget}`;
+  state.fortuneClue = step === route[state.fortuneClue] ? state.fortuneClue + 1 : step === route[0] ? 1 : 0;
+  if (state.fortuneClue === 4) {
+    state.fortuneUnlocked = true;
+    state.fortuneCharges = 6;
+    // Existing scale is the baseline, not a pile of retroactive charges.
+    state.fortuneMilestone = fortuneMilestone();
+    toast('The Cube unfolds. Fortune Engine discovered.');
+  }
+}
+function fortuneMilestone() { return Math.max(0, Math.min(10000, Math.floor(state.balance.max(1).log10().toNumber() / 10 + 1e-9))); }
+function updateFortuneProgress() {
+  if (!state.fortuneUnlocked) return;
+  const milestone = fortuneMilestone();
+  if (milestone > state.fortuneMilestone) {
+    state.fortuneCharges = Math.min(100, state.fortuneCharges + milestone - state.fortuneMilestone);
+    state.fortuneMilestone = milestone;
+  }
+}
+function clearFortuneChain(forfeit = false) {
+  state.fortunePending = 0; state.fortuneSeconds = 0; state.fortuneMultiplier = 1;
+  state.fortuneLast = ''; state.fortuneStreak = 0; state.fortuneRefunds = 0;
+  state.fortuneRerolled = false; state.fortuneBoost = false; state.fortuneBase = D(0);
+  if (forfeit) state.fortuneBoostUntil = 0;
+}
+function fortuneCapacity() { return 10 + state.fortuneFrame * 2; }
+function fortuneSlots() { return 4 + Math.floor(state.fortuneFrame / 2); }
+function fortuneUsed(wedges = state.fortuneWedges) { return wedges.reduce((sum, id) => sum + FORTUNE_WEDGES[id].space, 0); }
+function fortuneAllowed() { return state.fortuneUnlocked && !state.activeChallenge && !state.gainZeroActive; }
+function fortuneSegments() {
+  const segments = state.fortuneWedges.map((id, index) => ({ id, index, weight: FORTUNE_WEDGES[id].space, ...FORTUNE_WEDGES[id] }));
+  const blank = fortuneCapacity() - fortuneUsed();
+  if (blank) segments.push({ id: 'blank', name: 'Idle', weight: blank, color: '#888' });
+  segments.push({ id: 'bust', name: 'Bust', weight: 4, color: '#b44f61' });
+  return segments;
+}
+function spinFortune(reroll = false) {
+  if (!fortuneAllowed() || state.fortuneCharges < 1) return;
+  if (reroll && (state.fortuneFrame < 2 || state.fortuneRerolled || !state.fortunePending)) return;
+  if (!state.fortunePending) state.fortuneBase = rate();
+  if (reroll) state.fortuneRerolled = true;
+  state.fortuneCharges--;
+  let roll = Math.random() * (fortuneCapacity() + 4);
+  const segment = fortuneSegments().find(part => (roll -= part.weight) < 0);
+  const id = segment.id;
+  // A reroll protects the existing pot, but still spends a charge and cannot be repeated.
+  if (id === 'bust') {
+    if (!reroll) clearFortuneChain();
+    state.fortuneResult = reroll ? 'Reroll: bust deflected. Your pot survives.' : 'Bust. Unbanked winnings lost; banked progress is safe.';
+    return;
+  }
+  state.fortunePending++;
+  state.fortuneStreak = id === state.fortuneLast ? Math.min(3, state.fortuneStreak + 1) : 1;
+  state.fortuneLast = id;
+  const factor = state.fortuneMultiplier * state.fortuneStreak;
+  if (id === 'points' || id === 'cache') {
+    state.fortuneSeconds = Math.min(120, state.fortuneSeconds + (id === 'cache' ? 35 : 15) * (1 + state.fortuneQuality) * factor);
+    state.fortuneMultiplier = 1;
+  }
+  if (id === 'tokens') { state.fortunePending += (4 + state.fortuneQuality * 2) * factor; state.fortuneMultiplier = 1; }
+  if (id === 'multiplier') state.fortuneMultiplier = Math.min(8, state.fortuneMultiplier * 2);
+  if (id === 'refund' && state.fortuneRefunds < 2) { state.fortuneCharges++; state.fortuneRefunds++; }
+  if (id === 'boost') state.fortuneBoost = true;
+  state.fortuneResult = `${segment.name}${state.fortuneStreak > 1 ? ` · ×${state.fortuneStreak} streak` : ''}. Bank or risk another spin.`;
+}
+function bankFortune() {
+  if (!fortuneAllowed() || !state.fortunePending) return;
+  // Snapshot at chain start and current production both bound the prize.
+  const payout = state.fortuneBase.min(rate()).times(state.fortuneSeconds);
+  state.balance = plus(state.balance, payout); state.runEarned = plus(state.runEarned, payout); state.lifetime = plus(state.lifetime, payout);
+  state.fortuneTokens += state.fortunePending;
+  const boosted = state.fortuneBoost;
+  clearFortuneChain();
+  if (boosted) state.fortuneBoostUntil = Date.now() + 30000;
+  state.fortuneResult = `Banked P$ ${fmt(payout)} and workshop cogs.${boosted ? ' Overdrive: ×2 for 30s.' : ''}`;
+}
+const fortunePanel = document.createElement('section');
+fortunePanel.id = 'fortune-panel'; fortunePanel.className = 'expansion-panel'; fortunePanel.hidden = true;
+document.querySelector('.prestige').before(fortunePanel);
+fortunePanel.innerHTML = `<details open><summary>Fortune Engine</summary>
+<p>Bank winnings or risk another charge. Bust loses the current pot. Every safe spin adds one cog; repeat wedges build a ×2/×3 streak. Prime affects the next Output, Cache, or Cogs payout. Idle only adds its one cog.</p>
+<div class="fortune-layout"><div id="fortune-wheel" role="img" aria-label="Wheel probabilities"></div><div><p id="fortune-wallet"></p><p id="fortune-pot"></p><p id="fortune-result" role="status" aria-live="polite"></p>
+<button id="fortune-spin">Spin · 1 charge</button><button id="fortune-reroll">Protected reroll · 1 charge</button><button id="fortune-bank">Bank winnings</button></div></div>
+<p>Charges: +1 per Credit prestige and per new ten-decade P$ high-water mark (100 stored max). Refunds: twice per chain. Production payouts: at most 120 seconds at the lower of starting and current production. All prestiges forfeit the pot and end Overdrive. Trials and Null gain pause the engine.</p>
+<h3>Wheel workshop</h3><p>Each wedge occupies its stated space and has that many chances to land. Unused space becomes Idle. Four spaces always belong to Bust. Editing and upgrades require an empty pot.</p>
+<p id="fortune-odds"></p><p id="fortune-frame"></p><div id="fortune-wedges"></div>
+<button id="fortune-add">Add Output wedge</button><button id="fortune-upgrade-frame"></button><button id="fortune-upgrade-quality"></button>
+<p>Frame levels add 2 spaces each; levels 2 and 4 also add a slot. Level 2 unlocks one protected reroll per chain. Quality increases Output/Cache duration and Cogs payouts. Workshop upgrades and discoveries survive every prestige.</p></details>`;
+const fortuneHint = document.createElement('p'); fortuneHint.id = 'fortune-hint';
+fortuneHint.textContent = 'An inscription on the Cube: “Let raw work turn a cycle; let cycles turn another. Let credit turn the deeper cycle. Return raw work to a cycle, and the square will remember how to turn.” Four faint notches border the inscription.';
+document.querySelector('.cube-effect').after(fortuneHint);
+let fortuneEditorKey = '';
+function renderFortune() {
+  updateFortuneProgress();
+  fortuneHint.hidden = !state.cubeUnlocked || state.fortuneUnlocked;
+  fortuneHint.dataset.notches = state.fortuneClue;
+  fortuneHint.title = `${state.fortuneClue} of four notches are lit. The inscription can always be retried.`;
+  fortunePanel.hidden = !state.fortuneUnlocked;
+  if (!state.fortuneUnlocked) return;
+  const locked = !fortuneAllowed(), editing = !!state.fortunePending;
+  document.getElementById('fortune-wallet').textContent = `${state.fortuneCharges} charges · ${state.fortuneTokens} banked cogs`;
+  document.getElementById('fortune-pot').textContent = `Pot: ${state.fortunePending} cogs + ${state.fortuneSeconds}s output · Next payout ×${state.fortuneMultiplier}${state.fortuneBoost ? ' + Overdrive' : ''}`;
+  document.getElementById('fortune-result').textContent = locked ? 'Engine paused during trials or Null gain.' : state.fortuneResult;
+  document.getElementById('fortune-spin').disabled = locked || !state.fortuneCharges;
+  document.getElementById('fortune-reroll').disabled = locked || !state.fortuneCharges || !editing || state.fortuneFrame < 2 || state.fortuneRerolled;
+  document.getElementById('fortune-bank').disabled = locked || !editing;
+  document.getElementById('fortune-frame').textContent = `Frame ${state.fortuneFrame}/4 · Quality ${state.fortuneQuality}/4 · ${fortuneUsed()}/${fortuneCapacity()} space · ${state.fortuneWedges.length}/${fortuneSlots()} slots`;
+  for (const [kind, level] of [['frame', state.fortuneFrame], ['quality', state.fortuneQuality]]) {
+    const button = document.getElementById(`fortune-upgrade-${kind}`);
+    button.textContent = level >= 4 ? `${kind} complete` : `Upgrade ${kind} · ${10 * 2 ** level} cogs`;
+    button.disabled = editing || level >= 4 || state.fortuneTokens < 10 * 2 ** level;
+  }
+  document.getElementById('fortune-add').disabled = editing || state.fortuneWedges.length >= fortuneSlots() || fortuneUsed() + 2 > fortuneCapacity();
+  const editorKey = JSON.stringify([state.fortuneWedges, state.fortuneFrame, editing]);
+  if (editorKey !== fortuneEditorKey) {
+    fortuneEditorKey = editorKey;
+    document.getElementById('fortune-wedges').innerHTML = state.fortuneWedges.map((id, i) => `<fieldset><legend>Wedge ${i + 1}</legend><label>Type <select data-fortune-wedge="${i}" ${editing ? 'disabled' : ''}>${Object.entries(FORTUNE_WEDGES).map(([key, w]) => `<option value="${key}" ${key === id ? 'selected' : ''} ${fortuneUsed() - FORTUNE_WEDGES[id].space + w.space > fortuneCapacity() ? 'disabled' : ''}>${w.name} · ${w.space} space — ${w.detail}</option>`).join('')}</select></label>${i >= 4 ? `<button data-fortune-remove="${i}" ${editing ? 'disabled' : ''}>Remove</button>` : ''}</fieldset>`).join('');
+    let angle = 0;
+    const parts = fortuneSegments().map(part => { const start = angle; angle += part.weight / (fortuneCapacity() + 4) * 360; return `${part.color} ${start}deg ${angle}deg`; });
+    const wheel = document.getElementById('fortune-wheel'); wheel.style.background = `conic-gradient(${parts.join(',')})`;
+    document.getElementById('fortune-odds').textContent = fortuneSegments().map(part => `${part.name}: ${(100 * part.weight / (fortuneCapacity() + 4)).toFixed(1)}%`).join(' · ');
+    wheel.setAttribute('aria-label', fortuneSegments().map(part => `${part.name}: ${(100 * part.weight / (fortuneCapacity() + 4)).toFixed(1)}%`).join(', '));
+    wheel.textContent = 'FORTUNE';
+  }
+}
+fortunePanel.addEventListener('click', event => {
+  const button = event.target.closest('button'); if (!button || button.disabled || !state.fortuneUnlocked) return;
+  if (button.id === 'fortune-spin') spinFortune();
+  if (button.id === 'fortune-reroll') spinFortune(true);
+  if (button.id === 'fortune-bank') bankFortune();
+  if (!state.fortunePending) {
+    if (button.id === 'fortune-add' && state.fortuneWedges.length < fortuneSlots() && fortuneUsed() + 2 <= fortuneCapacity()) state.fortuneWedges.push('points');
+    if (button.dataset.fortuneRemove !== undefined && Number(button.dataset.fortuneRemove) >= 4) state.fortuneWedges.splice(Number(button.dataset.fortuneRemove), 1);
+    for (const kind of ['frame', 'quality']) if (button.id === `fortune-upgrade-${kind}`) {
+      const key = kind === 'frame' ? 'fortuneFrame' : 'fortuneQuality', cost = 10 * 2 ** state[key];
+      if (state[key] < 4 && state.fortuneTokens >= cost) { state.fortuneTokens -= cost; state[key]++; }
+    }
+  }
+  save(); render();
+});
+fortunePanel.addEventListener('change', event => {
+  const index = Number(event.target.dataset.fortuneWedge), id = event.target.value;
+  if (!state.fortuneUnlocked || state.fortunePending || !Number.isInteger(index) || index < 0 || index >= state.fortuneWedges.length || !Object.hasOwn(FORTUNE_WEDGES, id)) return;
+  const next = [...state.fortuneWedges]; next[index] = id;
+  if (fortuneUsed(next) <= fortuneCapacity()) state.fortuneWedges = next;
+  save(); render();
+});
+
 // Expansion progress uses additive save fields so older saves retain their progress.
 const ACHIEVEMENTS = {
   neutral: ['A resounding ×1', 'Buy Neutral multiplier.', () => state.alphaNeutralBought],
@@ -1356,6 +1533,7 @@ expansionPanel.innerHTML = `
 <h3>Questionable achievements</h3><p>Three achievements unlock Gold; all six unlock Violet. Rewards are cosmetic.</p><ul id="achievement-list"></ul><label>Theme <select id="achievement-theme"><option value="default">Default</option><option value="gold">Gold</option><option value="violet">Violet</option></select></label>
 </details>`;
 function renderExpansion() {
+  renderFortune();
   for (const [id, visible] of [['loadout',state.cubeUnlocked],['combo',state.pyramidUnlocked],['research',state.dataLore.every(Boolean)],['preset',state.automationsUnlocked],['burst',state.sparkPrestiges > 0]]) document.getElementById(`${id}-feature`).hidden = !visible;
   document.getElementById('loadout-slots').innerHTML = Array.from({length:3}, (_,i) => `<p>Slot ${i+1}: ${state.cubeLoadouts[i] || 'Empty'} <button data-save-loadout="${i}" ${i >= loadoutSlots() ? 'disabled' : ''}>Save current target</button> <button data-load-loadout="${i}" ${i >= loadoutSlots() || !cubeTargetAvailable(state.cubeLoadouts[i]) ? 'disabled' : ''}>Load</button></p>`).join('');
   document.getElementById('combo-progress').textContent = `${state.completedCombos.length}/9 pairs complete: ${state.completedCombos.map(id => challengeNames[id]).join(', ') || 'none'}`;
@@ -1490,6 +1668,16 @@ function isValidSave(snapshot) {
         && D(value).isFinite() && D(value).gte(0);
     }
     const fallback = initialState[key];
+    if (key === 'fortuneClue') return Number.isInteger(value) && value >= 0 && value <= 4;
+    if (key === 'fortuneWedges') return Array.isArray(value) && value.length >= 4 && value.length <= 6 && value.every(v => Object.hasOwn(FORTUNE_WEDGES, v)) && value.reduce((n, v) => n + FORTUNE_WEDGES[v].space, 0) <= 10 + 2 * (snapshot.fortuneFrame || 0) && value.length <= 4 + Math.floor((snapshot.fortuneFrame || 0) / 2);
+    if (['fortuneFrame', 'fortuneQuality'].includes(key)) return Number.isInteger(value) && value >= 0 && value <= 4;
+    if (key === 'fortuneCharges') return Number.isInteger(value) && value >= 0 && value <= 100;
+    if (key === 'fortuneMultiplier') return Number.isInteger(value) && value >= 1 && value <= 8;
+    if (key === 'fortuneSeconds') return Number.isInteger(value) && value >= 0 && value <= 120;
+    if (key === 'fortuneRefunds') return Number.isInteger(value) && value >= 0 && value <= 2;
+    if (key === 'fortuneStreak') return Number.isInteger(value) && value >= 0 && value <= 3;
+    if (key === 'fortuneLast') return ['', 'blank'].includes(value) || Object.hasOwn(FORTUNE_WEDGES, value);
+    if (key === 'fortuneResult') return typeof value === 'string' && value.length <= 200;
     if (key === 'cubeLoadouts') return Array.isArray(value) && value.length === 3 && value.every(v => ['', 'points', 'tokens', 'credits', 'ascendance', 'alpha'].includes(v));
     if (key === 'researchBranch') return ['none', 'production', 'resets', 'automation'].includes(value);
     if (key === 'researchLevel') return Number.isInteger(value) && value >= 0 && value <= 5;
