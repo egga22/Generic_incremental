@@ -291,4 +291,12 @@ body.hard-mode .hard-mode-wall:has(+ section[hidden]) { display: none; }
   #fortune-wheel { transition-duration: .1s; }
 }
 
+.expedition-panel { margin: 1rem 0; padding: 1rem; border: 1px solid #b99a57; border-radius: 12px; background: rgba(185,154,87,.08); }
+.expedition-actions, .expedition-upgrades { display: flex; flex-wrap: wrap; gap: .5rem; }
+.expedition-routes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: .75rem; margin: 1rem 0; }
+.expedition-routes[hidden] { display: none; }
+.expedition-routes article { padding: .75rem; border: 1px solid #b99a5766; border-radius: 8px; }
+.expedition-panel button { white-space: normal; text-align: left; max-width: 100%; }
+.expedition-routes button { width: 100%; }
+
 .icosahedron-image { display: block; width: min(240px, 100%); height: auto; margin: 1rem auto; }

@@ -28,3 +28,13 @@ After your first prestige, Kirby appears beneath the upgrades. Feed 1% of P$ (mi
 Beam boosts passive production, Mirror boosts token reset rewards, Spark speeds charge, Stone builds production strength over five minutes on one Cube target, and Fisher awards an extra fish every fifth successful catch. Hypernova spends 100 Fullness for 30 seconds of doubled ability strength (Fisher: every third catch), followed by a 60-second nap. Effects pause during trials and zero-gain mode. Ascendance clears Fullness, burst, nap, and Stone charge while keeping discoveries.
 
 **More → Copyright mode** hides Kirby and disables all companion effects and interactions. It cancels an active burst and clears Stone charge, preserves discoveries and Fullness, and is included in saves and exports. Turn it off to restore the companion.
+
+## Pyramid Expeditions
+
+Open the Pyramid after unlocking it to start an eight-floor expedition. Each floor offers three routes: Weighted Gallery (milder deduction), Sealed Vault (larger treasure, harsher deduction), and Collapsing Stairs (short timer). Rooms reset P$ and tokens while keeping credits and permanent upgrades. Collect `1e(33 + 3 × cleared floors)` tokens and press **Clear room** before the timer expires. Room clears do not award credits or complete regular trials.
+
+Each cleared room adds its floor number times its route reward (1/3/2 seals) to unbanked treasure and grants a temporary relic. Prisms add 0.03 to room production exponents, Scarabs double expedition token reset rewards, and Hourglasses add 30 seconds to future rooms. Base timers are 420/360/180 seconds and shorten by 20 seconds per cleared floor, with a 60-second minimum after bonuses.
+
+Between floors, bank treasure and leave or choose another route. Failure or abandonment loses all unbanked treasure and relics; clearing floor eight automatically banks. Timers use wall-clock time and continue across reloads. Automatic resets and other prestige layers pause during expeditions; normal autobuyers and manual token resets remain available.
+
+Banked seals buy three permanent upgrades: ×1.1 passive production per level, ×1.1 token/credit reset rewards per level, and +10 seconds per room per level. Each has 20 levels costing 5 × next level seals. Banked seals, upgrades, and best depth survive Ascendance.

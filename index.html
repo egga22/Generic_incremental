@@ -327,6 +327,20 @@ input, textarea, select {
           <p class="cube-effect" w-tid="1019">The Cube multiplies <strong id="cube-target-name" w-tid="1021">Points</strong> by ×<span id="cube-multiplier" w-tid="1023">1</span>.</p>
         </div>
         <div id="pyramid-panel" hidden w-tid="1025">
+          <section id="expedition-panel" class="expedition-panel" hidden aria-labelledby="expedition-heading">
+            <h3 id="expedition-heading">Pyramid Expeditions</h3>
+            <p>Choose a route on each of 8 floors. Reach its token goal, then use Clear room below. Entering a room resets P$ and tokens; existing credits and permanent upgrades stay. No credits are earned in rooms. Timers continue while away.</p>
+            <p>Bank seals between floors or risk all unbanked treasure on the next room. Timing out or abandoning loses treasure and temporary relics. Floor 8 banks automatically. Other prestige layers and automatic resets pause until you leave.</p>
+            <p id="expedition-status" role="status"></p>
+            <div class="expedition-actions"><button id="expedition-start" type="button">Start expedition</button><button id="expedition-bank" type="button">Bank treasure &amp; leave</button><button id="expedition-abandon" type="button">Abandon · lose treasure</button></div>
+            <div id="expedition-routes" class="expedition-routes" hidden>
+              <article><button type="button" data-expedition-room="gallery">Weighted Gallery</button><p>Earn a Prism: +0.03 to future room exponents, up to 1.</p></article>
+              <article><button type="button" data-expedition-room="vault">Sealed Vault</button><p>Earn a Scarab: ×2 token reset rewards during this expedition.</p></article>
+              <article><button type="button" data-expedition-room="stairs">Collapsing Stairs</button><p>Earn an Hourglass: +30 seconds to future rooms.</p></article>
+            </div>
+            <h4>Permanent expedition upgrades</h4><p>Spend banked seals outside expeditions. These upgrades survive every prestige.</p>
+            <div class="expedition-upgrades"><button type="button" data-expedition-upgrade="0"></button><button type="button" data-expedition-upgrade="1"></button><button type="button" data-expedition-upgrade="2"></button></div>
+          </section>
           <div class="pyramid-summary" w-tid="1027"><div w-tid="1029"><span class="label" w-tid="1031">CHALLENGE STATUS</span><div class="pyramid-status" id="pyramid-status" w-tid="1033">Choose a challenge</div></div><div class="pyramid-timer" id="pyramid-timer" hidden w-tid="1035"></div></div>
           <div class="challenge-list" w-tid="1037">
             <article class="challenge" id="challenge-deduction-1" w-tid="1039"><div w-tid="1041"><strong w-tid="1043">Deduction I</strong><span w-tid="1045">Raise P$ gain to the power of 0.9</span></div><button type="button" data-challenge="deduction1" w-tid="1047">Start</button></article>

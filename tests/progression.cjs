@@ -491,6 +491,83 @@ const dieSave=JSON.parse(a.serializeState()); assert(a.isValidSave(dieSave)); as
 dieState.icosahedronReadyAt=Date.now()-1; a.render(); assert(!rollDie.disabled, 'elapsed wall-clock cooldown enables rolling');
 console.log('Icosahedron checks passed');
 
+// Expeditions: exercise the actual route, completion, cash-out and upgrade controls.
+const es = a.state;
+const expeditionTestStart = {...es, expeditionUpgrades: [...es.expeditionUpgrades]};
+es.activeChallenge=''; es.challengeEndsAt=0; es.pyramidUnlocked=false; es.gainZeroActive=false;
+es.expedition=null; es.expeditionSeals=0; es.expeditionUpgrades=[0,0,0]; a.render();
+assert(doc.getElementById('expedition-panel').hidden);
+es.pyramidUnlocked=true; es.credits=a.D(12345); a.render();
+const expeditionClick=id=>doc.getElementById(id).click();
+const route=id=>doc.querySelector(`[data-expedition-room="${id}"]`).click();
+const clearRoom=()=>{es.tokens=a.D(10).pow(33+es.expedition.floor*3);a.render();expeditionClick('credit-prestige-button');};
+expeditionClick('expedition-start');
+assert.equal(es.activeChallenge,'expedition'); assert(es.credits.eq(12345)); assert(es.tokens.eq(0));
+assert(doc.getElementById('expedition-bank').disabled);
+assert(doc.getElementById('credit-prestige-button').disabled);
+assert(doc.querySelector('[data-challenge="deduction1"]').disabled);
+for(const id of ['data-prestige-button','spark-prestige-button','ascendance-prestige-button','token-ascendance-button']) assert(doc.getElementById(id).disabled);
+route('gallery'); const firstDeadline=es.challengeEndsAt;
+assert.equal(es.expedition.room,'gallery'); assert.equal(a.challengeExponent(),.82);
+assert(firstDeadline>Date.now()+419000);
+const trialRecords=JSON.stringify(es.completedChallenges), combos=JSON.stringify(es.completedCombos);
+es.tokens=a.D('9e32'); a.render(); assert(doc.getElementById('credit-prestige-button').disabled);
+clearRoom(); assert.equal(es.expedition.floor,1); assert.equal(es.expedition.treasure,1);
+assert.equal(es.expedition.relics[0],1); assert.equal(es.challengeEndsAt,0);
+assert.equal(JSON.stringify(es.completedChallenges),trialRecords); assert.equal(JSON.stringify(es.completedCombos),combos);
+assert(es.credits.eq(12345)); assert(!doc.getElementById('expedition-bank').disabled);
+route('vault'); assert(Math.abs(a.challengeExponent()-.73)<1e-9);
+es.tokens=a.D('1e33'); a.render(); assert(doc.getElementById('credit-prestige-button').disabled,'later floors require their larger goal');
+clearRoom(); assert.equal(es.expedition.treasure,7); assert.equal(es.expedition.relics[1],1);
+es.balance=a.D('1e20'); const scarabReward=a.tokenReward(); es.expedition.relics[1]=0;
+assert(scarabReward.eq(a.tokenReward().times(2))); es.expedition.relics[1]=1;
+route('stairs'); clearRoom(); assert.equal(es.expedition.treasure,13);
+route('gallery'); assert(es.challengeEndsAt>Date.now()+389000,'Hourglass extends later rooms');
+const activeSave=JSON.parse(a.serializeState()); assert(a.isValidSave(activeSave));
+// A reload keeps route, treasure, relics, and the absolute deadline.
+const expeditionReload = new JSDOM(fs.readFileSync('index.html','utf8'), {url:'https://example.test',runScripts:'outside-only'});
+const ec=expeditionReload.getInternalVMContext(); ec.setInterval=()=>1; ec.setTimeout=()=>1; ec.clearTimeout=()=>{};
+ec.localStorage.setItem('pocket-foundry-save-v2',JSON.stringify(activeSave));
+vm.runInContext('(function(){'+fs.readFileSync('break_eternity.js','utf8').replace(/export \{[\s\S]*?\};/,'globalThis.Decimal = y;')+'})();',ec);
+vm.runInContext(source,ec);
+assert.equal(ec.testAPI.state.challengeEndsAt,es.challengeEndsAt);
+assert.equal(JSON.stringify(ec.testAPI.state.expedition),JSON.stringify(es.expedition));
+assert(!a.isValidSave({...activeSave,expedition:{...activeSave.expedition,room:'bogus'}}));
+assert(!a.isValidSave({...activeSave,expedition:{...activeSave.expedition,floor:8}}));
+assert(!a.isValidSave({...activeSave,expeditionUpgrades:[21,0,0]}));
+assert(!a.isValidSave({...activeSave,activeChallenge:''}));
+clearRoom(); expeditionClick('expedition-bank');
+assert.equal(es.expedition,null); assert.equal(es.expeditionSeals,17); assert.equal(es.activeChallenge,'');
+expeditionClick('expedition-bank'); assert.equal(es.expeditionSeals,17,'no double bank');
+es.printer=true; const productionBefore=a.rate();
+doc.querySelector('[data-expedition-upgrade="0"]').click();
+assert.equal(es.expeditionSeals,12); assert.equal(es.expeditionUpgrades[0],1);
+assert(a.rate().eq(productionBefore.times(1.1)),'permanent production boost');
+doc.querySelector('[data-expedition-upgrade="1"]').click();
+es.balance=a.D('1e20'); const resetBoost=a.tokenReward();es.expeditionUpgrades[1]=0;
+assert(resetBoost.eq(a.tokenReward().times(1.1)));es.expeditionUpgrades[1]=1;
+expeditionClick('expedition-start'); route('stairs'); clearRoom(); route('vault');
+const bankedBeforeLoss=es.expeditionSeals; es.challengeEndsAt=Date.now()-1;
+es.tokens=a.D('1e100'); a.render(); expeditionClick('credit-prestige-button');
+assert.equal(es.expedition,null); assert.equal(es.expeditionSeals,bankedBeforeLoss,'timeout loses only unbanked treasure');
+expeditionClick('expedition-start'); route('gallery'); clearRoom();expeditionClick('expedition-abandon');
+assert.equal(es.expeditionSeals,bankedBeforeLoss);assert.equal(es.expedition,null);
+// Full depth banks once, then all permanent progress survives Ascendance.
+expeditionClick('expedition-start');
+for(let floor=0;floor<8;floor++){route('vault'); clearRoom();}
+assert.equal(es.expedition,null); assert.equal(es.expeditionBest,8);
+assert.equal(es.expeditionSeals,bankedBeforeLoss+108);
+const permanentSeals=es.expeditionSeals; a.resetAscendanceRun();
+assert.equal(es.expeditionSeals,permanentSeals);assert.equal(es.expeditionUpgrades[0],1);assert.equal(es.expeditionUpgrades[1],1);
+assert(a.isValidSave(JSON.parse(a.serializeState())));
+// The regular tick also expires rooms without requiring a button click.
+es.pyramidUnlocked=true; a.render(); expeditionClick('expedition-start'); route('gallery');
+es.challengeEndsAt=Date.now()-1; timers.forEach(fn=>fn());
+assert.equal(es.expedition,null); assert.equal(es.activeChallenge,'');
+Object.assign(es, expeditionTestStart); a.render();
+expeditionReload.window.close();
+console.log('Expeditions passed: routes, escalating goals, relics, prestige locks, bank/loss, upgrades, full depth, reloads and save validation.');
+
 // Upgrade 21 follows 20, doubles gain, saves, and resets with Points upgradethinkState.
 const thinkState=a.state;
 const thinkStart = {...thinkState};

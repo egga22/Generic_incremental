@@ -22,6 +22,7 @@ const plus = (a, b) => D(a).plus(b);
 const minus = (a, b) => D(a).minus(b);
 const initialState = { balance: 0, runEarned: 0, lifetime: 0, printer: false, press: false, multiplierLevel: 0, incomeLevel: 0, powerLevel: 0, clickLevel: 0, logLevel: 0, exponentLevel: 0, exponentCapLevel: 0, capLevel: 0, tokens: 0, totalPrestiges: 0, tokenResetCount: 0, tokenMultiplierLevel: 0, discountLevel: 0, tokenBoostLevel: 0, expansionUnlocked: false, maxBuyUnlocked: false, maxBuyActive: false, tokenCreditLevel: 0, tokenDiscountLevel: 0, credits: 0, totalCreditPrestiges: 0, data: 0, totalDataPrestiges: 0, dataLore: Array(5).fill(false), gainZeroBought: false, gainZeroActive: false, priceOrigins: {}, creditEngine: false, creditExponentLevel: 0, heavyMint: false, cubeUnlocked: false, cubeLevel: 0, cubeClicks: 0, cubeTarget: 'points', freeRunUpgrades: false, passiveTokens: false, alphaUnlocked: false, alpha: 0, alphaGainPurchases: 0, alphaBoostLevel: 0, alphaCapLevel: 0, alphaNeutralBought: false, alphaGeneratorBought: false, fishingUnlocked: false, fishPoints: 0, fishGainLevel: 0, redFishLevel: 0, fishAlphaLevel: 0, garbageUnlocked: false, darkMatterUnlocked: false, darkMatter: 0, darkMatter1Bought: false, darkMatter2Bought: false, darkMatter2Level: 0, darkMatter3Bought: false, darkMatter4Bought: false, darkMatterCoinBoost: 1, darkMatterFlipTimer: 0, darkMatterFlipDuration: 1, pyramidUnlocked: false, activeChallenge: '', challengeEndsAt: 0, completedChallenges: [], creditChallengeBoost: false, automationsUnlocked: false, automationBought: Array(12).fill(false), automationActive: Array(12).fill(false), ascendance: 0, totalAscendances: 0, ascCurrencyBoost: false, ascCreditExponent: false, ascCubePowerLevel: 0, ascCubeAutoclicker: false, ascCubeAscendance: false, ascCubeAlpha: false, ascPointDiscountLevel: 0, ascTotalLevelBoost: false, ascAllCurrencyLevel: 0, ascMainlinePowerLevel: 0, scaryModeLevel: 0, scaryModeActive: true, spark: 0, sparkPrestiges: 0, sparkUpgrade1Level: 0, sparkUpgrade2Level: 0, sparkUpgrade3Level: 0, pointUpgrade16Bought: false, pointUpgrade17Bought: false, pointUpgrade18Bought: false, pointUpgrade19Bought: false, pointUpgrade20Bought: false, pointUpgrade21Bought: false, cyan13Bought: false, cyan14Level: 0, cyan15Bought: false, cyanSquareCounts: [0, 0, 0] };
 Object.assign(initialState, {
+  expedition: null, expeditionSeals: 0, expeditionBest: 0, expeditionUpgrades: [0, 0, 0],
   casinoUnlocked: false,
   alphaTerms: null, blackjackStakeKind: 'base',
   americanRoulette: false, blackjackStake: 0, blackjackDeck: [], blackjackPlayer: [], blackjackDealer: [], blackjackActive: false,
@@ -57,6 +58,10 @@ state.darkMatter2Level = Math.max(0, Math.min(1000, Number(savedState.darkMatter
 state.darkMatterFlipDuration = Math.max(1, Number(savedState.darkMatterFlipDuration) || 1);
 state.cyanSquareCounts = Array.from({ length: 3 }, (_, i) => Math.max(0, Number(savedState.cyanSquareCounts?.[i]) || 0));
 state.priceOrigins ||= {};
+if (!validExpedition(state.expedition) || (state.activeChallenge === 'expedition') !== Boolean(state.expedition)) {
+  state.expedition = null;
+  if (state.activeChallenge === 'expedition') { state.activeChallenge = ''; state.challengeEndsAt = 0; }
+}
 let toastTimer;
 let activeTab = 'run';
 let fishingBiteAt = null;
@@ -190,16 +195,16 @@ function rate() {
   if (state.exponentLevel && value.gt(0)) value = value.pow(D(1.1).pow(state.exponentLevel));
   const exponent = challengeExponent();
   const challenged = exponent < 1 && value.gt(0) ? value.pow(exponent) : value;
-  return softenGain(applyCurrencyGain(challenged.times(sparkRateMultiplier())), 'balance').times(Date.now() < state.fortuneBoostUntil && !state.activeChallenge ? 2 : 1).times(kirbyBonus('beam')).times(kirbyBonus('stone'));
+  return softenGain(applyCurrencyGain(challenged.times(sparkRateMultiplier())), 'balance').times(Date.now() < state.fortuneBoostUntil && !state.activeChallenge ? 2 : 1).times(kirbyBonus('beam')).times(kirbyBonus('stone')).times(expeditionMultiplier(0));
 }
-const challengeNames = { deduction1: 'Deduction I', deduction2: 'Deduction II', deduction3: 'Deduction III', time1: 'Time Limit I', time2: 'Time Limit II', time3: 'Time Limit III' };
+const challengeNames = { expedition: 'Pyramid Expedition', deduction1: 'Deduction I', deduction2: 'Deduction II', deduction3: 'Deduction III', time1: 'Time Limit I', time2: 'Time Limit II', time3: 'Time Limit III' };
 for (const deduction of ['deduction1', 'deduction2', 'deduction3']) {
   for (const time of ['time1', 'time2', 'time3']) challengeNames[`${deduction}+${time}`] = `${challengeNames[deduction]} + ${challengeNames[time]}`;
 }
 function saleGain() {
   return softenGain(applyCurrencyGain(D(1 + state.clickLevel * 2).times(pointMultiplier()).pow(challengeExponent())), 'balance');
 }
-function challengeExponent() { return ({ deduction1: .9, deduction2: .8, deduction3: .7 })[state.activeChallenge.split('+')[0]] || 1; }
+function challengeExponent() { if (state.expedition?.room) return Math.min(1, expeditionRoom().exponent + state.expedition.relics[0] * .03); return ({ deduction1: .9, deduction2: .8, deduction3: .7 })[state.activeChallenge.split('+')[0]] || 1; }
 function challengeDuration(id) { const base = ({ time1: 7, time2: 6, time3: 5 })[id.split('+').at(-1)] || 0; return base ? base + state.cyan14Level : 0; }
 function resetCreditRun() {
   clearFortuneChain(true);
@@ -216,6 +221,7 @@ function resetCreditRun() {
   resetPriceOrigins(['multiplierLevel', 'incomeLevel', 'powerLevel', 'clickLevel', 'discountLevel', 'tokenBoostLevel', 'tokenCreditLevel', 'tokenDiscountLevel', 'exponentCapLevel', 'logLevel', 'exponentLevel', 'capLevel']);
 }
 function resetAscendanceRun() {
+  if (state.expedition) endExpedition(false);
   state.kirbyFullness = 0; state.kirbyBurstUntil = 0; state.kirbyNapUntil = 0; state.kirbyStoneSeconds = 0;
   updateFortuneProgress();
   clearFortuneChain(true);
@@ -257,7 +263,7 @@ function tokenIncomeRate() {
 function tokenReward() {
   let reward = state.balance.div(nextGoal()).floor().times(D(1.25).pow(state.tokenBoostLevel));
   if (state.creditExponentLevel) reward = reward.pow(D(1.01).pow(state.creditExponentLevel));
-  return softenGain(applyCurrencyGain(reward.times(state.researchBranch === 'resets' ? D(2).pow(state.researchLevel) : 1).times(tokenMultiplier()).times(challengeGainMultiplier())), 'tokens').times(kirbyBonus('mirror'));
+  return softenGain(applyCurrencyGain(reward.times(state.researchBranch === 'resets' ? D(2).pow(state.researchLevel) : 1).times(tokenMultiplier()).times(challengeGainMultiplier())), 'tokens').times(kirbyBonus('mirror')).times(expeditionMultiplier(1));
 }
 function cubeMultiplier(target) {
   const unlocked = state.cubeUnlocked && (target === 'ascendance' ? state.ascCubeAscendance : target === 'alpha' ? state.ascCubeAlpha : true);
@@ -323,7 +329,7 @@ function buyCyanUpgrade(index) {
 function creditPrestigeReward() {
   let reward = state.tokens.div('1e33').floor().times(creditMultiplier());
   if (state.ascCreditExponent) reward = reward.pow(1.5);
-  return softenGain(reward, 'credits');
+  return softenGain(reward, 'credits').times(expeditionMultiplier(1));
 }
 function dataReward(cost) {
   return softenGain(applyCurrencyGain(state.balance.div(cost).floor()), 'data');
@@ -1171,6 +1177,11 @@ function render() {
   const ascendanceEarned = state.credits.div(ascendanceCost).floor();
   const ascendancePrestige = document.querySelector('#ascendance-prestige-button');
   ascendancePrestige.disabled = lt(state.credits, ascendanceCost);
+  if (state.expedition) {
+    for (const id of ['data-prestige-button', 'spark-prestige-button', 'ascendance-prestige-button', 'token-ascendance-button']) document.getElementById(id).disabled = true;
+    creditPrestige.disabled = !state.expedition.room || lt(state.tokens, expeditionGoal());
+    document.getElementById('credit-prestige-label').textContent = state.expedition.room ? `Clear room · ${fmt(expeditionGoal())} tokens · No credits` : 'Choose the next route or bank treasure';
+  }
   document.querySelector('#ascendance-prestige-label').textContent = gte(state.credits, ascendanceCost) ? `Ascend · +${fmt(ascendanceGain(ascendanceEarned))} ᛥ` : 'C$ 1e250 for 1 ᛥ';
 }
 
@@ -1457,6 +1468,7 @@ function performTokenPrestige() {
 }
 document.querySelector('#credit-prestige-button').addEventListener('click', performCreditPrestige);
 function performCreditPrestige() {
+  if (state.expedition) { finishExpeditionRoom(); return; }
   if (lt(state.tokens, '1e33')) return;
   state.automationLastReset[1] = Date.now();
   const completing = state.activeChallenge;
@@ -1835,6 +1847,98 @@ fortunePanel.addEventListener('change', event => {
   save(); render();
 });
 
+// Expeditions share the trial lock, but have their own completion and treasure ledger.
+const EXPEDITION_ROOMS = {
+  gallery: { name: 'Weighted Gallery', exponent: .82, seconds: 420, treasure: 1, relic: 0, detail: 'Gentler timer; earn a Prism (+0.03 to room exponents).' },
+  vault: { name: 'Sealed Vault', exponent: .70, seconds: 360, treasure: 3, relic: 1, detail: 'Severe deduction; earn a Scarab (×2 token rewards in this expedition).' },
+  stairs: { name: 'Collapsing Stairs', exponent: .95, seconds: 180, treasure: 2, relic: 2, detail: 'Short timer; earn an Hourglass (+30 seconds to future rooms).' }
+};
+function validExpedition(e) {
+  return e === null || isSaveObject(e) && Object.keys(e).sort().join(',') === 'floor,relics,room,treasure'
+    && Number.isInteger(e.floor) && e.floor >= 0 && e.floor < 8
+    && Number.isSafeInteger(e.treasure) && e.treasure >= 0 && e.treasure <= 108
+    && ['', 'gallery', 'vault', 'stairs'].includes(e.room)
+    && Array.isArray(e.relics) && e.relics.length === 3 && e.relics.every(n => Number.isInteger(n) && n >= 0 && n <= 8)
+    && e.relics.reduce((a, b) => a + b, 0) === e.floor;
+}
+function expeditionRoom() { return EXPEDITION_ROOMS[state.expedition.room]; }
+function expeditionGoal() { return D(10).pow(33 + state.expedition.floor * 3); }
+function expeditionMultiplier(kind) {
+  return D(1.1).pow(state.expeditionUpgrades[kind]).times(kind === 1 && state.expedition ? D(2).pow(state.expedition.relics[1]) : 1);
+}
+function startExpedition() {
+  if (!state.pyramidUnlocked || state.activeChallenge || state.gainZeroActive) return;
+  resetCreditRun();
+  state.expedition = { floor: 0, room: '', treasure: 0, relics: [0, 0, 0] };
+  state.activeChallenge = 'expedition'; state.challengeEndsAt = 0;
+  activeTab = 'pyramid';
+}
+function enterExpeditionRoom(id) {
+  const e = state.expedition, room = EXPEDITION_ROOMS[id];
+  if (!e || e.room || !room || state.gainZeroActive) return;
+  resetCreditRun(); e.room = id;
+  state.challengeEndsAt = Date.now() + Math.max(60, room.seconds - e.floor * 20 + e.relics[2] * 30 + state.expeditionUpgrades[2] * 10) * 1000;
+}
+function endExpedition(bank) {
+  const e = state.expedition;
+  if (!e || bank && (e.room || !e.floor)) return;
+  if (bank) state.expeditionSeals += e.treasure;
+  state.expedition = null; state.activeChallenge = ''; state.challengeEndsAt = 0;
+  toast(bank ? `Expedition banked · +${e.treasure} seals` : 'Expedition lost · Unbanked treasure and relics lost');
+}
+function finishExpeditionRoom() {
+  const e = state.expedition;
+  if (!e?.room) return;
+  if (Date.now() >= state.challengeEndsAt) { endExpedition(false); save(); render(); return; }
+  if (state.gainZeroActive || lt(state.tokens, expeditionGoal())) return;
+  const room = expeditionRoom();
+  e.floor++; e.treasure += room.treasure * e.floor; e.relics[room.relic]++;
+  state.expeditionBest = Math.max(state.expeditionBest, e.floor);
+  resetCreditRun(); e.room = ''; state.challengeEndsAt = 0;
+  if (e.floor === 8) endExpedition(true);
+  else toast(`Floor ${e.floor} cleared · Bank ${e.treasure} seals or risk another floor`);
+  save(); render();
+}
+function renderExpedition() {
+  const panel = document.getElementById('expedition-panel'), e = state.expedition;
+  panel.hidden = !state.pyramidUnlocked;
+  document.getElementById('expedition-status').textContent = e
+    ? `Floor ${e.floor + 1}/8 · ${e.room ? expeditionRoom().name + ' · ' + Math.max(0, Math.ceil((state.challengeEndsAt - Date.now()) / 1000)) + 's remaining' : 'Choose a route'} · ${e.treasure} unbanked seals · Relics: ${e.relics[0]} Prisms, ${e.relics[1]} Scarabs, ${e.relics[2]} Hourglasses`
+    : `Best: ${state.expeditionBest}/8 floors · ${state.expeditionSeals} banked seals`;
+  document.getElementById('expedition-start').disabled = !!state.activeChallenge || state.gainZeroActive;
+  document.getElementById('expedition-bank').disabled = !e || !!e.room || !e.floor;
+  document.getElementById('expedition-abandon').disabled = !e;
+  document.getElementById('expedition-routes').hidden = !e || !!e.room;
+  for (const [id, room] of Object.entries(EXPEDITION_ROOMS)) {
+    const button = document.querySelector(`[data-expedition-room="${id}"]`);
+    button.disabled = !e || !!e.room || state.gainZeroActive;
+    if (e) button.textContent = `${room.name} · P$ gain ^${Math.min(1, room.exponent + e.relics[0] * .03).toFixed(2)} · ${Math.max(60, room.seconds - e.floor * 20 + e.relics[2] * 30 + state.expeditionUpgrades[2] * 10)}s · +${room.treasure * (e.floor + 1)} seals · Goal ${fmt(expeditionGoal())} tokens`;
+  }
+  for (let i = 0; i < 3; i++) {
+    const level = state.expeditionUpgrades[i], b = document.querySelector(`[data-expedition-upgrade="${i}"]`);
+    b.textContent = `${['Production ×1.1 per level', 'Token & credit rewards ×1.1 per level', 'Supplies +10s per room per level'][i]} · ${level}/20 · ${level === 20 ? 'Complete' : (5 * (level + 1)) + ' seals'}`;
+    b.disabled = !!e || level >= 20 || state.expeditionSeals < 5 * (level + 1);
+  }
+}
+document.getElementById('expedition-panel').addEventListener('click', event => {
+  const b = event.target.closest('button'); if (!b || b.disabled) return;
+  if (b.id === 'expedition-start') startExpedition();
+  if (b.id === 'expedition-bank') endExpedition(true);
+  if (b.id === 'expedition-abandon') endExpedition(false);
+  if (b.dataset.expeditionRoom) enterExpeditionRoom(b.dataset.expeditionRoom);
+  if (b.dataset.expeditionUpgrade !== undefined && !state.expedition) {
+    const i = Number(b.dataset.expeditionUpgrade), cost = 5 * (state.expeditionUpgrades[i] + 1);
+    if (state.expeditionUpgrades[i] < 20 && state.expeditionSeals >= cost) { state.expeditionSeals -= cost; state.expeditionUpgrades[i]++; }
+  }
+  save(); render();
+});
+// Only token resets and room completion are available until the expedition ends.
+for (const id of ['data-prestige-button', 'spark-prestige-button', 'ascendance-prestige-button', 'token-ascendance-button']) {
+  document.getElementById(id).addEventListener('click', event => {
+    if (state.expedition) event.stopImmediatePropagation();
+  }, true);
+}
+
 // Expansion progress uses additive save fields so older saves retain their progress.
 const ACHIEVEMENTS = {
   over9000: ['its over 9000', 'Hold more than 1e9000 of any currency.', () => ['balance', 'tokens', 'credits', 'data', 'alpha', 'ascendance', 'darkMatter', 'spark', 'fishPoints', 'fortuneTokens', 'fortuneCharges'].some(key => gt(state[key], '1e9000'))],
@@ -1890,6 +1994,7 @@ expansionPanel.innerHTML = `
 <h3>Questionable achievements</h3><p>Three achievements unlock Gold; six unlock Violet. Rewards are cosmetic.</p><ul id="achievement-list"></ul><label>Theme <select id="achievement-theme"><option value="default">Default</option><option value="gold">Gold</option><option value="violet">Violet</option></select></label>
 </details>`;
 function renderExpansion() {
+  renderExpedition();
   renderFortune();
   renderIcosahedron();
   for (const [id, visible] of [['loadout',state.cubeUnlocked],['combo',state.pyramidUnlocked],['research',state.dataLore.every(Boolean)],['preset',state.automationsUnlocked],['burst',state.sparkPrestiges > 0]]) document.getElementById(`${id}-feature`).hidden = !visible;
@@ -1988,6 +2093,7 @@ setInterval(() => {
   checkAchievements();
   if (state.cubeUnlocked && state.ascCubeAutoclicker) addCubeClicks(cubeClickGain().times(elapsed));
   const earned = rate().times(elapsed);
+  if (state.expedition?.room && now >= state.challengeEndsAt) endExpedition(false);
   if (state.activeChallenge && state.challengeEndsAt && now >= state.challengeEndsAt) { const name = challengeNames[state.activeChallenge]; state.activeChallenge = ''; state.challengeEndsAt = 0; toast(`${name} failed · Time expired`); }
   const passiveTokensEarned = tokenIncomeRate().times(elapsed);
   if (state.alphaGeneratorBought) changeAlpha(applyAlphaGain(cubeMultiplier('alpha').times(elapsed / 10)));
@@ -2024,12 +2130,16 @@ function isSaveObject(value) {
 }
 function isValidSave(snapshot) {
   if (!isSaveObject(snapshot) || !Object.hasOwn(snapshot, 'balance') || !Object.hasOwn(snapshot, 'runEarned')) return false;
+  if ((snapshot.activeChallenge === 'expedition') !== Boolean(snapshot.expedition)) return false;
   return Object.entries(snapshot).every(([key, value]) => {
     if (!Object.hasOwn(initialState, key)) return false;
     if (CURRENCY_KEYS.includes(key)) {
       return (typeof value === 'string' && value.trim() !== '' || typeof value === 'number')
         && D(value).isFinite() && D(value).gte(0);
     }
+    if (key === 'expedition') return validExpedition(value);
+    if (key === 'expeditionBest') return Number.isInteger(value) && value >= 0 && value <= 8;
+    if (key === 'expeditionUpgrades') return Array.isArray(value) && value.length === 3 && value.every(n => Number.isInteger(n) && n >= 0 && n <= 20);
     const fallback = initialState[key];
     if (['blackjackDeck', 'blackjackPlayer', 'blackjackDealer'].includes(key)) return Array.isArray(value) && value.length <= 52 && new Set(value).size === value.length && value.every(n => Number.isInteger(n) && n >= 0 && n < 52);
     if (key === 'alphaTerms') return value === null || isSaveObject(value) && Object.keys(value).length === 3 && ['base', 'e', 'pi'].every(k => typeof value[k] === 'string' && value[k].trim() !== '' && D(value[k]).isFinite());
