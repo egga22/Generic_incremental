@@ -42,5 +42,30 @@ assert(!a.isValidSave({balance:0,runEarned:0,cubeLoadouts:['bogus','','']}));
 s.automationsUnlocked=true; s.automationPresets[0]='fast'; s.automationLastReset[0]=0; s.balance=a.D(10000); s.activeChallenge='deduction1';
 const resets=s.tokenResetCount; a.runPresetResets(Date.now()); assert.equal(s.tokenResetCount,resets,'no auto resets in trials'); s.activeChallenge='';
 a.runPresetResets(Date.now()); assert.equal(s.tokenResetCount,resets+1,'fast preset resets eligible runs');
+// Direct conversion must match both existing prestige buttons, including bonuses.
+for (const boosted of [false, true]) {
+  s.tokens=a.D('1e285'); s.credits=a.D('1e250'); s.ascendance=a.D(0);
+  s.activeChallenge=''; s.gainZeroActive=false; s.tokenCreditLevel=boosted ? 5 : 0;
+  s.ascCreditExponent=boosted; s.ascCubeAscendance=true;
+  s.cubeUnlocked=true; s.cubeTarget='ascendance'; s.cubeLevel=3;
+  const before={...s};
+  a.render();
+  assert(!doc.getElementById('token-ascendance-button').disabled);
+  doc.getElementById('token-ascendance-button').click();
+  const direct=s.ascendance;
+  assert(s.tokens.eq(0) && s.credits.eq(0), 'direct conversion resets both currencies');
+  assert.equal(s.totalAscendances,before.totalAscendances+1);
+  Object.assign(s,before); a.render();
+  doc.getElementById('credit-prestige-button').click();
+  doc.getElementById('ascendance-prestige-button').click();
+  assert(s.ascendance.eq(direct), 'direct reward matches sequential conversion');
+}
+s.tokens=a.D('1e33'); s.credits=a.D(0); a.render();
+assert(doc.getElementById('token-ascendance-button').disabled, 'insufficient tokens');
+s.tokens=a.D('1e300'); s.activeChallenge='deduction1'; a.render();
+assert(doc.getElementById('token-ascendance-button').disabled, 'no shortcut during trials');
+s.activeChallenge=''; s.gainZeroActive=true; a.render();
+assert(doc.getElementById('token-ascendance-button').disabled, 'zero gain prevents shortcut');
+s.gainZeroActive=false;
 a.render(); timers.forEach(fn => fn());
 console.log('Progression checks passed: startup, saves, research, combined trials, loadouts, burst, reserves, milestones, achievements, tick.');

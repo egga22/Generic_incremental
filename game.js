@@ -252,6 +252,11 @@ function dataReward(cost) {
 }
 function powerMax() { return 100 + state.capLevel * 2; }
 function exponentMax() { return 1 + state.exponentCapLevel; }
+// Quote the same credits and Ascendance as a credit prestige followed by Ascend.
+function tokenAscendanceReward() {
+  if (state.activeChallenge || lt(state.tokens, '1e33')) return D(0);
+  return ascendanceGain(plus(state.credits, creditPrestigeReward()).div('1e250').floor());
+}
 function creditExponentCost(level = state.creditExponentLevel) { return D(2).times(D(2).pow(priceLevel('creditExponentLevel', level))); }
 function cubeNextCost() { return D(2).pow(priceLevel('cubeLevel', state.cubeLevel)); }
 function cubeClicksToNext() { return cubeNextCost().minus(state.cubeClicks).max(0); }
@@ -912,6 +917,11 @@ function render() {
   const sparkPrestige = document.querySelector('#spark-prestige-button');
   sparkPrestige.disabled = lt(state.balance, sparkCost);
   document.querySelector('#spark-prestige-label').textContent = gte(state.balance, sparkCost) ? `Spark reset · +${fmt(sparkEarned)} ⊹ · resets P$ only` : `P$ ${fmt(sparkCost)} for Spark ⊹ · resets P$ only`;
+  const tokenAscendanceEarned = tokenAscendanceReward();
+  document.querySelector('#token-ascendance-button').disabled = lt(tokenAscendanceEarned, 1);
+  document.querySelector('#token-ascendance-label').textContent = gte(tokenAscendanceEarned, 1)
+    ? `Tokens → Ascendance · +${fmt(tokenAscendanceEarned)} ᛥ`
+    : 'Tokens → Ascendance · need enough for 1 ᛥ';
   const ascendanceCost = D('1e250');
   const ascendanceEarned = state.credits.div(ascendanceCost).floor();
   const ascendancePrestige = document.querySelector('#ascendance-prestige-button');
@@ -1223,6 +1233,16 @@ document.querySelector('#data-prestige-button').addEventListener('click', () => 
   state.runEarned = D(0);
   activeTab = 'data';
   toast(`Data reset · +${fmt(reward)} 𝔻`);
+  save(); render();
+});
+document.querySelector('#token-ascendance-button').addEventListener('click', () => {
+  const reward = tokenAscendanceReward();
+  if (lt(reward, 1)) return;
+  state.ascendance = plus(state.ascendance, reward);
+  state.totalAscendances += 1;
+  resetAscendanceRun();
+  activeTab = 'ascendance';
+  toast(`Tokens → Ascendance · +${fmt(reward)} ᛥ`);
   save(); render();
 });
 document.querySelector('#ascendance-prestige-button').addEventListener('click', () => {
