@@ -320,6 +320,8 @@ input, textarea, select {
       <details id="more-menu">
         <summary>More</summary>
         <label class="theme-switch"><input id="theme-toggle" type="checkbox" role="switch"> Dark mode</label>
+        <label class="theme-switch"><input id="copyright-mode" type="checkbox" role="switch"> Copyright mode</label>
+        <p>Hides the copy companion and disables all of his effects and interactions. Saved companion progress is kept.</p>
         <button type="button" id="export-save">Export save</button>
         <button type="button" id="import-save">Import save</button>
         <button type="button" id="open-deep-settings" aria-haspopup="dialog">Deep settings</button>
@@ -331,8 +333,7 @@ input, textarea, select {
         <h2 id="deep-settings-title">Deep settings</h2>
         <button type="submit" class="deep-settings-close" aria-label="Close settings" autofocus>×</button>
       </form>
-      <label class="theme-switch"><input id="copyright-mode" type="checkbox" role="switch"> Copyright mode</label>
-      <p>Hides the copy companion and disables all of his effects and interactions. Saved companion progress is kept.</p>
+      <p class="deep-settings-empty">No settings yet.</p>
     </dialog>
     <div class="toast" id="toast" role="status" aria-live="polite" w-tid="1139"></div>
   </body>

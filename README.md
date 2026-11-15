@@ -27,4 +27,4 @@ After your first prestige, Kirby appears beneath the upgrades. Feed 1% of P$ (mi
 
 Beam boosts passive production, Mirror boosts token reset rewards, Spark speeds charge, Stone builds production strength over five minutes on one Cube target, and Fisher awards an extra fish every fifth successful catch. Hypernova spends 100 Fullness for 30 seconds of doubled ability strength (Fisher: every third catch), followed by a 60-second nap. Effects pause during trials and zero-gain mode. Ascendance clears Fullness, burst, nap, and Stone charge while keeping discoveries.
 
-**More → Deep settings → Copyright mode** hides Kirby and disables all companion effects and interactions. It cancels an active burst and clears Stone charge, preserves discoveries and Fullness, and is included in saves and exports. Turn it off to restore the companion.
+**More → Copyright mode** hides Kirby and disables all companion effects and interactions. It cancels an active burst and clears Stone charge, preserves discoveries and Fullness, and is included in saves and exports. Turn it off to restore the companion.
