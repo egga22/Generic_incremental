@@ -199,3 +199,10 @@ body[data-achievement-theme="violet"] .expansion-panel { border-color: #a073e8; 
 #fortune-hint[data-notches="2"]::after { content: '◆ ◆ ◇ ◇'; }
 #fortune-hint[data-notches="3"]::after { content: '◆ ◆ ◆ ◇'; }
 #fortune-wedges select { width: min(100%, 32rem); }
+
+.kirby-panel { margin: 20px 0; padding: 20px; border: 2px solid #d96b98; border-radius: 16px; background: color-mix(in srgb, #ffb4d2 14%, transparent); }
+.kirby-panel[hidden] { display: none; }
+#kirby-face { color: #d94d8d; font-size: 2rem; font-weight: bold; padding: 12px; }
+.kirby-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.kirby-actions button[aria-pressed="true"] { outline: 2px solid #d94d8d; outline-offset: 2px; }
+.kirby-panel p { line-height: 1.5; }

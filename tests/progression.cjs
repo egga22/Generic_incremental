@@ -12,7 +12,7 @@ context.clearTimeout = () => {};
 vm.runInContext('(function(){' + fs.readFileSync('break_eternity.js','utf8').replace(/export \{[\s\S]*?\};/, 'globalThis.Decimal = y;') + '})();', context);
 let source = fs.readFileSync('game.js','utf8').replace("import Decimal from './break_eternity.js';",'');
 source += `
-globalThis.testAPI = {get state(){return state}, D, rate, tokenReward, creditMultiplier, challengeExponent, challengeDuration, challengeGainMultiplier, resetAscendanceRun, resetCreditRun, runAutomations, runPresetResets, presetAllowsPurchase, isValidSave, serializeState, render, checkAchievements, recordFortuneRitual, spinFortune, bankFortune, fortuneUsed, fortuneCapacity, fortuneSegments, clearFortuneChain, updateFortuneProgress};`;
+globalThis.testAPI = {get state(){return state}, D, rate, kirbyBonus, feedKirby, tokenReward, creditMultiplier, challengeExponent, challengeDuration, challengeGainMultiplier, resetAscendanceRun, resetCreditRun, runAutomations, runPresetResets, presetAllowsPurchase, isValidSave, serializeState, render, checkAchievements, recordFortuneRitual, spinFortune, bankFortune, fortuneUsed, fortuneCapacity, fortuneSegments, clearFortuneChain, updateFortuneProgress};`;
 vm.runInContext(source, context);
 const a = context.testAPI, s = a.state, doc = dom.window.document;
 assert(a.isValidSave(JSON.parse(a.serializeState())), 'fresh save round trip');
@@ -139,3 +139,50 @@ for (const [layer,target] of [['token','points'],['token','tokens'],['credit','c
 }
 assert(rs.fortuneUnlocked,'actual prestige route reveals wheel');
 console.log('Fortune discovery verified through prestige controls.');
+
+// Companion controls, economic effects, restrictions, and persisted settings.
+vm.runInContext('state = {...initialState}; for (const key of CURRENCY_KEYS) state[key] = D(initialState[key]);', context);
+const ks = a.state; ks.fortuneWedges=['points','tokens','multiplier','refund'];
+a.render(); assert(doc.getElementById('kirby-panel').hidden, 'companion starts locked');
+ks.tokenResetCount=1; ks.balance=a.D(1000); ks.tokens=a.D(10); ks.printer=true; a.render();
+assert(!doc.getElementById('kirby-panel').hidden);
+const plainRate=a.rate();
+doc.querySelector('[data-kirby-feed="balance"]').click();
+assert(ks.balance.eq(990)); assert.equal(ks.kirbyFullness,25); assert(ks.kirbyBeam);
+assert(a.rate().gt(plainRate));
+a.feedKirby('balance'); assert.equal(ks.kirbyFullness,25,'feeding cooldown enforced');
+ks.kirbyFeedAt=0; a.render(); doc.querySelector('[data-kirby-feed="tokens"]').click();
+assert(ks.tokens.eq(9)); assert(ks.kirbyMirror);
+ks.kirbyFullness=100; a.render(); doc.getElementById('kirby-hypernova').click();
+assert.equal(ks.kirbyFullness,0); assert(a.kirbyBonus('beam')>1.4);
+ks.kirbyBurstUntil=0; assert.equal(a.kirbyBonus('beam'),1,'nap has no bonus');
+ks.kirbyNapUntil=0; ks.kirbyAbility='mirror';
+const mirrorReward=a.tokenReward(); ks.activeChallenge='time1'; assert.equal(a.kirbyBonus('mirror'),1);
+ks.activeChallenge='';
+const toggle=doc.getElementById('copyright-mode'); toggle.checked=true;
+toggle.dispatchEvent(new dom.window.Event('change'));
+assert(ks.copyrightMode); assert(doc.getElementById('kirby-panel').hidden);
+assert.equal(a.kirbyBonus('mirror'),1); assert(a.tokenReward().lt(mirrorReward));
+const beforeDisabled=ks.balance.toString(); ks.kirbyFeedAt=0; a.feedKirby('balance');
+assert.equal(ks.balance.toString(),beforeDisabled,'copyright mode blocks hidden interactions');
+assert(JSON.parse(a.serializeState()).copyrightMode,'copyright setting is saved');
+assert(a.isValidSave(JSON.parse(a.serializeState())));
+for (const bad of [{kirbyFullness:101},{kirbyAbility:'invalid'},{kirbyStoneSeconds:301}]) {
+  assert(!a.isValidSave({balance:0,runEarned:0,...bad}));
+}
+ks.kirbyFullness=75; a.resetAscendanceRun();
+assert.equal(ks.kirbyFullness,0); assert(ks.kirbyBeam && ks.kirbyMirror && ks.kirbyUnlocked && ks.copyrightMode);
+toggle.checked=false; toggle.dispatchEvent(new dom.window.Event('change'));
+assert(!doc.getElementById('kirby-panel').hidden,'disabling copyright mode restores companion');
+console.log('Kirby checks passed: unlock, feeding, cooldowns, bonuses, burst, nap, trials, copyright mode, saves, Ascendance.');
+
+ks.kirbyNapUntil=0; ks.kirbySwitchAt=0; ks.activeChallenge=''; ks.sparkPrestiges=1; a.render();
+doc.querySelector('[data-kirby-ability="spark"]').click();
+assert.equal(ks.kirbyAbility,'spark'); assert(a.kirbyBonus('spark')>1);
+doc.querySelector('[data-kirby-ability="mirror"]').click();
+assert.equal(ks.kirbyAbility,'spark','switch cooldown enforced');
+ks.kirbyAbility='stone'; ks.cubeUnlocked=true; ks.cubeTarget='points'; ks.kirbyStoneTarget='points'; ks.kirbyStoneSeconds=300;
+assert(a.kirbyBonus('stone')>1); ks.cubeTarget='tokens'; assert.equal(a.kirbyBonus('stone'),1,'changing target removes Stone charge immediately');
+ks.kirbyAbility='beam'; ks.kirbyBurstUntil=Date.now()-1; ks.kirbyNapUntil=Date.now()-1;
+assert(a.kirbyBonus('beam')>1 && a.kirbyBonus('beam')<1.4,'expired burst and nap restore ordinary bonus');
+assert(a.isValidSave(JSON.parse(a.serializeState())));

@@ -21,6 +21,10 @@ const plus = (a, b) => D(a).plus(b);
 const minus = (a, b) => D(a).minus(b);
 const initialState = { balance: 0, runEarned: 0, lifetime: 0, printer: false, press: false, multiplierLevel: 0, incomeLevel: 0, powerLevel: 0, clickLevel: 0, logLevel: 0, exponentLevel: 0, exponentCapLevel: 0, capLevel: 0, tokens: 0, totalPrestiges: 0, tokenResetCount: 0, tokenMultiplierLevel: 0, discountLevel: 0, tokenBoostLevel: 0, expansionUnlocked: false, maxBuyUnlocked: false, maxBuyActive: false, tokenCreditLevel: 0, tokenDiscountLevel: 0, credits: 0, totalCreditPrestiges: 0, data: 0, totalDataPrestiges: 0, dataLore: Array(5).fill(false), gainZeroBought: false, gainZeroActive: false, priceOrigins: {}, creditEngine: false, creditExponentLevel: 0, heavyMint: false, cubeUnlocked: false, cubeLevel: 0, cubeClicks: 0, cubeTarget: 'points', freeRunUpgrades: false, passiveTokens: false, alphaUnlocked: false, alpha: 0, alphaGainPurchases: 0, alphaBoostLevel: 0, alphaCapLevel: 0, alphaNeutralBought: false, alphaGeneratorBought: false, fishingUnlocked: false, fishPoints: 0, fishGainLevel: 0, redFishLevel: 0, fishAlphaLevel: 0, garbageUnlocked: false, darkMatterUnlocked: false, darkMatter: 0, darkMatter1Bought: false, darkMatter2Bought: false, darkMatter2Level: 0, darkMatter3Bought: false, darkMatter4Bought: false, darkMatterCoinBoost: 1, darkMatterFlipTimer: 0, darkMatterFlipDuration: 1, pyramidUnlocked: false, activeChallenge: '', challengeEndsAt: 0, completedChallenges: [], creditChallengeBoost: false, automationsUnlocked: false, automationBought: Array(12).fill(false), automationActive: Array(12).fill(false), ascendance: 0, totalAscendances: 0, ascCurrencyBoost: false, ascCreditExponent: false, ascCubePowerLevel: 0, ascCubeAutoclicker: false, ascCubeAscendance: false, ascCubeAlpha: false, ascPointDiscountLevel: 0, ascTotalLevelBoost: false, ascAllCurrencyLevel: 0, ascMainlinePowerLevel: 0, spark: 0, sparkPrestiges: 0, sparkUpgrade1Level: 0, sparkUpgrade2Level: 0, sparkUpgrade3Level: 0, pointUpgrade16Bought: false, pointUpgrade17Bought: false, pointUpgrade18Bought: false, pointUpgrade19Bought: false, pointUpgrade20Bought: false, cyan13Bought: false, cyan14Level: 0, cyan15Bought: false, cyanSquareCounts: [0, 0, 0] };
 Object.assign(initialState, {
+  copyrightMode: false, kirbyUnlocked: false, kirbyAbility: 'beam',
+  kirbyBeam: false, kirbyMirror: false, kirbyFullness: 0,
+  kirbyFeedAt: 0, kirbySwitchAt: 0, kirbyBurstUntil: 0, kirbyNapUntil: 0,
+  kirbyStoneSeconds: 0, kirbyStoneTarget: 'points', kirbyCatches: 0,
   fortuneUnlocked: false, fortuneClue: 0,
   fortuneCharges: 0, fortuneTokens: 0, fortuneFrame: 0, fortuneQuality: 0,
   fortuneWedges: ['points', 'tokens', 'multiplier', 'refund'],
@@ -118,13 +122,67 @@ function restoreCurrencyGain() {
   render(); save();
 }
 function sparkRateMultiplier() { return D(1.1).pow(state.sparkUpgrade1Level).times(D(2).pow(state.sparkUpgrade2Level)).times(D(10).pow(state.sparkUpgrade3Level)); }
+function kirbyAvailable() {
+  return !state.copyrightMode && state.kirbyUnlocked && !state.activeChallenge && !state.gainZeroActive;
+}
+function kirbyAbilities() {
+  return { beam: state.kirbyBeam, mirror: state.kirbyMirror, spark: state.sparkPrestiges > 0,
+    stone: state.cubeUnlocked, fisher: state.fishingUnlocked };
+}
+function kirbyFriendship() {
+  return Math.min(5, Object.values(kirbyAbilities()).filter(Boolean).length);
+}
+function kirbyBonus(ability) {
+  if (!kirbyAvailable() || state.kirbyAbility !== ability || !kirbyAbilities()[ability] || Date.now() < state.kirbyNapUntil && Date.now() >= state.kirbyBurstUntil) return 1;
+  const strength = 1 + kirbyFriendship() * .05;
+  const burst = Date.now() < state.kirbyBurstUntil ? 2 : 1;
+  const base = {beam: .2, mirror: .1, spark: .25, stone: state.kirbyStoneTarget === state.cubeTarget ? Math.min(300, state.kirbyStoneSeconds) / 1500 : 0, fisher: 0}[ability];
+  return 1 + base * strength * burst;
+}
+function feedKirby(currency) {
+  const now = Date.now();
+  if (!kirbyAvailable() || now < state.kirbyFeedAt || now < state.kirbyNapUntil || state.kirbyFullness >= 100) return;
+  if (!['balance', 'tokens'].includes(currency)) return;
+  const cost = state[currency].times(.01).max(currency === 'tokens' ? 1 : 10);
+  if (state[currency].lt(cost)) return;
+  state[currency] = state[currency].minus(cost);
+  state[currency === 'tokens' ? 'kirbyMirror' : 'kirbyBeam'] = true;
+  state.kirbyFullness = Math.min(100, state.kirbyFullness + 25);
+  state.kirbyFeedAt = now + 30000;
+  render(); save();
+}
+function renderKirby() {
+  if (state.tokenResetCount > 0 || state.totalCreditPrestiges > 0 || state.totalAscendances > 0) state.kirbyUnlocked = true;
+  const panel = document.getElementById('kirby-panel');
+  panel.hidden = state.copyrightMode || !state.kirbyUnlocked;
+  document.getElementById('copyright-mode').checked = state.copyrightMode;
+  if (panel.hidden) return;
+  const now = Date.now(), available = kirbyAvailable(), napping = now < state.kirbyNapUntil;
+  const bursting = now < state.kirbyBurstUntil;
+  panel.dataset.ability = state.kirbyAbility;
+  document.getElementById('kirby-face').textContent = bursting ? '( > ◡ < ) ★' : napping ? '( − . − ) zZ' : '( • ◡ • )';
+  document.getElementById('kirby-status').textContent = !available ? 'Resting during trials or zero gain.' : bursting ? 'Hypernova! Poyo!' : napping ? `Nap: ${Math.ceil((state.kirbyNapUntil-now)/1000)}s` : `Poyo! ${state.kirbyAbility === 'stone' ? 'Too square. ' : ''}Ready for a snack.`;
+  document.getElementById('kirby-progress').textContent = `Fullness ${state.kirbyFullness}% · Friendship ${kirbyFriendship()}/5 · Feed cooldown ${Math.max(0, Math.ceil((state.kirbyFeedAt-now)/1000))}s`;
+  for (const currency of ['balance', 'tokens']) {
+    const b = document.querySelector(`[data-kirby-feed="${currency}"]`);
+    const cost = state[currency].times(.01).max(currency === 'tokens' ? 1 : 10);
+    b.textContent = `Feed ${fmt(cost)} ${currency === 'tokens' ? 'tokens' : 'P$'}`;
+    b.disabled = !available || napping || now < state.kirbyFeedAt || state.kirbyFullness >= 100 || state[currency].lt(cost);
+  }
+  document.querySelectorAll('[data-kirby-ability]').forEach(b => {
+    const ability = b.dataset.kirbyAbility;
+    b.disabled = !available || napping || now < state.kirbySwitchAt || !kirbyAbilities()[ability];
+    b.setAttribute('aria-pressed', String(state.kirbyAbility === ability));
+  });
+  document.getElementById('kirby-hypernova').disabled = !available || napping || state.kirbyFullness < 100 || !kirbyAbilities()[state.kirbyAbility];
+}
 function rate() {
   let value = D(incomeBase()).times(D(1.1).pow(state.multiplierLevel)).times(D(1.3).pow(state.powerLevel)).times(D(2).pow(state.tokenMultiplierLevel)).times(D(1.5).pow(state.tokenBoostLevel)).times(1 + state.totalPrestiges * 0.5).times(pointMultiplier()).times(state.researchBranch === 'production' ? D(2).pow(state.researchLevel) : 1).times(Date.now() < state.sparkBurstUntil ? state.sparkBurstPower : 1);
   if (state.logLevel) value = value.times(state.balance.max(10).log10().max(1).pow(state.logLevel));
   if (state.exponentLevel && value.gt(0)) value = value.pow(D(1.1).pow(state.exponentLevel));
   const exponent = challengeExponent();
   const challenged = exponent < 1 && value.gt(0) ? value.pow(exponent) : value;
-  return softenGain(applyCurrencyGain(challenged.times(sparkRateMultiplier())), 'balance').times(Date.now() < state.fortuneBoostUntil && !state.activeChallenge ? 2 : 1);
+  return softenGain(applyCurrencyGain(challenged.times(sparkRateMultiplier())), 'balance').times(Date.now() < state.fortuneBoostUntil && !state.activeChallenge ? 2 : 1).times(kirbyBonus('beam')).times(kirbyBonus('stone'));
 }
 const challengeNames = { deduction1: 'Deduction I', deduction2: 'Deduction II', deduction3: 'Deduction III', time1: 'Time Limit I', time2: 'Time Limit II', time3: 'Time Limit III' };
 for (const deduction of ['deduction1', 'deduction2', 'deduction3']) {
@@ -150,6 +208,7 @@ function resetCreditRun() {
   resetPriceOrigins(['multiplierLevel', 'incomeLevel', 'powerLevel', 'clickLevel', 'discountLevel', 'tokenBoostLevel', 'tokenCreditLevel', 'tokenDiscountLevel', 'exponentCapLevel', 'logLevel', 'exponentLevel', 'capLevel']);
 }
 function resetAscendanceRun() {
+  state.kirbyFullness = 0; state.kirbyBurstUntil = 0; state.kirbyNapUntil = 0; state.kirbyStoneSeconds = 0;
   updateFortuneProgress();
   clearFortuneChain(true);
   state.balance = D(0); state.runEarned = D(0); state.lifetime = D(0);
@@ -190,7 +249,7 @@ function tokenIncomeRate() {
 function tokenReward() {
   let reward = state.balance.div(nextGoal()).floor().times(D(1.25).pow(state.tokenBoostLevel));
   if (state.creditExponentLevel) reward = reward.pow(D(1.01).pow(state.creditExponentLevel));
-  return softenGain(applyCurrencyGain(reward.times(state.researchBranch === 'resets' ? D(2).pow(state.researchLevel) : 1).times(tokenMultiplier()).times(challengeGainMultiplier())), 'tokens');
+  return softenGain(applyCurrencyGain(reward.times(state.researchBranch === 'resets' ? D(2).pow(state.researchLevel) : 1).times(tokenMultiplier()).times(challengeGainMultiplier())), 'tokens').times(kirbyBonus('mirror'));
 }
 function cubeMultiplier(target) {
   const unlocked = state.cubeUnlocked && (target === 'ascendance' ? state.ascCubeAscendance : target === 'alpha' ? state.ascCubeAlpha : true);
@@ -571,6 +630,7 @@ garbageForm.addEventListener('submit', event => {
 garbageAll.addEventListener('click', () => discardCurrency(true));
 
 function render() {
+  renderKirby();
   renderExpansion();
   renderTheme();
   renderFishing();
@@ -1070,7 +1130,12 @@ document.querySelector('#fishing-action').addEventListener('click', () => {
   } else {
     fishingBiteAt = null;
     if (phase === 'bite') {
-      const reward = (1 + state.fishGainLevel) * (fishingRedFish ? 1.5 : 1);
+      let extra = 0;
+      if (kirbyAvailable() && state.kirbyAbility === 'fisher' && (Date.now() >= state.kirbyNapUntil || Date.now() < state.kirbyBurstUntil)) {
+        state.kirbyCatches += 1;
+        if (state.kirbyCatches >= (Date.now() < state.kirbyBurstUntil ? 3 : 5)) { extra = 1; state.kirbyCatches = 0; }
+      }
+      const reward = (1 + extra) * (1 + state.fishGainLevel) * (fishingRedFish ? 1.5 : 1);
       state.fishPoints = plus(state.fishPoints, reward);
       fishingResult = `${fishingRedFish ? 'Red Fish' : 'Fish'} caught! +${fmt(reward)} 🐟`;
       save();
@@ -1621,7 +1686,12 @@ setInterval(() => {
   runAutomations();
   if (state.researchBranch === 'automation') for (let i = 0; i < state.researchLevel; i++) runAutomations();
   runPresetResets(now);
-  if (state.sparkPrestiges > 0 && rate().gt(0) && now >= state.sparkBurstUntil) state.sparkCharge = Math.min(100, state.sparkCharge + elapsed / 3);
+  if (state.sparkPrestiges > 0 && rate().gt(0) && now >= state.sparkBurstUntil) state.sparkCharge = Math.min(100, state.sparkCharge + elapsed / 3 * kirbyBonus('spark'));
+  if (kirbyAvailable() && state.kirbyAbility === 'stone' && state.cubeUnlocked) {
+    if (state.kirbyStoneTarget !== state.cubeTarget) state.kirbyStoneSeconds = 0;
+    state.kirbyStoneTarget = state.cubeTarget;
+    state.kirbyStoneSeconds = Math.min(300, state.kirbyStoneSeconds + elapsed);
+  }
   checkAchievements();
   if (state.cubeUnlocked && state.ascCubeAutoclicker) addCubeClicks(cubeClickGain().times(elapsed));
   const earned = rate().times(elapsed);
@@ -1668,6 +1738,11 @@ function isValidSave(snapshot) {
         && D(value).isFinite() && D(value).gte(0);
     }
     const fallback = initialState[key];
+    if (key === 'kirbyAbility') return ['beam', 'mirror', 'spark', 'stone', 'fisher'].includes(value);
+    if (key === 'kirbyStoneTarget') return ['points', 'tokens', 'credits', 'ascendance', 'alpha'].includes(value);
+    if (key === 'kirbyFullness') return Number.isInteger(value) && value >= 0 && value <= 100;
+    if (key === 'kirbyStoneSeconds') return Number.isFinite(value) && value >= 0 && value <= 300;
+    if (key === 'kirbyCatches') return Number.isInteger(value) && value >= 0 && value <= 4;
     if (key === 'fortuneClue') return Number.isInteger(value) && value >= 0 && value <= 4;
     if (key === 'fortuneWedges') return Array.isArray(value) && value.length >= 4 && value.length <= 6 && value.every(v => Object.hasOwn(FORTUNE_WEDGES, v)) && value.reduce((n, v) => n + FORTUNE_WEDGES[v].space, 0) <= 10 + 2 * (snapshot.fortuneFrame || 0) && value.length <= 4 + Math.floor((snapshot.fortuneFrame || 0) / 2);
     if (['fortuneFrame', 'fortuneQuality'].includes(key)) return Number.isInteger(value) && value >= 0 && value <= 4;
@@ -1746,3 +1821,21 @@ importFile.addEventListener('change', async () => {
 
 const deepSettings = document.querySelector('#deep-settings');
 document.querySelector('#open-deep-settings').addEventListener('click', () => deepSettings.showModal());
+
+document.getElementById('copyright-mode').addEventListener('change', event => {
+  state.copyrightMode = event.target.checked;
+  state.kirbyBurstUntil = 0; state.kirbyStoneSeconds = 0;
+  render(); save();
+});
+document.querySelectorAll('[data-kirby-feed]').forEach(b => b.addEventListener('click', () => feedKirby(b.dataset.kirbyFeed)));
+document.querySelectorAll('[data-kirby-ability]').forEach(b => b.addEventListener('click', () => {
+  const ability = b.dataset.kirbyAbility, now = Date.now();
+  if (!kirbyAvailable() || !kirbyAbilities()[ability] || now < state.kirbySwitchAt || now < state.kirbyNapUntil) return;
+  state.kirbyAbility = ability; state.kirbySwitchAt = now + 10000; state.kirbyStoneSeconds = 0;
+  render(); save();
+}));
+document.getElementById('kirby-hypernova').addEventListener('click', () => {
+  if (!kirbyAvailable() || state.kirbyFullness < 100 || Date.now() < state.kirbyNapUntil || !kirbyAbilities()[state.kirbyAbility]) return;
+  state.kirbyFullness = 0; state.kirbyBurstUntil = Date.now() + 30000; state.kirbyNapUntil = state.kirbyBurstUntil + 60000;
+  render(); save();
+});

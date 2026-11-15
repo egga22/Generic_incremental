@@ -296,6 +296,23 @@ input, textarea, select {
           <p class="pyramid-note" w-tid="1099">Each challenge resets credits when started. Complete a credit reset before its timer expires to finish; challenge resets award no credits.</p>
         </div>
       </section>
+      <section id="kirby-panel" class="kirby-panel" hidden aria-labelledby="kirby-title">
+        <h2 id="kirby-title">Kirby · Copy companion</h2>
+        <div id="kirby-face" aria-hidden="true"></div>
+        <p id="kirby-status" role="status"></p><p id="kirby-progress"></p>
+        <p>Feed 1% of your balance (minimum 10 P$ or 1 token) for 25% Fullness, once every 30 seconds. P$ discovers Beam; tokens discover Mirror. Discoveries and Friendship survive resets; Ascendance clears Fullness.</p>
+        <div class="kirby-actions"><button type="button" data-kirby-feed="balance">Feed P$</button><button type="button" data-kirby-feed="tokens">Feed tokens</button></div>
+        <div class="kirby-actions" aria-label="Copy abilities">
+          <button type="button" data-kirby-ability="beam">Beam · +20% production</button>
+          <button type="button" data-kirby-ability="mirror">Mirror · +10% reset tokens</button>
+          <button type="button" data-kirby-ability="spark">Spark · +25% charge speed</button>
+          <button type="button" data-kirby-ability="stone">Stone · up to +20% production</button>
+          <button type="button" data-kirby-ability="fisher">Fisher · extra fish every 5 catches</button>
+        </div>
+        <p>Spark, Stone and Fisher unlock with their systems. Each discovered ability adds 5% to Beam, Mirror, Spark and Stone bonus strength. Stone builds over 5 minutes on one Cube target. Switching takes 10 seconds to recharge. Effects pause during trials.</p>
+        <button id="kirby-hypernova" type="button">Hypernova · spend 100% Fullness</button>
+        <p>Double your ability bonus for 30 seconds (Fisher: extra fish every 3 catches), then nap for 60 seconds.</p>
+      </section>
       <section class="prestige" w-tid="1101">
         <div w-tid="1103"><h2 w-tid="1105">Prestige</h2><p w-tid="1107">Start over and keep a permanent +50% income boost.</p><span w-tid="1109">Tokens: <b id="prestige-tokens" w-tid="1111">0</b> · Credits: <b id="credit-balance" w-tid="1113">0</b> · ᛥ: <b id="ascendance-balance" w-tid="1115">0</b></span></div>
         <div class="prestige-actions" w-tid="1117"><button id="prestige-button" type="button" disabled w-tid="1119"><span id="prestige-button-label" w-tid="1121">P$ 500 to prestige</span></button><button id="credit-prestige-button" type="button" disabled w-tid="1123"><span id="credit-prestige-label" w-tid="1125">1De tokens for 1 C$</span></button><button id="data-prestige-button" type="button" disabled w-tid="1127"><span id="data-prestige-label" w-tid="1129">P$ 1e200 for 1 𝔻 · resets P$ only</span></button><button id="token-ascendance-button" type="button" disabled title="Convert tokens through their credit value, including current credits. Performs a full Ascendance reset."><span id="token-ascendance-label">Tokens → Ascendance · need enough for 1 ᛥ</span></button><button id="ascendance-prestige-button" type="button" disabled w-tid="1131"><span id="ascendance-prestige-label" w-tid="1133">C$ 1e250 for 1 ᛥ</span></button><button id="spark-prestige-button" type="button" disabled w-tid="1135"><span id="spark-prestige-label" w-tid="1137">P$ 1e300 for Spark ⊹ · resets P$ only</span></button></div>
@@ -314,7 +331,8 @@ input, textarea, select {
         <h2 id="deep-settings-title">Deep settings</h2>
         <button type="submit" class="deep-settings-close" aria-label="Close settings" autofocus>×</button>
       </form>
-      <p class="deep-settings-empty">No settings yet.</p>
+      <label class="theme-switch"><input id="copyright-mode" type="checkbox" role="switch"> Copyright mode</label>
+      <p>Hides the copy companion and disables all of his effects and interactions. Saved companion progress is kept.</p>
     </dialog>
     <div class="toast" id="toast" role="status" aria-live="polite" w-tid="1139"></div>
   </body>
