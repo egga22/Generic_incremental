@@ -192,7 +192,7 @@ function sectionUpgradeTargets() {
   const sections = ['run-upgrades', 'token-upgrades', 'credit-upgrades', 'data-upgrades', 'spark-upgrades', 'cube-panel', 'alpha-upgrades', 'darkmatter-upgrades', 'ascendance-upgrades', 'epsilon-upgrades'];
   return sections.flatMap(id => Array.from(document.querySelectorAll(`#${id} .upgrade[id^="upgrade-"]`)))
     .concat(Array.from(document.querySelectorAll('#icosahedron-panel article[id^="upgrade-"]')))
-    .filter(card => card.querySelector('button[id^="buy-"], button[data-die-upgrade]'));
+    .filter(card => !card.hidden && card.querySelector('button[id^="buy-"], button[data-die-upgrade]'));
 }
 function sectionUpgradeCurrency(card) {
   if (card.id.startsWith('upgrade-fish-')) return 'fishPoints';
@@ -208,6 +208,10 @@ function syncSectionOctahedrons() {
   const count = Math.max(0, state.pointUpgrade22Level * 15 - state.pointUpgrade23Level);
   while (state.sectionOctahedrons.length > count) state.sectionOctahedrons.pop();
   const targets = sectionUpgradeTargets();
+  const targetIds = new Set(targets.map(card => card.id));
+  state.sectionOctahedrons = state.sectionOctahedrons.map(id => (
+    targetIds.has(id) || !targets.length ? id : targets[Math.floor(Math.random() * targets.length)].id
+  ));
   while (state.sectionOctahedrons.length < count && targets.length) {
     state.sectionOctahedrons.push(targets[Math.floor(Math.random() * targets.length)].id);
   }
@@ -1166,7 +1170,6 @@ function renderPrestigeProgress(fraction) {
 function render() {
   if (state.epsilonUnlocked && !state.epsilonEscapeUnlocked) activeTab = 'epsilon';
   restoreSillyButtonLabels();
-  syncSectionOctahedrons();
   document.getElementById('scary-overlay').hidden = !state.scaryModeLevel || !state.scaryModeActive;
   document.getElementById('scary-mode-setting').hidden = !state.scaryModeLevel;
   document.getElementById('scary-mode').checked = state.scaryModeActive;
@@ -1467,6 +1470,7 @@ function render() {
     marker.innerHTML = threats.map(({ index }) => `<span class="epsilon-octahedron${index === 1 ? ' dim' : ''}" aria-hidden="true"></span>`).join('');
     marker.setAttribute('aria-label', threats.length ? `${threats.length} octahedron${threats.length === 1 ? '' : 's'} targeting upgrade ${upgrade}ε` : '');
   });
+  syncSectionOctahedrons();
   renderSectionOctahedrons();
   for (let index = 1; index <= 9; index += 1) {
     const level = epsilonUpgradeLevel(index);

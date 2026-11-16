@@ -842,11 +842,14 @@ const alphaSillyBefore={...alphaSillyState,alphaTerms:alphaSillyState.alphaTerms
 const priorTab=vm.runInContext('activeTab',context);
 Object.assign(alphaSillyState,{
  alphaUnlocked:true,alphaGainPurchases:0,alphaBoostLevel:0,alpha:a.D(500),alphaTerms:null,
- alphaButtonNamesBought:false,alphaWobbleBought:false,alphaPowerOneBought:false,alphaBouncyBallBought:false
+ alphaButtonNamesBought:false,alphaWobbleBought:false,alphaPowerOneBought:false,alphaBouncyBallBought:false,
+ pointUpgrade22Level:1,pointUpgrade23Level:0,sectionOctahedrons:Array(15).fill('upgrade-alpha-button-names')
 });
 vm.runInContext("activeTab='alpha'",context); a.render();
 const sillyIds=['button-names','wobble','power-one','bouncy-ball'];
 for(const id of sillyIds) assert(doc.getElementById(`upgrade-alpha-${id}`).hidden,`${id} waits for 1α`);
+assert.equal(alphaSillyState.sectionOctahedrons.length,15,'hidden upgrades do not remove octahedrons');
+assert(!alphaSillyState.sectionOctahedrons.includes('upgrade-alpha-button-names'),'octahedrons cannot target a hidden Alpha upgrade');
 alphaSillyState.alphaGainPurchases=1; a.render();
 for(const id of sillyIds) assert(doc.getElementById(`upgrade-alpha-${id}`).hidden,`${id} still waits for 2α`);
 const alphaBeforeMissingPrerequisite=alphaSillyState.alpha.toString();
