@@ -113,6 +113,8 @@ input, textarea, select {
         <article class="upgrade locked" id="upgrade-point-19" w-tid="361"><div w-tid="363"><h3 w-tid="365">19. Cascade engine</h3><p w-tid="367">Requires 18. Multiplies all P$ gain by one million.</p><div class="effect" w-tid="369">×1,000,000 P$ gain</div></div><button id="buy-point-19" type="button" disabled w-tid="371">P$ 1e240</button></article>
         <article class="upgrade locked" id="upgrade-point-20" w-tid="373"><div w-tid="375"><h3 w-tid="377">20. Event horizon</h3><p w-tid="379">Requires 19. Multiplies all P$ gain by one trillion.</p><div class="effect" w-tid="381">×1e12 P$ gain</div></div><button id="buy-point-20" type="button" disabled w-tid="383">P$ 1e260</button></article>
         <article class="upgrade locked" id="upgrade-point-21"><div><h3>21. Think on it...</h3><p>Requires 20. Divides all P$ gain by 1/2 (multiplying it by 2).</p><div class="effect">P$ gain ÷½ · ×2</div></div><button id="buy-point-21" type="button" disabled>P$ 1e280</button></article>
+        <article class="upgrade locked" id="upgrade-point-22"><div><h3>22. The wandering geometry</h3><p>Requires 21, 4T, 1A, and 9ε. Raises Ascendance Point gain to the power of 1.2 per level and releases 15 octahedrons per level. Octahedrons travel between upgrade sections; buying an upgrade beneath one empties that section's currency. Max level 2.</p><div class="effect">Ascendance gain<sup>1.2 per level</sup> · 15 octahedrons per level · Level <span id="point-22-level">0</span> / 2</div></div><button id="buy-point-22" type="button" disabled>P$ 1e3000</button></article>
+        <article class="upgrade locked" id="upgrade-point-23"><div><h3>23. Orbital dismantling</h3><p>Requires 22. Costs P$ 1e7000 per level and removes one released octahedron per purchase, up to 30 levels. Can only be bought while at least one octahedron remains.</p><div class="effect">−1 octahedron · Level <span id="point-23-level">0</span> / 30</div></div><button id="buy-point-23" type="button" disabled>P$ 1e7000</button></article>
         </div>
         <div id="alpha-upgrades" hidden w-tid="385">
           <article class="upgrade alpha-upgrade" id="upgrade-alpha-gain" w-tid="387"><div w-tid="389"><h3 w-tid="391">1α. Alpha gain</h3><p w-tid="393">Gain alpha when bought.</p><div class="effect" w-tid="395">+<span id="alpha-gain-amount" w-tid="397">1</span> α per purchase</div></div><button id="buy-alpha-gain" type="button" w-tid="399">Gain α</button></article>
@@ -186,7 +188,7 @@ input, textarea, select {
         </div>
         <div id="epsilon-upgrades" hidden>
           <h2>The Epsilon Tree</h2>
-          <p>ε is a bonus currency. Mainline bonuses do not affect its gain. Octahedrons move every five seconds; buying an upgrade beneath one drains your ε.</p>
+          <p>ε is a bonus currency. Mainline bonuses do not affect its gain. Octahedrons move every five seconds; buying an Epsilon upgrade beneath one drains your ε.</p>
           <div class="epsilon-tree">
             <article class="upgrade epsilon-upgrade" id="upgrade-epsilon-1"><div><h3>1ε. First signal</h3><span class="epsilon-threats" data-epsilon-threats="1" aria-label="Octahedrons"></span><p>Start generating epsilon.</p><div class="effect">+0.01 ε / sec</div></div><button id="buy-epsilon-1" type="button">Free</button></article>
             <article class="upgrade epsilon-upgrade locked" id="upgrade-epsilon-2"><div><h3>2ε. Moving geometry</h3><span class="epsilon-threats" data-epsilon-threats="2" aria-label="Octahedrons"></span><p>Requires 1ε. Adds +0.01 ε / sec and summons an octahedron. Max level 1.</p><div class="effect">+0.01 ε / sec · Level <span id="epsilon-level-2">0</span> / 1</div></div><button id="buy-epsilon-2" type="button" disabled></button></article>
@@ -324,9 +326,9 @@ input, textarea, select {
             <p>Every roll: 1 shard. New face: +2 shards. Each 5 distinct faces: +5 shards and +10% positive roll rewards. Daring unlocks at 5 faces. All die progress survives prestige.</p>
             <h4>Shard workshop</h4><p>Spend shards to improve future rolls. Each upgrade has 5 levels; costs start at 5 shards and double each level.</p>
             <div class="die-workshop">
-              <article><h4>Quick tumble</h4><p>−30 seconds cooldown per level (minimum 150 seconds). Applies to future rolls.</p><button type="button" data-die-upgrade="0"></button></article>
-              <article><h4>Polished faces</h4><p>+20% positive roll rewards per level.</p><button type="button" data-die-upgrade="1"></button></article>
-              <article><h4>Cushioned landing</h4><p>−15% roll losses per level (up to 75% reduction).</p><button type="button" data-die-upgrade="2"></button></article>
+              <article id="upgrade-icosahedron-quick"><h4>Quick tumble</h4><p>−30 seconds cooldown per level (minimum 150 seconds). Applies to future rolls.</p><button type="button" data-die-upgrade="0"></button></article>
+              <article id="upgrade-icosahedron-polish"><h4>Polished faces</h4><p>+20% positive roll rewards per level.</p><button type="button" data-die-upgrade="1"></button></article>
+              <article id="upgrade-icosahedron-cushion"><h4>Cushioned landing</h4><p>−15% roll losses per level (up to 75% reduction).</p><button type="button" data-die-upgrade="2"></button></article>
             </div>
             <h4>Face collection</h4><div id="icosahedron-collection" class="die-collection"></div>
             <details><summary>All roll effects (5% each)</summary><ol id="icosahedron-effects"></ol></details>

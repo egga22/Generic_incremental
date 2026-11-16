@@ -20,13 +20,14 @@ const gt = (a, b) => D(a).gt(b);
 const gte = (a, b) => D(a).gte(b);
 const plus = (a, b) => D(a).plus(b);
 const minus = (a, b) => D(a).minus(b);
-const initialState = { balance: 0, runEarned: 0, lifetime: 0, printer: false, press: false, multiplierLevel: 0, incomeLevel: 0, powerLevel: 0, clickLevel: 0, logLevel: 0, exponentLevel: 0, exponentCapLevel: 0, capLevel: 0, tokens: 0, totalPrestiges: 0, tokenResetCount: 0, tokenMultiplierLevel: 0, discountLevel: 0, tokenBoostLevel: 0, expansionUnlocked: false, maxBuyUnlocked: false, maxBuyActive: false, tokenCreditLevel: 0, tokenDiscountLevel: 0, credits: 0, totalCreditPrestiges: 0, data: 0, totalDataPrestiges: 0, dataLore: Array(5).fill(false), gainZeroBought: false, gainZeroActive: false, priceOrigins: {}, creditEngine: false, creditExponentLevel: 0, heavyMint: false, cubeUnlocked: false, cubeLevel: 0, cubeClicks: 0, cubeTarget: 'points', freeRunUpgrades: false, passiveTokens: false, alphaUnlocked: false, alpha: 0, alphaGainPurchases: 0, alphaBoostLevel: 0, alphaCapLevel: 0, alphaNeutralBought: false, alphaGeneratorBought: false, fishingUnlocked: false, fishPoints: 0, fishGainLevel: 0, redFishLevel: 0, fishAlphaLevel: 0, garbageUnlocked: false, darkMatterUnlocked: false, darkMatter: 0, darkMatter1Bought: false, darkMatter2Bought: false, darkMatter2Level: 0, darkMatter3Bought: false, darkMatter4Bought: false, darkMatterCoinBoost: 1, darkMatterFlipTimer: 0, darkMatterFlipDuration: 1, pyramidUnlocked: false, activeChallenge: '', challengeEndsAt: 0, completedChallenges: [], creditChallengeBoost: false, automationsUnlocked: false, automationBought: Array(12).fill(false), automationActive: Array(12).fill(false), ascendance: 0, totalAscendances: 0, ascCurrencyBoost: false, ascCreditExponent: false, ascCubePowerLevel: 0, ascCubeAutoclicker: false, ascCubeAscendance: false, ascCubeAlpha: false, ascPointDiscountLevel: 0, ascTotalLevelBoost: false, ascAllCurrencyLevel: 0, ascMainlinePowerLevel: 0, scaryModeLevel: 0, scaryModeActive: true, spark: 0, sparkPrestiges: 0, sparkUpgrade1Level: 0, sparkUpgrade2Level: 0, sparkUpgrade3Level: 0, pointUpgrade16Bought: false, pointUpgrade17Bought: false, pointUpgrade18Bought: false, pointUpgrade19Bought: false, pointUpgrade20Bought: false, pointUpgrade21Bought: false, cyan13Bought: false, cyan14Level: 0, cyan15Bought: false, cyanSquareCounts: [0, 0, 0] };
+const initialState = { balance: 0, runEarned: 0, lifetime: 0, printer: false, press: false, multiplierLevel: 0, incomeLevel: 0, powerLevel: 0, clickLevel: 0, logLevel: 0, exponentLevel: 0, exponentCapLevel: 0, capLevel: 0, tokens: 0, totalPrestiges: 0, tokenResetCount: 0, tokenMultiplierLevel: 0, discountLevel: 0, tokenBoostLevel: 0, expansionUnlocked: false, maxBuyUnlocked: false, maxBuyActive: false, tokenCreditLevel: 0, tokenDiscountLevel: 0, credits: 0, totalCreditPrestiges: 0, data: 0, totalDataPrestiges: 0, dataLore: Array(5).fill(false), gainZeroBought: false, gainZeroActive: false, priceOrigins: {}, creditEngine: false, creditExponentLevel: 0, heavyMint: false, cubeUnlocked: false, cubeLevel: 0, cubeClicks: 0, cubeTarget: 'points', freeRunUpgrades: false, passiveTokens: false, alphaUnlocked: false, alpha: 0, alphaGainPurchases: 0, alphaBoostLevel: 0, alphaCapLevel: 0, alphaNeutralBought: false, alphaGeneratorBought: false, fishingUnlocked: false, fishPoints: 0, fishGainLevel: 0, redFishLevel: 0, fishAlphaLevel: 0, garbageUnlocked: false, darkMatterUnlocked: false, darkMatter: 0, darkMatter1Bought: false, darkMatter2Bought: false, darkMatter2Level: 0, darkMatter3Bought: false, darkMatter4Bought: false, darkMatterCoinBoost: 1, darkMatterFlipTimer: 0, darkMatterFlipDuration: 1, pyramidUnlocked: false, activeChallenge: '', challengeEndsAt: 0, completedChallenges: [], creditChallengeBoost: false, automationsUnlocked: false, automationBought: Array(12).fill(false), automationActive: Array(12).fill(false), ascendance: 0, totalAscendances: 0, ascCurrencyBoost: false, ascCreditExponent: false, ascCubePowerLevel: 0, ascCubeAutoclicker: false, ascCubeAscendance: false, ascCubeAlpha: false, ascPointDiscountLevel: 0, ascTotalLevelBoost: false, ascAllCurrencyLevel: 0, ascMainlinePowerLevel: 0, scaryModeLevel: 0, scaryModeActive: true, spark: 0, sparkPrestiges: 0, sparkUpgrade1Level: 0, sparkUpgrade2Level: 0, sparkUpgrade3Level: 0, pointUpgrade16Bought: false, pointUpgrade17Bought: false, pointUpgrade18Bought: false, pointUpgrade19Bought: false, pointUpgrade20Bought: false, pointUpgrade21Bought: false, pointUpgrade22Level: 0, pointUpgrade23Level: 0, cyan13Bought: false, cyan14Level: 0, cyan15Bought: false, cyanSquareCounts: [0, 0, 0] };
 Object.assign(initialState, {
   epsilon: 0, epsilonUnlocked: false, epsilonEscapeUnlocked: false,
   epsilonUpgrade1Bought: false, epsilonUpgrade2Level: 0, epsilonUpgrade3Level: 0,
   epsilonUpgrade4Level: 0, epsilonUpgrade5Level: 0, epsilonUpgrade6Level: 0,
   epsilonUpgrade7Level: 0, epsilonUpgrade8Level: 0, epsilonUpgrade9Bought: false,
   epsilonOctahedrons: [], epsilonOctahedronTimer: 0,
+  sectionOctahedrons: [], sectionOctahedronTimer: 0,
   npcProgress: [0, 0, 0], npcTalks: [0, 0, 0],
   expedition: null, expeditionSeals: 0, expeditionBest: 0, expeditionUpgrades: [0, 0, 0],
   casinoUnlocked: false,
@@ -85,10 +86,14 @@ state.automationBought = Array.from({ length: 12 }, (_, i) => Boolean(savedState
 state.automationActive = Array.from({ length: 12 }, (_, i) => Boolean(savedState.automationActive?.[i] ?? savedState.automationBought?.[i]));
 state.dataLore = Array.from({ length: 5 }, (_, i) => Boolean(savedState.dataLore?.[i]));
 state.darkMatter2Level = Math.max(0, Math.min(1000, Number(savedState.darkMatter2Level ?? (savedState.darkMatter2Bought ? 1 : 0)) || 0));
+state.pointUpgrade22Level = Number.isInteger(savedState.pointUpgrade22Level) ? Math.max(0, Math.min(2, savedState.pointUpgrade22Level)) : 0;
+state.pointUpgrade23Level = Number.isInteger(savedState.pointUpgrade23Level) ? Math.max(0, Math.min(30, savedState.pointUpgrade23Level)) : 0;
 state.darkMatterFlipDuration = Math.max(1, Number(savedState.darkMatterFlipDuration) || 1);
 state.cyanSquareCounts = Array.from({ length: 3 }, (_, i) => Math.max(0, Number(savedState.cyanSquareCounts?.[i]) || 0));
 state.epsilonOctahedrons = Array.isArray(savedState.epsilonOctahedrons) && savedState.epsilonOctahedrons.length <= 3 && savedState.epsilonOctahedrons.every(n => Number.isInteger(n) && n >= 1 && n <= 9) ? savedState.epsilonOctahedrons : [];
 state.epsilonOctahedronTimer = Number.isFinite(savedState.epsilonOctahedronTimer) && savedState.epsilonOctahedronTimer >= 0 && savedState.epsilonOctahedronTimer < 5 ? savedState.epsilonOctahedronTimer : 0;
+state.sectionOctahedrons = Array.isArray(savedState.sectionOctahedrons) && savedState.sectionOctahedrons.length <= 30 && savedState.sectionOctahedrons.every(id => typeof id === 'string' && /^upgrade-[a-z0-9-]{1,80}$/.test(id)) ? savedState.sectionOctahedrons : [];
+state.sectionOctahedronTimer = Number.isFinite(savedState.sectionOctahedronTimer) && savedState.sectionOctahedronTimer >= 0 && savedState.sectionOctahedronTimer < 5 ? savedState.sectionOctahedronTimer : 0;
 state.priceOrigins ||= {};
 if (!validExpedition(state.expedition) || (state.activeChallenge === 'expedition') !== Boolean(state.expedition)) {
   state.expedition = null;
@@ -97,6 +102,7 @@ if (!validExpedition(state.expedition) || (state.activeChallenge === 'expedition
 let toastTimer;
 let activeTab = state.epsilonUnlocked && !state.epsilonEscapeUnlocked ? 'epsilon' : 'run';
 let travelerAppears = false;
+const sectionOctahedronHits = new WeakMap();
 let fishingBiteAt = null;
 let fishingRedFish = false;
 let fishingResult = 'Ready to cast.';
@@ -180,8 +186,74 @@ function updateEpsilonOctahedrons(elapsed) {
     });
   }
 }
+function sectionUpgradeTargets() {
+  const sections = ['run-upgrades', 'token-upgrades', 'credit-upgrades', 'data-upgrades', 'spark-upgrades', 'cube-panel', 'alpha-upgrades', 'darkmatter-upgrades', 'ascendance-upgrades', 'epsilon-upgrades'];
+  return sections.flatMap(id => Array.from(document.querySelectorAll(`#${id} .upgrade[id^="upgrade-"]`)))
+    .concat(Array.from(document.querySelectorAll('#icosahedron-panel article[id^="upgrade-"]')))
+    .filter(card => card.querySelector('button[id^="buy-"], button[data-die-upgrade]'));
+}
+function sectionUpgradeCurrency(card) {
+  if (card.id.startsWith('upgrade-fish-')) return 'fishPoints';
+  const section = card.closest('#run-upgrades, #token-upgrades, #credit-upgrades, #data-upgrades, #spark-upgrades, #cube-panel, #alpha-upgrades, #darkmatter-upgrades, #ascendance-upgrades, #epsilon-upgrades, #icosahedron-panel');
+  return ({
+    'run-upgrades': 'balance', 'token-upgrades': 'tokens', 'credit-upgrades': 'credits',
+    'data-upgrades': 'data', 'spark-upgrades': 'spark', 'cube-panel': 'cubeClicks',
+    'alpha-upgrades': 'alpha', 'darkmatter-upgrades': 'darkMatter',
+    'ascendance-upgrades': 'ascendance', 'epsilon-upgrades': 'epsilon', 'icosahedron-panel': 'dieShards'
+  })[section?.id];
+}
+function syncSectionOctahedrons() {
+  const count = Math.max(0, state.pointUpgrade22Level * 15 - state.pointUpgrade23Level);
+  while (state.sectionOctahedrons.length > count) state.sectionOctahedrons.pop();
+  const targets = sectionUpgradeTargets();
+  while (state.sectionOctahedrons.length < count && targets.length) {
+    state.sectionOctahedrons.push(targets[Math.floor(Math.random() * targets.length)].id);
+  }
+  if (!count) state.sectionOctahedronTimer = 0;
+}
+function updateSectionOctahedrons(elapsed) {
+  syncSectionOctahedrons();
+  if (!state.sectionOctahedrons.length) return;
+  const targets = sectionUpgradeTargets();
+  if (!targets.length) return;
+  state.sectionOctahedronTimer += elapsed;
+  while (state.sectionOctahedronTimer >= 5) {
+    state.sectionOctahedronTimer -= 5;
+    state.sectionOctahedrons = state.sectionOctahedrons.map(current => {
+      if (targets.length < 2) return current;
+      const options = targets.filter(card => card.id !== current);
+      return options[Math.floor(Math.random() * options.length)].id;
+    });
+  }
+}
+function renderSectionOctahedrons() {
+  const counts = new Map();
+  for (const id of state.sectionOctahedrons) counts.set(id, (counts.get(id) || 0) + 1);
+  for (const card of sectionUpgradeTargets()) {
+    let marker = card.querySelector('[data-section-octahedrons]');
+    const count = counts.get(card.id) || 0;
+    if (!marker && count) {
+      marker = document.createElement('span');
+      marker.className = 'epsilon-threats';
+      marker.dataset.sectionOctahedrons = '';
+      card.querySelector('h3, h4')?.after(marker);
+    }
+    if (!marker) continue;
+    if (marker.childElementCount !== count) {
+      marker.replaceChildren(...Array.from({ length: count }, () => {
+        const octahedron = document.createElement('span');
+        octahedron.className = 'epsilon-octahedron';
+        octahedron.setAttribute('aria-hidden', 'true');
+        return octahedron;
+      }));
+    }
+    marker.hidden = count === 0;
+    marker.setAttribute('aria-label', count ? `${count} octahedron${count === 1 ? '' : 's'} targeting ${card.querySelector('h3, h4')?.textContent.trim() || card.id}` : '');
+  }
+}
 function tickEpsilon(elapsed) {
   updateEpsilonOctahedrons(elapsed);
+  updateSectionOctahedrons(elapsed);
   const earned = epsilonGainRate().times(elapsed);
   if (gt(earned, 0)) state.epsilon = plus(state.epsilon, earned);
 }
@@ -385,6 +457,7 @@ function resetCreditRun() {
   state.tokenCreditLevel = 0; state.tokenDiscountLevel = 0;
   state.maxBuyUnlocked = false; state.maxBuyActive = false;
   state.pointUpgrade16Bought = false; state.pointUpgrade17Bought = false; state.pointUpgrade18Bought = false; state.pointUpgrade19Bought = false; state.pointUpgrade20Bought = false; state.pointUpgrade21Bought = false;
+  state.pointUpgrade22Level = 0; state.pointUpgrade23Level = 0; state.sectionOctahedrons = []; state.sectionOctahedronTimer = 0;
   applyAscendanceMilestones();
   resetPriceOrigins(['multiplierLevel', 'incomeLevel', 'powerLevel', 'clickLevel', 'discountLevel', 'tokenBoostLevel', 'tokenCreditLevel', 'tokenDiscountLevel', 'exponentCapLevel', 'logLevel', 'exponentLevel', 'capLevel']);
 }
@@ -407,6 +480,7 @@ function resetAscendanceRun() {
   state.cubeLevel = 0; state.cubeClicks = D(0); state.cubeTarget = 'points';
   state.freeRunUpgrades = false; state.passiveTokens = false;
   state.pointUpgrade16Bought = false; state.pointUpgrade17Bought = false; state.pointUpgrade18Bought = false; state.pointUpgrade19Bought = false; state.pointUpgrade20Bought = false; state.pointUpgrade21Bought = false;
+  state.pointUpgrade22Level = 0; state.pointUpgrade23Level = 0; state.sectionOctahedrons = []; state.sectionOctahedronTimer = 0;
   state.activeChallenge = ''; state.challengeEndsAt = 0; state.creditChallengeBoost = false;
   state.automationsUnlocked = false; state.automationBought = Array(12).fill(false);
   state.automationActive = Array(12).fill(false);
@@ -454,7 +528,10 @@ function cubeMultiplier(target) {
 }
 function cubeClickPower() { return 2 ** state.ascCubePowerLevel; }
 function cubeClickGain() { return D(cubeClickPower()).times(applyCurrencyGain(1)); }
-function ascendanceGain(amount) { return state.gainZeroActive ? D(0) : softenGain(D(amount).times(cubeMultiplier('ascendance')), 'ascendance'); }
+function ascendanceGain(amount) {
+  const exponent = D(1.2).pow(state.pointUpgrade22Level);
+  return state.gainZeroActive ? D(0) : softenGain(D(amount).pow(exponent).times(cubeMultiplier('ascendance')), 'ascendance');
+}
 function addCubeClicks(amount) {
   state.cubeClicks = plus(state.cubeClicks, amount);
   while (gte(state.cubeClicks, cubeNextCost())) {
@@ -489,8 +566,18 @@ function capCost(level = state.capLevel) { return pointCost(D('5e8').times(D(1.5
 function ascPointDiscountCost(level = state.ascPointDiscountLevel) { return D('1e300').times(D(1.5).pow(level)); }
 function ascAllCurrencyCost(level = state.ascAllCurrencyLevel) { return D('1e12').times(D(10).pow(level)); }
 function ascMainlinePowerCost(level = state.ascMainlinePowerLevel) { return D('1e600').times(D(1e6).pow(level)); }
-function highPointUpgradeReady(index) { return index === 16 ? state.expansionUnlocked : state[`pointUpgrade${index - 1}Bought`]; }
-function highPointUpgradeCost(index) { return pointCost(D(['1e180','1e200','1e220','1e240','1e260','1e280'][index - 16])); }
+function highPointUpgradeReady(index) {
+  if (index === 16) return state.expansionUnlocked;
+  if (index === 22) return state.pointUpgrade21Bought && state.expansionUnlocked && state.ascCurrencyBoost && state.epsilonUpgrade9Bought;
+  if (index === 23) return state.pointUpgrade22Level > 0;
+  return state[`pointUpgrade${index - 1}Bought`];
+}
+function highPointUpgradeCost(index) {
+  const cost = index === 22
+    ? state.pointUpgrade22Level === 0 ? '1e3000' : '1e5000'
+    : index === 23 ? '1e7000' : ['1e180','1e200','1e220','1e240','1e260','1e280'][index - 16];
+  return pointCost(D(cost));
+}
 function sparkPrestigeCost() { return pointCost(SPARK_PRESTIGE_COST); }
 function sparkReward(balance) { const ratio = D(balance).div(sparkPrestigeCost()); return ratio.lt(1) ? D(0) : softenGain(ratio.log10().floor().plus(1), 'spark'); }
 function sparkUpgradeCost(index, level = state[`sparkUpgrade${index}Level`]) { const base = [0, 1, 10, 100][index]; const growth = [0, 1.5, 2, 3][index]; return D(base).times(D(growth).pow(level)); }
@@ -997,6 +1084,7 @@ function renderPrestigeProgress(fraction) {
 
 function render() {
   if (state.epsilonUnlocked && !state.epsilonEscapeUnlocked) activeTab = 'epsilon';
+  syncSectionOctahedrons();
   document.getElementById('scary-overlay').hidden = !state.scaryModeLevel || !state.scaryModeActive;
   document.getElementById('scary-mode-setting').hidden = !state.scaryModeLevel;
   document.getElementById('scary-mode').checked = state.scaryModeActive;
@@ -1132,16 +1220,19 @@ function render() {
     card.classList.toggle('locked', !available);
   }
   document.querySelector('#asc-point-discount-level').textContent = state.ascPointDiscountLevel;
-  for (let i = 16; i <= 21; i += 1) {
-    const bought = state[`pointUpgrade${i}Bought`];
+  for (let i = 16; i <= 23; i += 1) {
+    const level = i === 22 ? state.pointUpgrade22Level : i === 23 ? state.pointUpgrade23Level : Number(state[`pointUpgrade${i}Bought`]);
+    const max = i === 22 ? 2 : i === 23 ? 30 : 1;
     const cost = highPointUpgradeCost(i);
     const button = document.querySelector(`#buy-point-${i}`);
-    button.disabled = !highPointUpgradeReady(i) || bought || lt(state.balance, cost);
-    button.textContent = bought ? 'Bought' : `P$ ${fmt(cost)}`;
+    button.disabled = !highPointUpgradeReady(i) || level >= max || i === 23 && !state.sectionOctahedrons.length || lt(state.balance, cost);
+    button.textContent = level >= max ? (i === 22 || i === 23 ? 'MAX LEVEL' : 'Bought') : i === 23 && !state.sectionOctahedrons.length ? 'No octahedrons' : `P$ ${fmt(cost)}`;
     const card = document.querySelector(`#upgrade-point-${i}`);
-    card.hidden = !highPointUpgradeReady(i) && !bought;
+    card.hidden = !highPointUpgradeReady(i) && level === 0;
     card.classList.toggle('locked', !highPointUpgradeReady(i));
   }
+  document.querySelector('#point-22-level').textContent = state.pointUpgrade22Level;
+  document.querySelector('#point-23-level').textContent = state.pointUpgrade23Level;
   for (let i = 0; i < 3; i += 1) {
     const button = document.querySelector(`#buy-cyan-${13 + i}`);
     const level = i === 1 ? state.cyan14Level : i === 0 ? Number(state.cyan13Bought) : Number(state.cyan15Bought);
@@ -1283,6 +1374,7 @@ function render() {
     marker.innerHTML = threats.map(({ index }) => `<span class="epsilon-octahedron${index === 1 ? ' dim' : ''}" aria-hidden="true"></span>`).join('');
     marker.setAttribute('aria-label', threats.length ? `${threats.length} octahedron${threats.length === 1 ? '' : 's'} targeting upgrade ${upgrade}ε` : '');
   });
+  renderSectionOctahedrons();
   for (let index = 1; index <= 9; index += 1) {
     const level = epsilonUpgradeLevel(index);
     const cost = epsilonUpgradeCost(index);
@@ -1431,6 +1523,20 @@ for (const [tab, upgrades] of Object.entries(levelUpgrades)) {
   }
 }
 
+document.addEventListener('click', event => {
+  const button = event.target?.closest?.('button[id^="buy-"], button[data-die-upgrade]');
+  const card = button?.closest('[id^="upgrade-"]');
+  const currency = card && state.sectionOctahedrons.includes(card.id) ? sectionUpgradeCurrency(card) : null;
+  if (currency) sectionOctahedronHits.set(event, currency);
+}, true);
+document.addEventListener('click', event => {
+  const currency = sectionOctahedronHits.get(event);
+  if (!currency) return;
+  state[currency] = CURRENCY_KEYS.includes(currency) ? D(0) : 0;
+  const names = { balance: 'P$', tokens: 'tokens', credits: 'C$', data: '𝔻', spark: '⊹', cubeClicks: 'CC', alpha: 'α', darkMatter: '⊠', ascendance: 'ᛥ', epsilon: 'ε', fishPoints: '🐟', dieShards: 'shards' };
+  toast(`Octahedron hit · ${names[currency] || currency} reset to 0`);
+  render(); save();
+});
 setupAutomationCards();
 for (let i = 0; i < 12; i += 1) {
   const index = i;
@@ -1497,12 +1603,23 @@ document.querySelector('#buy-automation-unlock').addEventListener('click', () =>
   state.automationsUnlocked = true;
   toast(state.cyan13Bought ? 'Automations unlocked for free' : 'Automations unlocked'); render(); save();
 });
-for (let i = 3; i < 9; i += 1) {
-  const upgradeNumber = i + 13;
+for (let upgradeNumber = 16; upgradeNumber <= 23; upgradeNumber += 1) {
   document.querySelector(`#buy-point-${upgradeNumber}`).addEventListener('click', () => {
     const cost = highPointUpgradeCost(upgradeNumber);
-    if (!highPointUpgradeReady(upgradeNumber) || state[`pointUpgrade${upgradeNumber}Bought`] || lt(state.balance, cost)) return;
-    purchase(cost, () => { state[`pointUpgrade${upgradeNumber}Bought`] = true; }, `Upgrade ${upgradeNumber} bought`);
+    const level = upgradeNumber === 22 ? state.pointUpgrade22Level : upgradeNumber === 23 ? state.pointUpgrade23Level : Number(state[`pointUpgrade${upgradeNumber}Bought`]);
+    const max = upgradeNumber === 22 ? 2 : upgradeNumber === 23 ? 30 : 1;
+    if (!highPointUpgradeReady(upgradeNumber) || level >= max || upgradeNumber === 23 && !state.sectionOctahedrons.length || lt(state.balance, cost)) return;
+    purchase(cost, () => {
+      if (upgradeNumber === 22) {
+        state.pointUpgrade22Level += 1;
+        syncSectionOctahedrons();
+      } else if (upgradeNumber === 23) {
+        state.pointUpgrade23Level += 1;
+        syncSectionOctahedrons();
+      } else state[`pointUpgrade${upgradeNumber}Bought`] = true;
+    }, upgradeNumber === 22 ? `Upgrade 22 level ${state.pointUpgrade22Level + 1} bought · 15 octahedrons released`
+      : upgradeNumber === 23 ? `Upgrade 23 level ${state.pointUpgrade23Level + 1} bought · one octahedron removed`
+        : `Upgrade ${upgradeNumber} bought`);
     save();
   });
 }
@@ -1757,6 +1874,7 @@ function performTokenPrestige() {
   state.exponentCapLevel = 0;
   state.capLevel = 0;
   state.pointUpgrade16Bought = false; state.pointUpgrade17Bought = false; state.pointUpgrade18Bought = false; state.pointUpgrade19Bought = false; state.pointUpgrade20Bought = false; state.pointUpgrade21Bought = false;
+  state.pointUpgrade22Level = 0; state.pointUpgrade23Level = 0; state.sectionOctahedrons = []; state.sectionOctahedronTimer = 0;
   resetPriceOrigins(['multiplierLevel', 'incomeLevel', 'powerLevel', 'clickLevel', 'logLevel', 'exponentLevel', 'exponentCapLevel', 'capLevel']);
   applyAscendanceMilestones();
   toast(`Fresh start. +${fmt(reward)} tokens earned!`);
@@ -2481,6 +2599,10 @@ function isValidSave(snapshot) {
     }
     if (key === 'epsilonOctahedrons') return Array.isArray(value) && value.length <= 3 && value.every(n => Number.isInteger(n) && n >= 1 && n <= 9);
     if (key === 'epsilonOctahedronTimer') return Number.isFinite(value) && value >= 0 && value < 5;
+    if (key === 'sectionOctahedrons') return Array.isArray(value) && value.length <= 30 && value.every(id => typeof id === 'string' && /^upgrade-[a-z0-9-]{1,80}$/.test(id));
+    if (key === 'sectionOctahedronTimer') return Number.isFinite(value) && value >= 0 && value < 5;
+    if (key === 'pointUpgrade22Level') return Number.isInteger(value) && value >= 0 && value <= 2;
+    if (key === 'pointUpgrade23Level') return Number.isInteger(value) && value >= 0 && value <= 30;
     if (key.startsWith('epsilonUpgrade') && key.endsWith('Level')) {
       const index = Number(key.match(/\d+/)?.[0]);
       return Number.isInteger(value) && value >= 0 && value <= EPSILON_UPGRADE_MAX[index];
