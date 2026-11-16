@@ -20,7 +20,7 @@ const gt = (a, b) => D(a).gt(b);
 const gte = (a, b) => D(a).gte(b);
 const plus = (a, b) => D(a).plus(b);
 const minus = (a, b) => D(a).minus(b);
-const initialState = { balance: 0, runEarned: 0, lifetime: 0, printer: false, press: false, multiplierLevel: 0, incomeLevel: 0, powerLevel: 0, clickLevel: 0, logLevel: 0, exponentLevel: 0, exponentCapLevel: 0, capLevel: 0, tokens: 0, totalPrestiges: 0, tokenResetCount: 0, tokenMultiplierLevel: 0, discountLevel: 0, tokenBoostLevel: 0, expansionUnlocked: false, maxBuyUnlocked: false, maxBuyActive: false, tokenCreditLevel: 0, tokenDiscountLevel: 0, credits: 0, totalCreditPrestiges: 0, data: 0, totalDataPrestiges: 0, dataLore: Array(5).fill(false), gainZeroBought: false, gainZeroActive: false, priceOrigins: {}, creditEngine: false, creditExponentLevel: 0, heavyMint: false, cubeUnlocked: false, cubeLevel: 0, cubeClicks: 0, cubeTarget: 'points', freeRunUpgrades: false, passiveTokens: false, alphaUnlocked: false, alpha: 0, alphaGainPurchases: 0, alphaBoostLevel: 0, alphaCapLevel: 0, alphaNeutralBought: false, alphaGeneratorBought: false, fishingUnlocked: false, fishPoints: 0, fishGainLevel: 0, redFishLevel: 0, fishAlphaLevel: 0, garbageUnlocked: false, darkMatterUnlocked: false, darkMatter: 0, darkMatter1Bought: false, darkMatter2Bought: false, darkMatter2Level: 0, darkMatter3Bought: false, darkMatter4Bought: false, darkMatterCoinBoost: 1, darkMatterFlipTimer: 0, darkMatterFlipDuration: 1, pyramidUnlocked: false, activeChallenge: '', challengeEndsAt: 0, completedChallenges: [], creditChallengeBoost: false, automationsUnlocked: false, automationBought: Array(12).fill(false), automationActive: Array(12).fill(false), ascendance: 0, totalAscendances: 0, ascCurrencyBoost: false, ascCreditExponent: false, ascCubePowerLevel: 0, ascCubeAutoclicker: false, ascCubeAscendance: false, ascCubeAlpha: false, ascPointDiscountLevel: 0, ascTotalLevelBoost: false, ascAllCurrencyLevel: 0, ascMainlinePowerLevel: 0, scaryModeLevel: 0, scaryModeActive: true, spark: 0, sparkPrestiges: 0, sparkUpgrade1Level: 0, sparkUpgrade2Level: 0, sparkUpgrade3Level: 0, pointUpgrade16Bought: false, pointUpgrade17Bought: false, pointUpgrade18Bought: false, pointUpgrade19Bought: false, pointUpgrade20Bought: false, pointUpgrade21Bought: false, pointUpgrade22Level: 0, pointUpgrade23Level: 0, cyan13Bought: false, cyan14Level: 0, cyan15Bought: false, cyanSquareCounts: [0, 0, 0] };
+const initialState = { balance: 0, runEarned: 0, lifetime: 0, printer: false, press: false, multiplierLevel: 0, incomeLevel: 0, powerLevel: 0, clickLevel: 0, logLevel: 0, exponentLevel: 0, exponentCapLevel: 0, capLevel: 0, tokens: 0, totalPrestiges: 0, tokenResetCount: 0, tokenMultiplierLevel: 0, discountLevel: 0, tokenBoostLevel: 0, expansionUnlocked: false, maxBuyUnlocked: false, maxBuyActive: false, tokenCreditLevel: 0, tokenDiscountLevel: 0, credits: 0, totalCreditPrestiges: 0, data: 0, totalDataPrestiges: 0, dataLore: Array(5).fill(false), gainZeroBought: false, gainZeroActive: false, priceOrigins: {}, creditEngine: false, creditExponentLevel: 0, heavyMint: false, cubeUnlocked: false, cubeLevel: 0, cubeClicks: 0, cubeTarget: 'points', freeRunUpgrades: false, passiveTokens: false, alphaUnlocked: false, alpha: 0, alphaGainPurchases: 0, alphaBoostLevel: 0, alphaCapLevel: 0, alphaNeutralBought: false, alphaGeneratorBought: false, alphaButtonNamesBought: false, alphaWobbleBought: false, alphaPowerOneBought: false, alphaBouncyBallBought: false, fishingUnlocked: false, fishPoints: 0, fishGainLevel: 0, redFishLevel: 0, fishAlphaLevel: 0, garbageUnlocked: false, darkMatterUnlocked: false, darkMatter: 0, darkMatter1Bought: false, darkMatter2Bought: false, darkMatter2Level: 0, darkMatter3Bought: false, darkMatter4Bought: false, darkMatterCoinBoost: 1, darkMatterFlipTimer: 0, darkMatterFlipDuration: 1, pyramidUnlocked: false, activeChallenge: '', challengeEndsAt: 0, completedChallenges: [], creditChallengeBoost: false, automationsUnlocked: false, automationBought: Array(12).fill(false), automationActive: Array(12).fill(false), ascendance: 0, totalAscendances: 0, ascCurrencyBoost: false, ascCreditExponent: false, ascCubePowerLevel: 0, ascCubeAutoclicker: false, ascCubeAscendance: false, ascCubeAlpha: false, ascPointDiscountLevel: 0, ascTotalLevelBoost: false, ascAllCurrencyLevel: 0, ascMainlinePowerLevel: 0, scaryModeLevel: 0, scaryModeActive: true, spark: 0, sparkPrestiges: 0, sparkUpgrade1Level: 0, sparkUpgrade2Level: 0, sparkUpgrade3Level: 0, pointUpgrade16Bought: false, pointUpgrade17Bought: false, pointUpgrade18Bought: false, pointUpgrade19Bought: false, pointUpgrade20Bought: false, pointUpgrade21Bought: false, pointUpgrade22Level: 0, pointUpgrade23Level: 0, cyan13Bought: false, cyan14Level: 0, cyan15Bought: false, cyanSquareCounts: [0, 0, 0] };
 Object.assign(initialState, {
   epsilon: 0, epsilonUnlocked: false, epsilonEscapeUnlocked: false,
   epsilonUpgrade1Bought: false, epsilonUpgrade2Level: 0, epsilonUpgrade3Level: 0,
@@ -103,6 +103,8 @@ let toastTimer;
 let activeTab = state.epsilonUnlocked && !state.epsilonEscapeUnlocked ? 'epsilon' : 'run';
 let travelerAppears = false;
 const sectionOctahedronHits = new WeakMap();
+const sillyButtonLabels = new Map();
+const alphaBall = { x: 0, y: 0, vx: 210, vy: 170, initialized: false };
 let fishingBiteAt = null;
 let fishingRedFish = false;
 let fishingResult = 'Ready to cast.';
@@ -251,6 +253,78 @@ function renderSectionOctahedrons() {
     marker.setAttribute('aria-label', count ? `${count} octahedron${count === 1 ? '' : 's'} targeting ${card.querySelector('h3, h4')?.textContent.trim() || card.id}` : '');
   }
 }
+function restoreSillyButtonLabels() {
+  for (const [button, original] of sillyButtonLabels) {
+    if (!button.isConnected) continue;
+    button.innerHTML = original.html;
+    if (original.ariaLabel === null) button.removeAttribute('aria-label');
+    else button.setAttribute('aria-label', original.ariaLabel);
+  }
+  sillyButtonLabels.clear();
+}
+function applyAlphaButtonNames() {
+  document.body.classList.toggle('alpha-wobble', state.alphaWobbleBought);
+  if (!state.alphaButtonNamesBought) return;
+  const names = ['Bonk', 'Boop', 'Poke', 'Clicky', 'Absolutely not'];
+  const cycle = Math.floor(Date.now() / 5000);
+  Array.from(document.querySelectorAll('button:not(.tab)')).forEach((button, index) => {
+    if (button.children.length) return;
+    const text = button.textContent.trim();
+    if (!text) return;
+    sillyButtonLabels.set(button, { html: button.innerHTML, ariaLabel: button.getAttribute('aria-label') });
+    if (!button.hasAttribute('aria-label')) button.setAttribute('aria-label', text);
+    button.textContent = names[(cycle + index) % names.length];
+  });
+}
+function updateAlphaBouncyBall(elapsed = 0) {
+  const ball = document.querySelector('#alpha-bouncy-ball');
+  if (!state.alphaBouncyBallBought || activeTab !== 'alpha') {
+    ball.hidden = true;
+    return;
+  }
+  ball.hidden = false;
+  const size = 24;
+  const maxX = Math.max(0, window.innerWidth - size);
+  const maxY = Math.max(0, window.innerHeight - size);
+  if (!alphaBall.initialized) {
+    alphaBall.x = maxX / 2;
+    alphaBall.y = maxY / 2;
+    alphaBall.initialized = true;
+  }
+  const steps = Math.max(1, Math.ceil(Math.min(elapsed, 1) * 60));
+  const step = Math.min(elapsed, 1) / steps;
+  for (let i = 0; i < steps; i += 1) {
+    let nextX = alphaBall.x + alphaBall.vx * step;
+    let nextY = alphaBall.y + alphaBall.vy * step;
+    if (nextX < 0 || nextX > maxX) {
+      alphaBall.vx *= -1;
+      nextX = Math.max(0, Math.min(maxX, nextX));
+    }
+    if (nextY < 0 || nextY > maxY) {
+      alphaBall.vy *= -1;
+      nextY = Math.max(0, Math.min(maxY, nextY));
+    }
+    for (const upgrade of document.querySelectorAll('.upgrade')) {
+      if (!upgrade.getClientRects().length) continue;
+      const rect = upgrade.getBoundingClientRect();
+      const overlapX = Math.min(nextX + size, rect.right) - Math.max(nextX, rect.left);
+      const overlapY = Math.min(nextY + size, rect.bottom) - Math.max(nextY, rect.top);
+      if (overlapX <= 0 || overlapY <= 0) continue;
+      if (overlapX < overlapY) {
+        alphaBall.vx *= -1;
+        nextX = alphaBall.x < rect.left ? rect.left - size : rect.right;
+      } else {
+        alphaBall.vy *= -1;
+        nextY = alphaBall.y < rect.top ? rect.top - size : rect.bottom;
+      }
+      break;
+    }
+    alphaBall.x = Math.max(0, Math.min(maxX, nextX));
+    alphaBall.y = Math.max(0, Math.min(maxY, nextY));
+  }
+  ball.style.left = `${alphaBall.x}px`;
+  ball.style.top = `${alphaBall.y}px`;
+}
 function tickEpsilon(elapsed) {
   updateEpsilonOctahedrons(elapsed);
   updateSectionOctahedrons(elapsed);
@@ -293,7 +367,8 @@ function fishAlphaMultiplier() {
   return state.fishAlphaLevel ? state.fishPoints.div(50).plus(1) : D(1);
 }
 function applyAlphaGain(amount) {
-  return state.gainZeroActive ? D(0) : D(amount).times(fishAlphaMultiplier());
+  const gain = state.gainZeroActive ? D(0) : D(amount).times(fishAlphaMultiplier());
+  return state.alphaPowerOneBought ? gain.pow(1) : gain;
 }
 function pointCost(amount) { return D(amount).div(D(2).pow(state.ascPointDiscountLevel || 0)); }
 function priceLevel(key, level) { return Math.max(0, level - (state.priceOrigins?.[key] || 0)); }
@@ -745,6 +820,12 @@ function playBlackjack(action) {
 
 function alphaBoostPrice() { return D(25).times(D(1.5).pow(priceLevel('alphaBoostLevel', state.alphaBoostLevel))).ceil(); }
 function alphaCapPrice() { return D(100).times(D(1.5).pow(priceLevel('alphaCapLevel', state.alphaCapLevel))).ceil(); }
+const ALPHA_SILLY_UPGRADES = [
+  { id: 'button-names', key: 'alphaButtonNamesBought', cost: 10 },
+  { id: 'wobble', key: 'alphaWobbleBought', cost: 20 },
+  { id: 'power-one', key: 'alphaPowerOneBought', cost: 50 },
+  { id: 'bouncy-ball', key: 'alphaBouncyBallBought', cost: 100 }
+];
 function darkMatterRate() { return !state.gainZeroActive && state.darkMatter1Bought ? D(0.1).times(D(2).pow(state.darkMatter2Level)).times(state.darkMatter3Bought ? state.darkMatterCoinBoost : 1) : D(0); }
 function automationCost(index) { return 1e30 * (index + 1); }
 function automationPrerequisite(index) {
@@ -1084,6 +1165,7 @@ function renderPrestigeProgress(fraction) {
 
 function render() {
   if (state.epsilonUnlocked && !state.epsilonEscapeUnlocked) activeTab = 'epsilon';
+  restoreSillyButtonLabels();
   syncSectionOctahedrons();
   document.getElementById('scary-overlay').hidden = !state.scaryModeLevel || !state.scaryModeActive;
   document.getElementById('scary-mode-setting').hidden = !state.scaryModeLevel;
@@ -1336,6 +1418,17 @@ function render() {
   alphaCap.textContent = `${fmt(alphaCapCost)} α`;
   document.querySelector('#upgrade-alpha-cap').classList.toggle('locked', !state.alphaUnlocked || state.alphaBoostLevel < 1);
   document.querySelector('#upgrade-alpha-cap').hidden = state.alphaBoostLevel < 1;
+  for (const upgrade of ALPHA_SILLY_UPGRADES) {
+    const bought = state[upgrade.key];
+    const card = document.querySelector(`#upgrade-alpha-${upgrade.id}`);
+    const button = document.querySelector(`#buy-alpha-${upgrade.id}`);
+    const available = state.alphaGainPurchases > 0;
+    card.hidden = !available && !bought;
+    card.classList.toggle('locked', !available);
+    button.disabled = !available || bought || lt(state.alpha, upgrade.cost);
+    button.textContent = bought ? 'Bought' : `${fmt(upgrade.cost)} α`;
+  }
+  updateAlphaBouncyBall(0);
   document.querySelector('#buy-alpha-joke').textContent = `${fmt(state.alpha.times(1.5).ceil().max(1))} α`;
   const alphaGenerator = document.querySelector('#buy-alpha-generator');
   alphaGenerator.disabled = !state.alphaUnlocked || state.alphaGeneratorBought || lt(state.alpha, 10);
@@ -1506,6 +1599,7 @@ function render() {
     document.getElementById('credit-prestige-label').textContent = state.expedition.room ? `Clear room · ${fmt(expeditionGoal())} tokens · No credits` : 'Choose the next route or bank treasure';
   }
   document.querySelector('#ascendance-prestige-label').textContent = gte(state.credits, ascendanceCost) ? `Ascend · +${fmt(ascendanceGain(ascendanceEarned))} ᛥ` : 'C$ 1e250 for 1 ᛥ';
+  applyAlphaButtonNames();
 }
 
 for (const [tab, upgrades] of Object.entries(levelUpgrades)) {
@@ -1660,6 +1754,16 @@ document.querySelector('#buy-alpha-generator').addEventListener('click', () => {
 document.querySelector('#buy-alpha-boost').addEventListener('click', () => { const cost = alphaBoostPrice(); if (!state.alphaUnlocked || state.alphaBoostLevel >= 50 || lt(state.alpha, cost)) return; changeAlpha(cost.neg()); state.alphaBoostLevel += 1; toast('Alpha gain increased'); render(); save(); });
 document.querySelector('#buy-alpha-neutral').addEventListener('click', () => { if (!state.alphaUnlocked || state.alphaBoostLevel < 1 || state.alphaNeutralBought) return; const gain = applyAlphaGain(5).times(cubeMultiplier('alpha')); changeAlpha(gain); state.alphaNeutralBought = true; toast(`+${fmt(gain)} α · Neutral multiplier bought`); render(); save(); });
 document.querySelector('#buy-alpha-cap').addEventListener('click', () => { const cost = alphaCapPrice(); if (!state.alphaUnlocked || state.alphaBoostLevel < 1 || lt(state.alpha, cost)) return; changeAlpha(cost.neg()); state.alphaCapLevel += 1; toast('2α max level increased by 2'); render(); save(); });
+for (const upgrade of ALPHA_SILLY_UPGRADES) {
+  document.querySelector(`#buy-alpha-${upgrade.id}`).addEventListener('click', () => {
+    if (!state.alphaUnlocked || !state.alphaGainPurchases || state[upgrade.key] || lt(state.alpha, upgrade.cost)) return;
+    changeAlpha(D(upgrade.cost).neg());
+    state[upgrade.key] = true;
+    if (upgrade.key === 'alphaBouncyBallBought') alphaBall.initialized = false;
+    toast(`Alpha upgrade bought · ${upgrade.id}`);
+    render(); save();
+  });
+}
 document.querySelector('#buy-fishing').addEventListener('click', () => {
   if (!state.alphaUnlocked || state.fishingUnlocked || lt(state.alpha, FISHING_COST)) return;
   changeAlpha(D(FISHING_COST).neg());
@@ -2541,6 +2645,7 @@ setInterval(() => {
   const elapsed = Math.max(0, (now - lastTick) / 1000);
   lastTick = now;
   tickEpsilon(elapsed);
+  updateAlphaBouncyBall(elapsed);
   runAutomations();
   if (state.researchBranch === 'automation') for (let i = 0; i < state.researchLevel; i++) runAutomations();
   runPresetResets(now);

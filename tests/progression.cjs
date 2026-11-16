@@ -12,7 +12,7 @@ context.clearTimeout = () => {};
 vm.runInContext('(function(){' + fs.readFileSync('break_eternity.js','utf8').replace(/export \{[\s\S]*?\};/, 'globalThis.Decimal = y;') + '})();', context);
 let source = fs.readFileSync('game.js','utf8').replace("import Decimal from './break_eternity.js';",'');
 source += `
-globalThis.testAPI = {get state(){return state}, D, rate, saleGain, applyCurrencyGain, epsilonGainRate, tickEpsilon, ascendanceGain, highPointUpgradeCost, highPointUpgradeReady, updateSectionOctahedrons, kirbyBonus, feedKirby, tokenReward, creditMultiplier, challengeExponent, challengeDuration, challengeGainMultiplier, resetAscendanceRun, resetCreditRun, runAutomations, runPresetResets, presetAllowsPurchase, isValidSave, serializeState, render, checkAchievements, recordFortuneRitual, spinFortune, bankFortune, fortuneUsed, fortuneCapacity, fortuneSegments, clearFortuneChain, updateFortuneProgress};`;
+globalThis.testAPI = {get state(){return state}, D, rate, saleGain, applyCurrencyGain, applyAlphaGain, epsilonGainRate, tickEpsilon, ascendanceGain, highPointUpgradeCost, highPointUpgradeReady, updateSectionOctahedrons, updateAlphaBouncyBall, kirbyBonus, feedKirby, tokenReward, creditMultiplier, challengeExponent, challengeDuration, challengeGainMultiplier, resetAscendanceRun, resetCreditRun, runAutomations, runPresetResets, presetAllowsPurchase, isValidSave, serializeState, render, checkAchievements, recordFortuneRitual, spinFortune, bankFortune, fortuneUsed, fortuneCapacity, fortuneSegments, clearFortuneChain, updateFortuneProgress};`;
 vm.runInContext(source, context);
 const a = context.testAPI, s = a.state, doc = dom.window.document;
 assert(a.isValidSave(JSON.parse(a.serializeState())), 'fresh save round trip');
@@ -835,3 +835,39 @@ assert(!a.isValidSave({balance:0,runEarned:0,epsilonUpgrade7Level:6}));
 context.Math.random = originalRandom;
 Object.assign(ns, beforeNPCs);
 console.log('NPC and Epsilon checks passed: traveler odds, tree access, epsilon gain, moving hazards, upgrade gates, escape, and saves.');
+
+// Silly Alpha upgrades require 1α and stay scoped to the Alpha section.
+const alphaSillyState=a.state;
+const alphaSillyBefore={...alphaSillyState,alphaTerms:alphaSillyState.alphaTerms ? {...alphaSillyState.alphaTerms} : null};
+const priorTab=vm.runInContext('activeTab',context);
+Object.assign(alphaSillyState,{
+ alphaUnlocked:true,alphaGainPurchases:0,alpha:a.D(500),alphaTerms:null,
+ alphaButtonNamesBought:false,alphaWobbleBought:false,alphaPowerOneBought:false,alphaBouncyBallBought:false
+});
+vm.runInContext("activeTab='alpha'",context); a.render();
+const sillyIds=['button-names','wobble','power-one','bouncy-ball'];
+for(const id of sillyIds) assert(doc.getElementById(`upgrade-alpha-${id}`).hidden,`${id} waits for 1α`);
+alphaSillyState.alphaGainPurchases=1; a.render();
+for(const id of sillyIds) assert(!doc.getElementById(`upgrade-alpha-${id}`).hidden,`${id} unlocks after 1α`);
+doc.getElementById('buy-alpha-button-names').click();
+assert(alphaSillyState.alphaButtonNamesBought);
+assert(['Bonk','Boop','Poke','Clicky','Absolutely not'].includes(doc.getElementById('work-button').textContent));
+assert(doc.getElementById('work-button').getAttribute('aria-label'),'renamed buttons retain an accessible name');
+doc.getElementById('buy-alpha-wobble').click();
+assert(alphaSillyState.alphaWobbleBought && doc.body.classList.contains('alpha-wobble'));
+doc.getElementById('buy-alpha-power-one').click();
+assert(alphaSillyState.alphaPowerOneBought);
+assert(a.applyAlphaGain(3).eq(3),'the exponent-one upgrade deliberately leaves Alpha gain unchanged');
+doc.getElementById('buy-alpha-bouncy-ball').click();
+const alphaBallElement=doc.getElementById('alpha-bouncy-ball');
+assert(alphaSillyState.alphaBouncyBallBought && !alphaBallElement.hidden);
+vm.runInContext("activeTab='run'",context); a.render();
+assert(alphaBallElement.hidden,'the bouncing ball is hidden outside the Alpha section');
+vm.runInContext("activeTab='alpha'; alphaBall.x=3; alphaBall.y=100; alphaBall.vx=210; alphaBall.vy=0; alphaBall.initialized=true",context);
+Object.defineProperty(dom.window,'innerWidth',{configurable:true,value:30});
+a.updateAlphaBouncyBall(.1);
+assert(Number.parseFloat(alphaBallElement.style.left)<=6,'the ball stays inside the viewport edge');
+assert(vm.runInContext('alphaBall.vx < 0',context),'the ball bounces off the viewport edge');
+assert(a.isValidSave(JSON.parse(a.serializeState())),'silly Alpha upgrades persist in saves');
+Object.assign(alphaSillyState,alphaSillyBefore); vm.runInContext(`activeTab=${JSON.stringify(priorTab)}`,context); a.render();
+console.log('Silly Alpha upgrades passed: prerequisites, effects, ball movement, visibility and saves.');
