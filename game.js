@@ -794,6 +794,12 @@ function levelPrice(currency, amount) {
 function renderLevelUpgrades() {
   const currency = upgradeCurrencies[activeTab];
   const maxBuy = state.maxBuyUnlocked && state.maxBuyActive;
+  for (const upgrades of Object.values(levelUpgrades)) {
+    for (const [id, upgrade] of Object.entries(upgrades)) {
+      const ready = upgrade.ready?.() ?? true;
+      document.querySelector(`#upgrade-${id}`).hidden = !ready && state[upgrade.key] === 0;
+    }
+  }
   for (const [id, upgrade] of Object.entries(levelUpgrades[activeTab] ?? {})) {
     const button = document.querySelector(`#buy-${id}`);
     const level = state[upgrade.key];
@@ -1099,12 +1105,14 @@ function render() {
   const asc2 = document.querySelector('#buy-asc-2');
   asc2.disabled = !asc2Ready || state.ascCreditExponent;
   asc2.textContent = state.ascCreditExponent ? 'Bought' : 'Free';
+  document.querySelector('#upgrade-asc-2').hidden = !asc2Ready && !state.ascCreditExponent;
   document.querySelector('#upgrade-asc-2').classList.toggle('locked', !asc2Ready);
   document.querySelector('#asc-cube-power').textContent = cubeClickPower();
   document.querySelector('#asc-cube-power-level').textContent = state.ascCubePowerLevel;
   const asc7 = document.querySelector('#buy-asc-7');
   asc7.disabled = !state.ascCreditExponent || state.ascTotalLevelBoost || lt(state.ascendance, '1e10');
   asc7.textContent = state.ascTotalLevelBoost ? 'Bought' : '1e10 ᛥ';
+  document.querySelector('#upgrade-asc-7').hidden = !state.ascCreditExponent && !state.ascTotalLevelBoost;
   document.querySelector('#upgrade-asc-7').classList.toggle('locked', !state.ascCreditExponent);
   document.querySelector('#asc-total-level-multiplier').textContent = fmt(D(totalUpgradeLevels()).max(1));
   document.querySelector('#asc-all-currency-level').textContent = state.ascAllCurrencyLevel;
@@ -1119,7 +1127,9 @@ function render() {
     const button = document.querySelector(`#buy-asc-${id}`);
     button.disabled = !available || bought;
     button.textContent = bought ? 'Bought' : 'Free';
-    document.querySelector(`#upgrade-asc-${id}`).classList.toggle('locked', !available);
+    const card = document.querySelector(`#upgrade-asc-${id}`);
+    card.hidden = !available && !bought;
+    card.classList.toggle('locked', !available);
   }
   document.querySelector('#asc-point-discount-level').textContent = state.ascPointDiscountLevel;
   for (let i = 16; i <= 21; i += 1) {
@@ -1128,7 +1138,9 @@ function render() {
     const button = document.querySelector(`#buy-point-${i}`);
     button.disabled = !highPointUpgradeReady(i) || bought || lt(state.balance, cost);
     button.textContent = bought ? 'Bought' : `P$ ${fmt(cost)}`;
-    document.querySelector(`#upgrade-point-${i}`).classList.toggle('locked', !highPointUpgradeReady(i));
+    const card = document.querySelector(`#upgrade-point-${i}`);
+    card.hidden = !highPointUpgradeReady(i) && !bought;
+    card.classList.toggle('locked', !highPointUpgradeReady(i));
   }
   for (let i = 0; i < 3; i += 1) {
     const button = document.querySelector(`#buy-cyan-${13 + i}`);
@@ -1137,7 +1149,9 @@ function render() {
     const cost = cyanUpgradeCost(i);
     button.disabled = !cyanUpgradeReady(i) || level >= max || lt(state.balance, cost);
     button.textContent = level >= max ? 'Bought' : `P$ ${fmt(cost)}`;
-    document.querySelector(`#upgrade-cyan-${13 + i}`).classList.toggle('locked', !cyanUpgradeReady(i));
+    const card = document.querySelector(`#upgrade-cyan-${13 + i}`);
+    card.hidden = !cyanUpgradeReady(i) && level === 0;
+    card.classList.toggle('locked', !cyanUpgradeReady(i));
   }
   document.querySelector('#cyan-14-level').textContent = state.cyan14Level;
   document.querySelector('#cyan-15-max').textContent = upgradeLevelMax();
@@ -1249,14 +1263,17 @@ function render() {
   dm2.textContent = state.darkMatter2Level >= 1000 ? 'MAX LEVEL' : '2 ⊠';
   document.querySelector('#darkmatter-2-level').textContent = state.darkMatter2Level;
   document.querySelector('#darkmatter-2-multiplier').textContent = fmt(D(2).pow(state.darkMatter2Level));
+  document.querySelector('#upgrade-darkmatter-2').hidden = !state.darkMatter1Bought && state.darkMatter2Level === 0;
   document.querySelector('#upgrade-darkmatter-2').classList.toggle('locked', !state.darkMatter1Bought);
   const dm3 = document.querySelector('#buy-darkmatter-3');
   dm3.disabled = !state.darkMatter1Bought || state.darkMatter3Bought;
   dm3.textContent = state.darkMatter3Bought ? 'Active' : 'Free';
+  document.querySelector('#upgrade-darkmatter-3').hidden = !state.darkMatter1Bought && !state.darkMatter3Bought;
   document.querySelector('#upgrade-darkmatter-3').classList.toggle('locked', !state.darkMatter1Bought);
   const dm4 = document.querySelector('#buy-darkmatter-4');
   dm4.disabled = !state.darkMatter3Bought || state.darkMatter4Bought;
   dm4.textContent = state.darkMatter4Bought ? 'Bought' : 'Free';
+  document.querySelector('#upgrade-darkmatter-4').hidden = !state.darkMatter3Bought && !state.darkMatter4Bought;
   document.querySelector('#upgrade-darkmatter-4').classList.toggle('locked', !state.darkMatter3Bought);
   document.querySelector('#darkmatter-coin-boost').textContent = fmt(state.darkMatterCoinBoost);
   document.querySelector('#darkmatter-flip-duration').textContent = state.darkMatterFlipDuration;
@@ -1274,7 +1291,9 @@ function render() {
     const button = document.querySelector(`#buy-epsilon-${index}`);
     button.disabled = !state.epsilonUnlocked || !ready || maxed || lt(state.epsilon, cost);
     button.textContent = maxed ? (index === 1 || index === 9 ? 'Bought' : 'MAX LEVEL') : cost.eq(0) ? 'Free' : `${fmt(cost)} ε`;
-    document.querySelector(`#upgrade-epsilon-${index}`).classList.toggle('locked', !ready);
+    const card = document.querySelector(`#upgrade-epsilon-${index}`);
+    card.hidden = !ready && level === 0;
+    card.classList.toggle('locked', !ready);
     if (index >= 2 && index <= 4 || index === 7 || index === 8) document.querySelector(`#epsilon-level-${index}`).textContent = level;
   }
   const showUpgrade = (id, available) => { document.querySelector(`#upgrade-${id}`).hidden = !available; };

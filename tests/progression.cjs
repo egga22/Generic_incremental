@@ -17,6 +17,23 @@ vm.runInContext(source, context);
 const a = context.testAPI, s = a.state, doc = dom.window.document;
 assert(a.isValidSave(JSON.parse(a.serializeState())), 'fresh save round trip');
 assert(a.isValidSave({balance:0,runEarned:0}), 'old save accepted');
+a.render();
+const prerequisiteStart = {...s};
+assert(doc.getElementById('upgrade-asc-3').hidden, 'Ascendance levels stay hidden until their prerequisites are bought');
+s.ascCurrencyBoost=true; s.cubeUnlocked=true; a.render();
+assert(!doc.getElementById('upgrade-asc-3').hidden, 'Ascendance level appears when its prerequisites are bought');
+assert(doc.getElementById('upgrade-asc-4').hidden, 'next Ascendance upgrade stays hidden until its prerequisite level is bought');
+s.ascCubePowerLevel=1; a.render();
+assert(!doc.getElementById('upgrade-asc-4').hidden, 'next Ascendance upgrade appears after its prerequisite level is bought');
+assert(doc.getElementById('upgrade-darkmatter-2').hidden && doc.getElementById('upgrade-darkmatter-4').hidden, 'Dark Matter upgrades stay hidden until their prerequisites are bought');
+s.darkMatter1Bought=true; a.render();
+assert(!doc.getElementById('upgrade-darkmatter-2').hidden && !doc.getElementById('upgrade-darkmatter-3').hidden, 'first-contact purchase reveals dependent Dark Matter upgrades');
+assert(doc.getElementById('upgrade-darkmatter-4').hidden, 'Long odds stays hidden until Heads or tails is bought');
+s.darkMatter3Bought=true; a.render();
+assert(!doc.getElementById('upgrade-darkmatter-4').hidden, 'Long odds appears after its prerequisite is bought');
+s.epsilonUpgrade1Bought=true; a.render();
+assert(!doc.getElementById('upgrade-epsilon-2').hidden, 'Epsilon upgrade appears after its prerequisite is bought');
+Object.assign(s, prerequisiteStart); a.render();
 // Only held currencies count, with a strict greater-than threshold.
 const achievementStart = {...s};
 for (const key of ['balance', 'tokens', 'credits', 'data', 'alpha', 'ascendance', 'darkMatter', 'epsilon', 'spark', 'fishPoints', 'fortuneTokens', 'fortuneCharges']) {
@@ -289,6 +306,7 @@ for (let i=16;i<=20;i++) {
   a.render();
   const button=doc.getElementById(`buy-point-${i}`);
   assert(button.disabled, `upgrade ${i} locked without prerequisite`);
+  assert(doc.getElementById(`upgrade-point-${i}`).hidden, `upgrade ${i} hidden without prerequisite`);
   assert(doc.getElementById(`upgrade-point-${i}`).classList.contains('locked'));
   button.disabled=false; button.click();
   assert(!chainState[`pointUpgrade${i}Bought`], 'purchase handler rejects missing prerequisite');
@@ -298,6 +316,7 @@ for (let i=16;i<=20;i++) {
   a.render();
   const button=doc.getElementById(`buy-point-${i}`);
   assert(!button.disabled, `upgrade ${i} unlocks in sequence`);
+  assert(!doc.getElementById(`upgrade-point-${i}`).hidden, `upgrade ${i} shown when its prerequisite is bought`);
   assert(!doc.getElementById(`upgrade-point-${i}`).classList.contains('locked'));
   button.click();
   assert(chainState[`pointUpgrade${i}Bought`]);
