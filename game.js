@@ -62,7 +62,7 @@ const NPCS = [
       ['Reach your first Token prestige', () => state.totalPrestiges > 0, 'You let the old workshop go. Now we have room to grow.'],
       ['Unlock the Cube', () => state.cubeUnlocked, 'A machine with no obvious moving parts. Finally, a challenge for both of us.']
     ] },
-  { name: 'Orin', role: 'Reset cartographer', arrival: 'Arrives after your first Token prestige', unlocked: () => state.totalPrestiges > 0 || state.totalCreditPrestiges > 0 || state.totalAscendances > 0,
+  { name: 'Orin', role: 'Reset cartographer', arrival: 'Arrives after your first Token prestige', unlocked: () => state.tokenResetCount > 0 || state.totalPrestiges > 0 || state.totalCreditPrestiges > 0 || state.totalAscendances > 0,
     lines: ['I map the roads between resets. The destination matters, but so does what you carry forward.', 'Credits open a longer road. Check your next reward before leaving this run.', 'My maps used to end here. Thanks to you, I need another notebook.'],
     quests: [
       ['Reach your first Credit prestige', () => state.totalCreditPrestiges > 0, 'The first crossing is on the map. I knew you would find it.'],
@@ -103,6 +103,7 @@ if (!validExpedition(state.expedition) || (state.activeChallenge === 'expedition
 let toastTimer;
 let activeTab = state.epsilonUnlocked && !state.epsilonEscapeUnlocked ? 'epsilon' : 'run';
 let travelerAppears = false;
+let npcListMarkup = '';
 const sectionOctahedronHits = new WeakMap();
 const sillyButtonLabels = new Map();
 const alphaBall = { x: 0, y: 0, vx: 210, vy: 170, initialized: false };
@@ -1882,7 +1883,7 @@ function renderNPCs() {
   document.getElementById('traveler-card').hidden = panel.hidden || !travelerAppears;
   if (panel.hidden) return;
   const bonds = ['New acquaintance', 'Familiar face', 'Trusted friend', 'Close friend'];
-  document.getElementById('npc-list').innerHTML = NPCS.map((npc, i) => {
+  const markup = NPCS.map((npc, i) => {
     const progress = state.npcProgress[i];
     if (!npc.unlocked() && progress === 0) return `<article class="upgrade"><div><h3>${npc.name} · ${npc.role}</h3><p>${npc.arrival}</p></div></article>`;
     const quest = npc.quests[progress];
@@ -1890,6 +1891,11 @@ function renderNPCs() {
     const dialogue = talks ? npc.lines[(talks - 1) % npc.lines.length] : 'Someone new to talk to. Say hello.';
     return `<article class="upgrade npc-card"><div><h3>${npc.name} · ${npc.role}</h3><p class="effect">${bonds[progress]} · ${progress}/3 requests completed</p><blockquote>${dialogue}</blockquote>${progress ? `<p>${npc.quests[progress - 1][2]}</p>` : ''}<p>${quest ? `Request: ${quest[0]}. Reward: ${bonds[progress + 1]}.` : 'All requests complete. You are always welcome to stop by for a conversation.'}</p><button type="button" data-npc-talk="${i}">Talk to ${npc.name}</button> ${quest ? `<button type="button" data-npc-quest="${i}" ${quest[1]() ? '' : 'disabled'}>Complete request</button>` : ''}</div></article>`;
   }).join('');
+  // Keep NPC buttons attached while the game ticks so clicks and focus survive.
+  if (markup !== npcListMarkup) {
+    document.getElementById('npc-list').innerHTML = markup;
+    npcListMarkup = markup;
+  }
 }
 document.getElementById('npc-list').addEventListener('click', event => {
   const button = event.target.closest('button');
@@ -1917,7 +1923,7 @@ function chooseTab(tab) {
 }
 document.querySelector('#npc-tab').addEventListener('click', () => {
   if (state.epsilonUnlocked && !state.epsilonEscapeUnlocked) return;
-  travelerAppears = Math.random() < 0.9;
+  travelerAppears = Math.random() < 0.4;
   chooseTab('npc');
 });
 document.querySelector('#traveler-no').addEventListener('click', () => {
