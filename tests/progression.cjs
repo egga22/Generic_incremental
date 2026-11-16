@@ -842,7 +842,7 @@ const alphaSillyBefore={...alphaSillyState,alphaTerms:alphaSillyState.alphaTerms
 const priorTab=vm.runInContext('activeTab',context);
 Object.assign(alphaSillyState,{
  alphaUnlocked:true,alphaGainPurchases:0,alphaBoostLevel:0,alpha:a.D(500),alphaTerms:null,
- alphaButtonNamesBought:false,alphaWobbleBought:false,alphaPowerOneBought:false,alphaBouncyBallBought:false,
+ alphaButtonNamesBought:false,alphaButtonNamesActive:true,alphaWobbleBought:false,alphaWobbleActive:true,alphaPowerOneBought:false,alphaBouncyBallBought:false,
  pointUpgrade22Level:1,pointUpgrade23Level:0,sectionOctahedrons:Array(15).fill('upgrade-alpha-button-names')
 });
 vm.runInContext("activeTab='alpha'",context); a.render();
@@ -858,11 +858,24 @@ assert(!alphaSillyState.alphaButtonNamesBought && alphaSillyState.alpha.eq(alpha
 alphaSillyState.alphaBoostLevel=1; a.render();
 for(const id of sillyIds) assert(!doc.getElementById(`upgrade-alpha-${id}`).hidden,`${id} unlocks after 2α`);
 doc.getElementById('buy-alpha-button-names').click();
-assert(alphaSillyState.alphaButtonNamesBought);
-assert(['Bonk','Boop','Poke','Clicky','Absolutely not'].includes(doc.getElementById('work-button').textContent));
+assert(alphaSillyState.alphaButtonNamesBought && alphaSillyState.alphaButtonNamesActive);
+assert(['Bonk','Boop','Why','Poke','Clicky','Absolutely not'].includes(doc.getElementById('work-button').textContent));
 assert(doc.getElementById('work-button').getAttribute('aria-label'),'renamed buttons retain an accessible name');
+const originalWorkLabel=doc.getElementById('work-button').getAttribute('aria-label');
+doc.getElementById('toggle-alpha-button-names').click();
+assert(!alphaSillyState.alphaButtonNamesActive && doc.getElementById('work-button').textContent===originalWorkLabel,'button names restore when disabled');
+assert.equal(doc.getElementById('toggle-alpha-button-names').textContent,'Enable renaming','the toggle remains clearly labeled');
+assert.equal(JSON.parse(a.serializeState()).alphaButtonNamesActive,false,'button-renaming toggle state persists');
+doc.getElementById('toggle-alpha-button-names').click();
+assert(alphaSillyState.alphaButtonNamesActive,'button renaming can be re-enabled');
 doc.getElementById('buy-alpha-wobble').click();
-assert(alphaSillyState.alphaWobbleBought && doc.body.classList.contains('alpha-wobble'));
+assert(alphaSillyState.alphaWobbleBought && alphaSillyState.alphaWobbleActive && doc.body.classList.contains('alpha-wobble'));
+doc.getElementById('toggle-alpha-wobble').click();
+assert(!alphaSillyState.alphaWobbleActive && !doc.body.classList.contains('alpha-wobble'),'wobble stops when disabled');
+assert.equal(doc.getElementById('toggle-alpha-wobble').textContent,'Enable wobble','the wobble toggle stays clearly labeled');
+assert.equal(JSON.parse(a.serializeState()).alphaWobbleActive,false,'wobble toggle state persists');
+doc.getElementById('toggle-alpha-wobble').click();
+assert(alphaSillyState.alphaWobbleActive && doc.body.classList.contains('alpha-wobble'),'wobble can be re-enabled');
 doc.getElementById('buy-alpha-power-one').click();
 assert(alphaSillyState.alphaPowerOneBought);
 assert(a.applyAlphaGain(3).eq(3),'the exponent-one upgrade deliberately leaves Alpha gain unchanged');

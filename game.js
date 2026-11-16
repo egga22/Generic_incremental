@@ -22,6 +22,7 @@ const plus = (a, b) => D(a).plus(b);
 const minus = (a, b) => D(a).minus(b);
 const initialState = { balance: 0, runEarned: 0, lifetime: 0, printer: false, press: false, multiplierLevel: 0, incomeLevel: 0, powerLevel: 0, clickLevel: 0, logLevel: 0, exponentLevel: 0, exponentCapLevel: 0, capLevel: 0, tokens: 0, totalPrestiges: 0, tokenResetCount: 0, tokenMultiplierLevel: 0, discountLevel: 0, tokenBoostLevel: 0, expansionUnlocked: false, maxBuyUnlocked: false, maxBuyActive: false, tokenCreditLevel: 0, tokenDiscountLevel: 0, credits: 0, totalCreditPrestiges: 0, data: 0, totalDataPrestiges: 0, dataLore: Array(5).fill(false), gainZeroBought: false, gainZeroActive: false, priceOrigins: {}, creditEngine: false, creditExponentLevel: 0, heavyMint: false, cubeUnlocked: false, cubeLevel: 0, cubeClicks: 0, cubeTarget: 'points', freeRunUpgrades: false, passiveTokens: false, alphaUnlocked: false, alpha: 0, alphaGainPurchases: 0, alphaBoostLevel: 0, alphaCapLevel: 0, alphaNeutralBought: false, alphaGeneratorBought: false, alphaButtonNamesBought: false, alphaWobbleBought: false, alphaPowerOneBought: false, alphaBouncyBallBought: false, fishingUnlocked: false, fishPoints: 0, fishGainLevel: 0, redFishLevel: 0, fishAlphaLevel: 0, garbageUnlocked: false, darkMatterUnlocked: false, darkMatter: 0, darkMatter1Bought: false, darkMatter2Bought: false, darkMatter2Level: 0, darkMatter3Bought: false, darkMatter4Bought: false, darkMatterCoinBoost: 1, darkMatterFlipTimer: 0, darkMatterFlipDuration: 1, pyramidUnlocked: false, activeChallenge: '', challengeEndsAt: 0, completedChallenges: [], creditChallengeBoost: false, automationsUnlocked: false, automationBought: Array(12).fill(false), automationActive: Array(12).fill(false), ascendance: 0, totalAscendances: 0, ascCurrencyBoost: false, ascCreditExponent: false, ascCubePowerLevel: 0, ascCubeAutoclicker: false, ascCubeAscendance: false, ascCubeAlpha: false, ascPointDiscountLevel: 0, ascTotalLevelBoost: false, ascAllCurrencyLevel: 0, ascMainlinePowerLevel: 0, scaryModeLevel: 0, scaryModeActive: true, spark: 0, sparkPrestiges: 0, sparkUpgrade1Level: 0, sparkUpgrade2Level: 0, sparkUpgrade3Level: 0, pointUpgrade16Bought: false, pointUpgrade17Bought: false, pointUpgrade18Bought: false, pointUpgrade19Bought: false, pointUpgrade20Bought: false, pointUpgrade21Bought: false, pointUpgrade22Level: 0, pointUpgrade23Level: 0, cyan13Bought: false, cyan14Level: 0, cyan15Bought: false, cyanSquareCounts: [0, 0, 0] };
 Object.assign(initialState, {
+  alphaButtonNamesActive: true, alphaWobbleActive: true,
   epsilon: 0, epsilonUnlocked: false, epsilonEscapeUnlocked: false,
   epsilonUpgrade1Bought: false, epsilonUpgrade2Level: 0, epsilonUpgrade3Level: 0,
   epsilonUpgrade4Level: 0, epsilonUpgrade5Level: 0, epsilonUpgrade6Level: 0,
@@ -267,11 +268,11 @@ function restoreSillyButtonLabels() {
   sillyButtonLabels.clear();
 }
 function applyAlphaButtonNames() {
-  document.body.classList.toggle('alpha-wobble', state.alphaWobbleBought);
-  if (!state.alphaButtonNamesBought) return;
-  const names = ['Bonk', 'Boop', 'Poke', 'Clicky', 'Absolutely not'];
+  document.body.classList.toggle('alpha-wobble', state.alphaWobbleBought && state.alphaWobbleActive);
+  if (!state.alphaButtonNamesBought || !state.alphaButtonNamesActive) return;
+  const names = ['Bonk', 'Boop', 'Why', 'Poke', 'Clicky', 'Absolutely not'];
   const cycle = Math.floor(Date.now() / 5000);
-  Array.from(document.querySelectorAll('button:not(.tab)')).forEach((button, index) => {
+  Array.from(document.querySelectorAll('button:not(.tab):not([data-alpha-label-control])')).forEach((button, index) => {
     if (button.children.length) return;
     const text = button.textContent.trim();
     if (!text) return;
@@ -1431,6 +1432,12 @@ function render() {
     button.disabled = !available || bought || lt(state.alpha, upgrade.cost);
     button.textContent = bought ? 'Bought' : `${fmt(upgrade.cost)} α`;
   }
+  const alphaButtonNamesToggle = document.querySelector('#toggle-alpha-button-names');
+  alphaButtonNamesToggle.hidden = !state.alphaButtonNamesBought;
+  alphaButtonNamesToggle.textContent = state.alphaButtonNamesActive ? 'Disable renaming' : 'Enable renaming';
+  const alphaWobbleToggle = document.querySelector('#toggle-alpha-wobble');
+  alphaWobbleToggle.hidden = !state.alphaWobbleBought;
+  alphaWobbleToggle.textContent = state.alphaWobbleActive ? 'Disable wobble' : 'Enable wobble';
   updateAlphaBouncyBall(0);
   document.querySelector('#buy-alpha-joke').textContent = `${fmt(state.alpha.times(1.5).ceil().max(1))} α`;
   const alphaGenerator = document.querySelector('#buy-alpha-generator');
@@ -1763,11 +1770,25 @@ for (const upgrade of ALPHA_SILLY_UPGRADES) {
     if (!state.alphaUnlocked || !state.alphaBoostLevel || state[upgrade.key] || lt(state.alpha, upgrade.cost)) return;
     changeAlpha(D(upgrade.cost).neg());
     state[upgrade.key] = true;
+    if (upgrade.key === 'alphaButtonNamesBought') state.alphaButtonNamesActive = true;
+    if (upgrade.key === 'alphaWobbleBought') state.alphaWobbleActive = true;
     if (upgrade.key === 'alphaBouncyBallBought') alphaBall.initialized = false;
     toast(`Alpha upgrade bought · ${upgrade.id}`);
     render(); save();
   });
 }
+document.querySelector('#toggle-alpha-button-names').addEventListener('click', () => {
+  if (!state.alphaButtonNamesBought) return;
+  state.alphaButtonNamesActive = !state.alphaButtonNamesActive;
+  toast(state.alphaButtonNamesActive ? 'Button renaming enabled' : 'Button renaming disabled');
+  render(); save();
+});
+document.querySelector('#toggle-alpha-wobble').addEventListener('click', () => {
+  if (!state.alphaWobbleBought) return;
+  state.alphaWobbleActive = !state.alphaWobbleActive;
+  toast(state.alphaWobbleActive ? 'Upgrade wobble enabled' : 'Upgrade wobble disabled');
+  render(); save();
+});
 document.querySelector('#buy-fishing').addEventListener('click', () => {
   if (!state.alphaUnlocked || state.fishingUnlocked || lt(state.alpha, FISHING_COST)) return;
   changeAlpha(D(FISHING_COST).neg());
