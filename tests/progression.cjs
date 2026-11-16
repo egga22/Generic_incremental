@@ -836,19 +836,24 @@ context.Math.random = originalRandom;
 Object.assign(ns, beforeNPCs);
 console.log('NPC and Epsilon checks passed: traveler odds, tree access, epsilon gain, moving hazards, upgrade gates, escape, and saves.');
 
-// Silly Alpha upgrades require 1α and stay scoped to the Alpha section.
+// Silly Alpha upgrades require 2α and stay scoped to the Alpha section.
 const alphaSillyState=a.state;
 const alphaSillyBefore={...alphaSillyState,alphaTerms:alphaSillyState.alphaTerms ? {...alphaSillyState.alphaTerms} : null};
 const priorTab=vm.runInContext('activeTab',context);
 Object.assign(alphaSillyState,{
- alphaUnlocked:true,alphaGainPurchases:0,alpha:a.D(500),alphaTerms:null,
+ alphaUnlocked:true,alphaGainPurchases:0,alphaBoostLevel:0,alpha:a.D(500),alphaTerms:null,
  alphaButtonNamesBought:false,alphaWobbleBought:false,alphaPowerOneBought:false,alphaBouncyBallBought:false
 });
 vm.runInContext("activeTab='alpha'",context); a.render();
 const sillyIds=['button-names','wobble','power-one','bouncy-ball'];
 for(const id of sillyIds) assert(doc.getElementById(`upgrade-alpha-${id}`).hidden,`${id} waits for 1α`);
 alphaSillyState.alphaGainPurchases=1; a.render();
-for(const id of sillyIds) assert(!doc.getElementById(`upgrade-alpha-${id}`).hidden,`${id} unlocks after 1α`);
+for(const id of sillyIds) assert(doc.getElementById(`upgrade-alpha-${id}`).hidden,`${id} still waits for 2α`);
+const alphaBeforeMissingPrerequisite=alphaSillyState.alpha.toString();
+doc.getElementById('buy-alpha-button-names').click();
+assert(!alphaSillyState.alphaButtonNamesBought && alphaSillyState.alpha.eq(alphaBeforeMissingPrerequisite),'purchase handler enforces the 2α prerequisite');
+alphaSillyState.alphaBoostLevel=1; a.render();
+for(const id of sillyIds) assert(!doc.getElementById(`upgrade-alpha-${id}`).hidden,`${id} unlocks after 2α`);
 doc.getElementById('buy-alpha-button-names').click();
 assert(alphaSillyState.alphaButtonNamesBought);
 assert(['Bonk','Boop','Poke','Clicky','Absolutely not'].includes(doc.getElementById('work-button').textContent));
@@ -870,4 +875,4 @@ assert(Number.parseFloat(alphaBallElement.style.left)<=6,'the ball stays inside 
 assert(vm.runInContext('alphaBall.vx < 0',context),'the ball bounces off the viewport edge');
 assert(a.isValidSave(JSON.parse(a.serializeState())),'silly Alpha upgrades persist in saves');
 Object.assign(alphaSillyState,alphaSillyBefore); vm.runInContext(`activeTab=${JSON.stringify(priorTab)}`,context); a.render();
-console.log('Silly Alpha upgrades passed: prerequisites, effects, ball movement, visibility and saves.');
+console.log('Silly Alpha upgrades passed: 2α prerequisites, effects, ball movement, visibility and saves.');

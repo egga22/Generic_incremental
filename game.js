@@ -1422,7 +1422,7 @@ function render() {
     const bought = state[upgrade.key];
     const card = document.querySelector(`#upgrade-alpha-${upgrade.id}`);
     const button = document.querySelector(`#buy-alpha-${upgrade.id}`);
-    const available = state.alphaGainPurchases > 0;
+    const available = state.alphaBoostLevel > 0;
     card.hidden = !available && !bought;
     card.classList.toggle('locked', !available);
     button.disabled = !available || bought || lt(state.alpha, upgrade.cost);
@@ -1756,7 +1756,7 @@ document.querySelector('#buy-alpha-neutral').addEventListener('click', () => { i
 document.querySelector('#buy-alpha-cap').addEventListener('click', () => { const cost = alphaCapPrice(); if (!state.alphaUnlocked || state.alphaBoostLevel < 1 || lt(state.alpha, cost)) return; changeAlpha(cost.neg()); state.alphaCapLevel += 1; toast('2α max level increased by 2'); render(); save(); });
 for (const upgrade of ALPHA_SILLY_UPGRADES) {
   document.querySelector(`#buy-alpha-${upgrade.id}`).addEventListener('click', () => {
-    if (!state.alphaUnlocked || !state.alphaGainPurchases || state[upgrade.key] || lt(state.alpha, upgrade.cost)) return;
+    if (!state.alphaUnlocked || !state.alphaBoostLevel || state[upgrade.key] || lt(state.alpha, upgrade.cost)) return;
     changeAlpha(D(upgrade.cost).neg());
     state[upgrade.key] = true;
     if (upgrade.key === 'alphaBouncyBallBought') alphaBall.initialized = false;
