@@ -93,6 +93,16 @@ state.dataLore = Array.from({ length: 5 }, (_, i) => Boolean(savedState.dataLore
 state.darkMatter2Level = Math.max(0, Math.min(1000, Number(savedState.darkMatter2Level ?? (savedState.darkMatter2Bought ? 1 : 0)) || 0));
 state.pointUpgrade22Level = Number.isInteger(savedState.pointUpgrade22Level) ? Math.max(0, Math.min(2, savedState.pointUpgrade22Level)) : 0;
 state.pointUpgrade23Level = Number.isInteger(savedState.pointUpgrade23Level) ? Math.max(0, Math.min(30, savedState.pointUpgrade23Level)) : 0;
+state.alphaButtonNamesBought = typeof savedState.alphaButtonNamesBought === 'boolean' ? savedState.alphaButtonNamesBought : false;
+state.alphaWobbleBought = typeof savedState.alphaWobbleBought === 'boolean' ? savedState.alphaWobbleBought : false;
+state.alphaPowerOneBought = typeof savedState.alphaPowerOneBought === 'boolean' ? savedState.alphaPowerOneBought : false;
+state.alphaBouncyBallBought = typeof savedState.alphaBouncyBallBought === 'boolean' ? savedState.alphaBouncyBallBought : false;
+state.ballCustomizationBought = typeof savedState.ballCustomizationBought === 'boolean' ? savedState.ballCustomizationBought : false;
+state.ballPoisonBought = typeof savedState.ballPoisonBought === 'boolean' ? savedState.ballPoisonBought : false;
+state.ballHomingBought = typeof savedState.ballHomingBought === 'boolean' ? savedState.ballHomingBought : false;
+state.ballTwinsBought = typeof savedState.ballTwinsBought === 'boolean' ? savedState.ballTwinsBought : false;
+state.ballSpeedyBought = typeof savedState.ballSpeedyBought === 'boolean' ? savedState.ballSpeedyBought : false;
+state.ballDualCustomizationBought = typeof savedState.ballDualCustomizationBought === 'boolean' ? savedState.ballDualCustomizationBought : false;
 state.ballPointGainLevel = Number.isInteger(savedState.ballPointGainLevel) ? Math.max(0, Math.min(10, savedState.ballPointGainLevel)) : 0;
 state.ballPointGainBought = Boolean(savedState.ballPointGainBought);
 state.ballCustomization = Array.isArray(savedState.ballCustomization)
