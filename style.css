@@ -6,7 +6,26 @@
 .sections-toggle{width:100%;display:flex;justify-content:space-between;align-items:center;margin:0 0 10px;text-align:left}.alpha-upgrade{background:#d7ffcf;border-color:#63bd50}.alpha-upgrade.locked{background:#e8ffe3;border-color:#9cdb8e}.alpha-upgrade h3{color:#145d12}.alpha-upgrade p,.alpha-upgrade .effect{color:#286b25}.alpha-upgrade button{background:#f5fff2;border-color:#63bd50;color:#145d12}.alpha-upgrade button:not(:disabled):hover{background:#bdffaf}.balance.currency-alpha{color:#21821b}
 .alpha-wobble .upgrade{animation:alpha-card-wobble 2.4s ease-in-out infinite}
 @keyframes alpha-card-wobble{0%,100%{rotate:-.35deg}50%{rotate:.35deg}}
-#alpha-bouncy-ball{position:fixed;z-index:1000;width:24px;height:24px;border-radius:50%;pointer-events:none;background:radial-gradient(circle at 35% 30%,#fff 0 8%,#ff7b32 28%,#ca185f 75%);box-shadow:0 2px 8px #0006}
+#alpha-bouncy-ball,#alpha-bouncy-ball-twin{position:fixed;z-index:1000;width:24px;height:24px;border-radius:50%;pointer-events:none;background:radial-gradient(circle at 35% 30%,#fff 0 8%,#e94444 28%,#e94444 75%);box-shadow:0 2px 8px #0006}
+#alpha-bouncy-ball.homing-ball::after,#alpha-bouncy-ball-twin.homing-ball::after{content:"+";position:absolute;inset:0;display:grid;place-items:center;color:#111;font-size:20px;font-weight:700;line-height:1}
+#alpha-bouncy-ball.speedy-ball,#alpha-bouncy-ball-twin.speedy-ball{box-shadow:0 0 10px 3px #ffd92f99}
+.alpha-ball-afterimage{position:fixed;z-index:999;border-radius:50%;pointer-events:none;opacity:.5;animation:alpha-ball-fade .5s ease-out forwards}
+@keyframes alpha-ball-fade{to{opacity:0;transform:scale(.7)}}
+#ball-upgrades{margin-inline-start:24px}
+.ball-point-summary{display:flex;justify-content:space-between;gap:12px;padding:8px 12px;color:#8b2028;background:#fff0f0;border:1px solid #e49aa0;margin:0 0 9px}
+.ball-point-summary span{color:#a8444b;font-size:12px}
+.ball-upgrade{background:var(--ball-upgrade-background,#ffe5e7);border-color:var(--ball-upgrade-border,#d76b75)}
+.ball-upgrade.locked{background:var(--ball-upgrade-background,#ffe5e7);border-color:var(--ball-upgrade-border,#d76b75)}
+.ball-upgrade h3,.ball-upgrade p,.ball-upgrade .effect{color:var(--ball-upgrade-text,#76232a)}
+.ball-upgrade button{background:var(--ball-upgrade-button,#fff6f6);border-color:var(--ball-upgrade-border,#d76b75);color:var(--ball-upgrade-text,#76232a)}
+.ball-upgrade button:not(:disabled):hover{filter:brightness(.96)}
+#ball-customization{padding:10px 12px;margin:0 0 10px;border:1px solid #d76b75;background:#fff7f7}
+#ball-customization h3{margin:0 0 6px;font-size:14px}
+#ball-customization p{margin:0 0 8px;font-size:12px;color:#666}
+#ball-customization-options{display:flex;flex-wrap:wrap;gap:6px}
+#ball-customization-options button{border-color:#d76b75;color:#76232a}
+#ball-customization-options button.selected{background:#d94a55;color:#fff}
+.alpha-ball-afterimage{will-change:opacity,transform}
 #automation-upgrades{margin-top:14px}.automation-heading{margin:0 0 9px;font-size:14px;font-weight:600}
 .automation-upgrade{background:#a93a43;border-color:#812a32;color:#fff}.automation-upgrade.locked{background:#8f2e36;border-color:#702129;color:#fff}.automation-upgrade h3{color:#fff}.automation-upgrade p,.automation-upgrade .effect{color:#ffe2e4}.automation-upgrade button{background:#fff0f0;border-color:#f0b4b8;color:#702129}.automation-upgrade button:not(:disabled):hover{background:#ffdadd}
 .data-upgrade{background:#087cf0;border-color:#0058ba;color:#fff}.data-upgrade h3{color:#fff}.data-upgrade p,.data-upgrade .effect{color:#e4f2ff}.data-upgrade button{background:#f2f9ff;border-color:#8dc5ff;color:#064c99}.data-upgrade button:not(:disabled):hover{background:#d7edff}.balance.currency-data{color:#087cf0}.prestige-actions #data-prestige-button{white-space:normal}

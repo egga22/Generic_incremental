@@ -12,7 +12,7 @@ context.clearTimeout = () => {};
 vm.runInContext('(function(){' + fs.readFileSync('break_eternity.js','utf8').replace(/export \{[\s\S]*?\};/, 'globalThis.Decimal = y;') + '})();', context);
 let source = fs.readFileSync('game.js','utf8').replace("import Decimal from './break_eternity.js';",'');
 source += `
-globalThis.testAPI = {get state(){return state}, D, rate, saleGain, applyCurrencyGain, applyAlphaGain, epsilonGainRate, tickEpsilon, ascendanceGain, highPointUpgradeCost, highPointUpgradeReady, updateSectionOctahedrons, updateAlphaBouncyBall, kirbyBonus, feedKirby, tokenReward, creditMultiplier, challengeExponent, challengeDuration, challengeGainMultiplier, resetAscendanceRun, resetCreditRun, runAutomations, runPresetResets, presetAllowsPurchase, isValidSave, serializeState, render, checkAchievements, recordFortuneRitual, spinFortune, bankFortune, fortuneUsed, fortuneCapacity, fortuneSegments, clearFortuneChain, updateFortuneProgress};`;
+globalThis.testAPI = {get state(){return state}, D, rate, saleGain, applyCurrencyGain, applyAlphaGain, epsilonGainRate, tickEpsilon, ascendanceGain, highPointUpgradeCost, highPointUpgradeReady, updateSectionOctahedrons, updateAlphaBouncyBall, ballPointGain, registerAlphaBallBounce, tickAlphaBallPoison, kirbyBonus, feedKirby, tokenReward, creditMultiplier, challengeExponent, challengeDuration, challengeGainMultiplier, resetAscendanceRun, resetCreditRun, runAutomations, runPresetResets, presetAllowsPurchase, isValidSave, serializeState, render, checkAchievements, recordFortuneRitual, spinFortune, bankFortune, fortuneUsed, fortuneCapacity, fortuneSegments, clearFortuneChain, updateFortuneProgress};`;
 vm.runInContext(source, context);
 const a = context.testAPI, s = a.state, doc = dom.window.document;
 assert(a.isValidSave(JSON.parse(a.serializeState())), 'fresh save round trip');
@@ -36,7 +36,7 @@ assert(!doc.getElementById('upgrade-epsilon-2').hidden, 'Epsilon upgrade appears
 Object.assign(s, prerequisiteStart); a.render();
 // Only held currencies count, with a strict greater-than threshold.
 const achievementStart = {...s};
-for (const key of ['balance', 'tokens', 'credits', 'data', 'alpha', 'ascendance', 'darkMatter', 'epsilon', 'spark', 'fishPoints', 'fortuneTokens', 'fortuneCharges']) {
+for (const key of ['balance', 'tokens', 'credits', 'data', 'alpha', 'ascendance', 'darkMatter', 'epsilon', 'spark', 'fishPoints', 'ballPoints', 'fortuneTokens', 'fortuneCharges']) {
   s.achievements = []; s[key] = a.D('1e9000');
   a.checkAchievements();
   assert(!s.achievements.includes('over9000'), `${key}: exact threshold does not qualify`);
@@ -898,3 +898,75 @@ assert(vm.runInContext('alphaBall.vx < 0',context),'the ball bounces off the vie
 assert(a.isValidSave(JSON.parse(a.serializeState())),'silly Alpha upgrades persist in saves');
 Object.assign(alphaSillyState,alphaSillyBefore); vm.runInContext(`activeTab=${JSON.stringify(priorTab)}`,context); a.render();
 console.log('Silly Alpha upgrades passed: 2α prerequisites, effects, ball movement, visibility and saves.');
+
+const ballState=a.state;
+Object.assign(ballState,{
+ alphaUnlocked:true,alphaBoostLevel:1,alphaBouncyBallBought:true,
+ ballPoints:a.D(5),ballPointGainBought:false,ballPointGainLevel:0,ballCustomizationBought:false,
+ ballPoisonBought:false,ballHomingBought:false,ballTwinsBought:false,ballSpeedyBought:false,
+ ballDualCustomizationBought:false,ballCustomization:[],ballPoisonTimers:[]
+});
+vm.runInContext("activeTab='alpha'; alphaBall.initialized=false; alphaTwinBall.initialized=false",context);
+a.render();
+assert(!doc.getElementById('ball-upgrades').hidden,'Ball Point upgrades appear after buying 13α');
+assert(doc.getElementById('buy-ball-2').disabled,'2αb requires a level in 1αb');
+assert(doc.getElementById('buy-ball-4').disabled,'customization options require 3αb');
+doc.getElementById('buy-ball-1').click();
+assert(ballState.ballPointGainBought); assert(ballState.ballPoints.eq(5),'1αb is free');
+assert.equal(a.ballPointGain().toString(),'1','1αb gives one BP per bounce');
+ballState.ballPoints=a.D(20000); a.render();
+doc.getElementById('buy-ball-2').click();
+assert.equal(ballState.ballPointGainLevel,1,'2αb adds one BP gain');
+doc.getElementById('buy-ball-3').click();
+assert(ballState.ballCustomizationBought && !doc.getElementById('ball-customization').hidden,'3αb unlocks customization');
+for(const number of [4,5,6,7]) doc.getElementById(`buy-ball-${number}`).click();
+assert(ballState.ballPoisonBought && ballState.ballHomingBought && ballState.ballTwinsBought && ballState.ballSpeedyBought,'4αb–7αb unlock the four customization options');
+assert(doc.getElementById('buy-ball-8').disabled===false,'8αb unlocks after upgrades 3αb through 7αb');
+doc.getElementById('buy-ball-8').click();
+assert(ballState.ballDualCustomizationBought,'8αb allows two customization options');
+doc.querySelector('[data-ball-option="poison"]').click();
+doc.querySelector('[data-ball-option="homing"]').click();
+assert.deepEqual(Array.from(ballState.ballCustomization),['poison','homing'],'two options can be active simultaneously');
+assert(doc.getElementById('ball-upgrades').style.getPropertyValue('--ball-upgrade-background').startsWith('linear-gradient'),'two active options give Ball Point upgrades a matching gradient');
+doc.querySelector('[data-ball-option="twins"]').click();
+assert.deepEqual(Array.from(ballState.ballCustomization),['poison','homing'],'a third option cannot be added');
+ballState.ballCustomization=['poison']; ballState.ballPoisonTimers=[]; ballState.ballPoints=a.D(0);
+a.registerAlphaBallBounce({x:0,y:0,vx:1,vy:1});
+assert.equal(ballState.ballPoisonTimers.length,1,'a poison-enabled bounce starts an independent five-second timer');
+a.tickAlphaBallPoison(1.5);
+assert(ballState.ballPoints.eq(17),'poison grants +10 BP/sec for the active timer duration');
+assert.equal(ballState.ballPoisonTimers[0],3.5,'poison timers count down');
+ballState.ballCustomization=['twins']; ballState.ballPoints=a.D(0); ballState.ballPoisonTimers=[];
+ballState.ballCustomization=['twins']; a.render();
+assert(doc.getElementById('ball-upgrades').style.getPropertyValue('--ball-upgrade-background').includes('#d9fbff'),'Twins colors Ball Point upgrades red-to-cyan');
+assert.equal(a.ballPointGain().toString(),'1.5','Twins multiplies each bounce payout by 0.75');
+a.registerAlphaBallBounce({x:0,y:0,vx:1,vy:1});
+assert(ballState.ballPoints.eq(1.5),'fractional Ball Points are preserved for Twins');
+assert(a.isValidSave(JSON.parse(a.serializeState())),'Ball Point upgrades, customization, and points save');
+const invalidBallSave=JSON.parse(a.serializeState()); invalidBallSave.ballCustomization=['poison','homing','twins'];
+assert(!a.isValidSave(invalidBallSave),'saves reject more selected options than unlocked slots');
+ballState.ballPoints=a.D(0); ballState.ballCustomization=[]; ballState.ballPoisonTimers=[];
+vm.runInContext('alphaBall.x=3; alphaBall.y=100; alphaBall.vx=210; alphaBall.vy=0; alphaBall.initialized=true',context);
+a.updateAlphaBouncyBall(.1);
+assert(ballState.ballPoints.gt(0),'viewport-edge bounces award Ball Points');
+const justHit=doc.getElementById('upgrade-ball-1'), homingTarget=doc.getElementById('upgrade-ball-2');
+justHit.getClientRects=()=>[{}]; justHit.getBoundingClientRect=()=>({left:12,right:22,top:12,bottom:22});
+homingTarget.getClientRects=()=>[{}]; homingTarget.getBoundingClientRect=()=>({left:200,right:300,top:200,bottom:300});
+ballState.ballCustomization=['homing'];
+const homingBall={x:0,y:0,vx:270,vy:0};
+a.registerAlphaBallBounce(homingBall,justHit.id);
+assert(Math.abs(homingBall.vx-homingBall.vy)<0.001,'Homing aims toward another upgrade instead of the one just hit');
+justHit.getClientRects=()=>[]; homingTarget.getClientRects=()=>[];
+Object.defineProperty(dom.window,'innerWidth',{configurable:true,value:800});
+Object.defineProperty(dom.window,'innerHeight',{configurable:true,value:600});
+ballState.ballCustomization=['twins'];
+vm.runInContext('alphaBall.x=100; alphaBall.y=100; alphaBall.vx=1; alphaBall.vy=0; alphaBall.initialized=true; alphaTwinBall.x=110; alphaTwinBall.y=100; alphaTwinBall.vx=-1; alphaTwinBall.vy=0; alphaTwinBall.initialized=true',context);
+a.updateAlphaBouncyBall(.001);
+const twinElement=doc.getElementById('alpha-bouncy-ball-twin');
+assert(twinElement && !twinElement.hidden,'Twins displays the second cyan ball');
+assert(Math.hypot(Number.parseFloat(twinElement.style.left)-Number.parseFloat(alphaBallElement.style.left),Number.parseFloat(twinElement.style.top)-Number.parseFloat(alphaBallElement.style.top))>=18,'Twin balls separate on collision');
+ballState.ballCustomization=['speedy'];
+vm.runInContext('alphaBall.x=100; alphaBall.y=100; alphaBall.vx=210; alphaBall.vy=0; alphaBall.initialized=true',context);
+a.updateAlphaBouncyBall(.25);
+assert(doc.querySelectorAll('.alpha-ball-afterimage').length>0,'Speedy leaves ball afterimages');
+console.log('Ball Point upgrades passed: prerequisites, costs, customization, poison, Twins, edge gains and saves.');

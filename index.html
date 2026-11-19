@@ -176,6 +176,54 @@ input, textarea, select {
             <div><h3>13α. Bouncy ball</h3><p>Requires 2α. Releases a ball that bounces off the screen edges and upgrade cards. It only appears in the Alpha section.</p><div class="effect">Boing</div></div>
             <button id="buy-alpha-bouncy-ball" type="button" disabled>100 α</button>
           </article>
+          <div id="ball-upgrades" hidden>
+            <div class="ball-point-summary">
+              <strong>Ball Points <span id="ball-point-value">0</span> BP</strong>
+              <span id="ball-point-rate">+0 BP/sec</span>
+            </div>
+            <article class="upgrade ball-upgrade" id="upgrade-ball-1">
+              <div><h3>1αb. Ball points</h3><p>Requires 13α. Gain 1 BP every time the ball hits a wall or upgrade.</p><div class="effect">+1 BP per bounce</div></div>
+              <button id="buy-ball-1" type="button" disabled>Free</button>
+            </article>
+            <article class="upgrade ball-upgrade locked" id="upgrade-ball-2">
+              <div><h3>2αb. Stronger bounces</h3><p>Requires 1αb. Adds +1 BP gain per ball hit.</p><div class="effect">Level <span id="ball-point-gain-level">0</span> / 10</div></div>
+              <button id="buy-ball-2" type="button" disabled>20 BP</button>
+            </article>
+            <article class="upgrade ball-upgrade locked" id="upgrade-ball-3">
+              <div><h3>3αb. Ball Customizer</h3><p>Requires 2αb. Unlocks the Ball Customizer. BP upgrades change color when the ball does.</p><div class="effect">Customize your ball below</div></div>
+              <button id="buy-ball-3" type="button" disabled>250 BP</button>
+            </article>
+            <article class="upgrade ball-upgrade locked" id="upgrade-ball-4">
+              <div><h3>4αb. Poison</h3><p>Requires 3αb. Unlocks Poison. Turns the ball and BP upgrades purple; every hit grants +10 BP/sec for 5 seconds.</p><div class="effect">Poison customization option</div></div>
+              <button id="buy-ball-4" type="button" disabled>300 BP</button>
+            </article>
+            <article class="upgrade ball-upgrade locked" id="upgrade-ball-5">
+              <div><h3>5αb. Homing</h3><p>Requires 3αb. Unlocks Homing. Turns the ball and BP upgrades light gray with a black + sign; the ball aims at the closest upgrade after each hit.</p><div class="effect">Homing customization option</div></div>
+              <button id="buy-ball-5" type="button" disabled>1000 BP</button>
+            </article>
+            <article class="upgrade ball-upgrade locked" id="upgrade-ball-6">
+              <div><h3>6αb. Twins</h3><p>Requires 3αb. Unlocks Twins. Splits the ball into red and cyan balls that can hit upgrades, edges, and each other. BP gain is ×0.75 for each ball.</p><div class="effect">Twins customization option · red-to-cyan upgrade colors</div></div>
+              <button id="buy-ball-6" type="button" disabled>2000 BP</button>
+            </article>
+            <article class="upgrade ball-upgrade locked" id="upgrade-ball-7">
+              <div><h3>7αb. Speedy</h3><p>Requires 3αb. Unlocks Speedy. Turns the ball and BP upgrades yellow and makes the ball significantly faster.</p><div class="effect">Speedy customization option</div></div>
+              <button id="buy-ball-7" type="button" disabled>3000 BP</button>
+            </article>
+            <article class="upgrade ball-upgrade locked" id="upgrade-ball-8">
+              <div><h3>8αb. Double customization</h3><p>Requires 3αb through 7αb. Allows two transformations to apply at once, with matching gradients.</p><div class="effect">Combine two options</div></div>
+              <button id="buy-ball-8" type="button" disabled>8000 BP</button>
+            </article>
+            <section id="ball-customization" hidden aria-label="Ball Customization">
+              <h3>Ball Customization</h3>
+              <p id="ball-customization-status">Choose an option to customize your ball.</p>
+              <div id="ball-customization-options">
+                <button type="button" data-ball-option="poison" hidden aria-pressed="false">Poison</button>
+                <button type="button" data-ball-option="homing" hidden aria-pressed="false">Homing</button>
+                <button type="button" data-ball-option="twins" hidden aria-pressed="false">Twins</button>
+                <button type="button" data-ball-option="speedy" hidden aria-pressed="false">Speedy</button>
+              </div>
+            </section>
+          </div>
           <section id="alpha-casino" hidden class="expansion-panel" aria-labelledby="casino-title">
             <h3 id="casino-title">Alpha Casino</h3>
             <p>Risk α for a bigger stack. Winning payouts include your stake; a loss spends it. No gain multipliers apply. Casino pauses during Null gain and challenges.</p>
