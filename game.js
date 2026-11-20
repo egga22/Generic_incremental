@@ -1162,11 +1162,18 @@ function renderMaze() {
   }
 
   ALPHA_MAZE_UPGRADE_POSITIONS.forEach(([x, y], index) => {
-    if (Math.hypot(x - state.alphaMazeX, y - state.alphaMazeY) > vision) return;
+    const distance = Math.hypot(x - state.alphaMazeX, y - state.alphaMazeY);
+    const seen = state.alphaMazeSeen.includes(y * ALPHA_MAZE_SIZE + x);
+    if (distance > vision && !seen) return;
     if (state.alphaMazeUpgrades[index]) return;
-    ctx.fillStyle = '#dcebd7';
-    ctx.fillRect(x * tile + tile * .28, y * tile + tile * .28, tile * .44, tile * .44);
-    ctx.fillStyle = '#182018';
+    const boxInset = tile * .18;
+    const boxSize = tile - boxInset * 2;
+    ctx.fillStyle = '#050605';
+    ctx.fillRect(x * tile + boxInset, y * tile + boxInset, boxSize, boxSize);
+    ctx.strokeStyle = '#5f735b';
+    ctx.lineWidth = Math.max(1, tile * .08);
+    ctx.strokeRect(x * tile + boxInset, y * tile + boxInset, boxSize, boxSize);
+    ctx.fillStyle = '#95a190';
     ctx.font = `${Math.floor(tile * .55)}px monospace`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
