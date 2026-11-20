@@ -1285,6 +1285,96 @@ const levelUpgrades = {
 };
 const upgradeCurrencies = { run: 'balance', token: 'tokens', credit: 'credits', spark: 'spark', ascendance: 'ascendance', alpha: 'fishPoints' };
 
+function refundUpgradeRows() {
+  const rows = [];
+  for (const [tab, upgrades] of Object.entries(levelUpgrades)) {
+    for (const [id, upgrade] of Object.entries(upgrades)) {
+      const level = state[upgrade.key];
+      if (!level) continue;
+      const card = document.querySelector(`#upgrade-${id}`);
+      const name = card?.querySelector('h3')?.textContent || id;
+      const cost = upgrade.cost(level - 1);
+      const currency = upgradeCurrencies[tab];
+      rows.push({ id, name, currency, cost, kept: Boolean(upgrade.kept && state.freeRunUpgrades) });
+    }
+  }
+
+  const fixed = [
+    ['printer', '1P. Printer', 'balance', () => D(0), () => state.printer],
+    ['press', '2P. Press', 'balance', () => pointCost(10), () => state.press],
+    ['unlock', '4T. Expansion plans', 'tokens', () => D(10), () => state.expansionUnlocked],
+    ['max-buy', '7T. Max Buy', 'tokens', () => D(25), () => state.maxBuyUnlocked],
+    ['garbage', '8T. Garbage', 'tokens', () => D('1e900'), () => state.garbageUnlocked],
+    ['credit-multiplier', '1C. Credit engine', 'credits', () => D(1), () => state.creditEngine],
+    ['credit-cost', '3C. Heavy mint', 'credits', () => D(5), () => state.heavyMint],
+    ['cube-unlock', '4C. The Cube', 'credits', () => D(10), () => state.cubeUnlocked],
+    ['free-run', '5C. Costless craft', 'credits', () => D(100), () => state.freeRunUpgrades],
+    ['passive-tokens', '6C. Token trickle', 'credits', () => D(10000), () => state.passiveTokens],
+    ['pyramid-unlock', '7C. The Pyramid', 'credits', () => D(1000000), () => state.pyramidUnlocked],
+    ['credit-challenge-boost', '8C. Pyramid mastery', 'credits', () => D(10000000), () => state.creditChallengeBoost],
+    ['gain-zero', 'Zero gain', 'data', () => D(1), () => state.gainZeroBought],
+    ['asc-1', '1A. Hundredfold', 'ascendance', () => D(5), () => state.ascCurrencyBoost],
+    ['asc-2', '2A. Credit calculus', 'ascendance', () => D(0), () => state.ascCreditExponent],
+    ['asc-4', '4A. Cube autoclicker', 'ascendance', () => D(0), () => state.ascCubeAutoclicker],
+    ['asc-5', '5A. Ascendant cube', 'ascendance', () => D(0), () => state.ascCubeAscendance],
+    ['asc-6', '6A. Alpha cube', 'ascendance', () => D(0), () => state.ascCubeAlpha],
+    ['asc-7', '7A. Total mastery', 'ascendance', () => D('1e10'), () => state.ascTotalLevelBoost],
+  ];
+  for (const [id, name, currency, cost, owned] of fixed) {
+    if (owned()) rows.push({ id, name, currency, cost: cost(), kept: false });
+  }
+  return rows;
+}
+
+function unbuyUpgrade(id) {
+  for (const [tab, upgrades] of Object.entries(levelUpgrades)) {
+    if (!upgrades[id]) continue;
+    const upgrade = upgrades[id];
+    if (!state[upgrade.key]) return false;
+    const level = state[upgrade.key];
+    const cost = upgrade.cost(level - 1);
+    if (!(upgrade.kept && state.freeRunUpgrades)) {
+      state[upgradeCurrencies[tab]] = plus(state[upgradeCurrencies[tab]], cost);
+    }
+    state[upgrade.key] -= 1;
+    if (id === 'exponent-cap') clampUpgradeLevels();
+    toast(`${document.querySelector(`#upgrade-${id}`)?.querySelector('h3')?.textContent || 'Upgrade'} unbought`);
+    return true;
+  }
+
+  const fixed = {
+    printer: ['printer', 'balance', 0],
+    press: ['press', 'balance', () => pointCost(10)],
+    unlock: ['expansionUnlocked', 'tokens', 10],
+    'max-buy': ['maxBuyUnlocked', 'tokens', 25],
+    garbage: ['garbageUnlocked', 'tokens', '1e900'],
+    'credit-multiplier': ['creditEngine', 'credits', 1],
+    'credit-cost': ['heavyMint', 'credits', 5],
+    'cube-unlock': ['cubeUnlocked', 'credits', 10],
+    'free-run': ['freeRunUpgrades', 'credits', 100],
+    'passive-tokens': ['passiveTokens', 'credits', 10000],
+    'pyramid-unlock': ['pyramidUnlocked', 'credits', 1000000],
+    'credit-challenge-boost': ['creditChallengeBoost', 'credits', 10000000],
+    'gain-zero': ['gainZeroBought', 'data', 1],
+    'asc-1': ['ascCurrencyBoost', 'ascendance', 5],
+    'asc-2': ['ascCreditExponent', 'ascendance', 0],
+    'asc-4': ['ascCubeAutoclicker', 'ascendance', 0],
+    'asc-5': ['ascCubeAscendance', 'ascendance', 0],
+    'asc-6': ['ascCubeAlpha', 'ascendance', 0],
+    'asc-7': ['ascTotalLevelBoost', 'ascendance', '1e10'],
+  };
+  const entry = fixed[id];
+  if (!entry || !state[entry[0]]) return false;
+  const [key, currency, refund] = entry;
+  state[key] = false;
+  if (typeof refund === 'function') state[currency] = plus(state[currency], refund());
+  else if (refund !== 0) state[currency] = plus(state[currency], D(refund));
+  if (id === 'unlock') { state.maxBuyUnlocked = false; state.maxBuyActive = false; }
+  if (id === 'gain-zero') state.gainZeroActive = false;
+  toast(`${document.querySelector(`#upgrade-${id}`)?.querySelector('h3')?.textContent || 'Upgrade'} unbought`);
+  return true;
+}
+
 function clampUpgradeLevels() {
   // Cap-granting upgrades in the run table come before the levels they affect.
   for (const upgrades of Object.values(levelUpgrades)) {
@@ -3064,6 +3154,7 @@ expansionPanel.className = 'expansion-panel';
 document.querySelector('.prestige').before(expansionPanel);
 expansionPanel.innerHTML = `
 <details open><summary>Discoveries &amp; mastery</summary>
+<div id="upgrade-refund-feature"><h3>Upgrade refunds</h3><p>Unbuy purchased upgrades one level at a time. The currency spent on the removed level is returned, unless it was bought with a free run or Ascendance milestone.</p><div id="upgrade-refund-list"></div></div>
 <div id="loadout-feature"><h3>Cube loadouts</h3><p>Save a target, then restore it in one click. Slots unlock with the Cube, 1 Ascendance, and 3 Ascendances. Cube levels and clicks are shared.</p><div id="loadout-slots"></div></div>
 <div id="combo-feature"><h3>Combined Pyramid trials</h3><p>Pair completed trials. Reach 1e33 tokens under both restrictions, then credit prestige. Each unique pair adds +10% to token and credit rewards. Starting clears credits and the credit run.</p><label>Deduction <select id="combo-deduction">${[1,2,3].map(i => `<option value="deduction${i}">Deduction ${i}</option>`).join('')}</select></label>
 <label>Time limit <select id="combo-time">${[1,2,3].map(i => `<option value="time${i}">Time Limit ${i}</option>`).join('')}</select></label><button id="start-combo">Start combined trial</button><p id="combo-progress"></p></div>
@@ -3077,6 +3168,10 @@ function renderExpansion() {
   renderExpedition();
   renderFortune();
   renderIcosahedron();
+  const refundNames = { balance: 'P$', tokens: 'tokens', credits: 'C$', data: '𝔻', spark: '⊹', fishPoints: '🐟', ascendance: 'ᛥ' };
+  document.getElementById('upgrade-refund-list').innerHTML = refundUpgradeRows().map(row =>
+    `<p><span>${row.name}${row.kept ? ' · no currency refund' : ` · refund ${fmt(row.cost)} ${refundNames[row.currency] || row.currency}`}</span> <button type="button" data-unbuy="${row.id}">Unbuy</button></p>`
+  ).join('') || '<p>No purchased upgrades to refund.</p>';
   for (const [id, visible] of [['loadout',state.cubeUnlocked],['combo',state.pyramidUnlocked],['research',state.dataLore.every(Boolean)],['preset',state.automationsUnlocked],['burst',state.sparkPrestiges > 0]]) document.getElementById(`${id}-feature`).hidden = !visible;
   document.getElementById('loadout-slots').innerHTML = Array.from({length:3}, (_,i) => `<p>Slot ${i+1}: ${state.cubeLoadouts[i] || 'Empty'} <button data-save-loadout="${i}" ${i >= loadoutSlots() ? 'disabled' : ''}>Save current target</button> <button data-load-loadout="${i}" ${i >= loadoutSlots() || !cubeTargetAvailable(state.cubeLoadouts[i]) ? 'disabled' : ''}>Load</button></p>`).join('');
   document.getElementById('combo-progress').textContent = `${state.completedCombos.length}/9 pairs complete: ${state.completedCombos.map(id => challengeNames[id]).join(', ') || 'none'}`;
@@ -3102,6 +3197,10 @@ function renderExpansion() {
 }
 expansionPanel.addEventListener('click', event => {
   const button = event.target.closest('button'); if (!button || button.disabled) return;
+  if (button.dataset.unbuy !== undefined) {
+    if (unbuyUpgrade(button.dataset.unbuy)) { render(); save(); }
+    return;
+  }
   if (button.dataset.saveLoadout !== undefined && state.cubeUnlocked) state.cubeLoadouts[Number(button.dataset.saveLoadout)] = state.cubeTarget;
   if (button.dataset.loadLoadout !== undefined) { const target = state.cubeLoadouts[Number(button.dataset.loadLoadout)]; if (cubeTargetAvailable(target)) state.cubeTarget = target; }
   if (button.id === 'start-combo' && state.pyramidUnlocked && !state.activeChallenge) {
