@@ -386,14 +386,40 @@ function updateAlphaBallMotion(ball, size, elapsed, speedMultiplier) {
       const overlapX = Math.min(nextX + size, rect.right) - Math.max(nextX, rect.left);
       const overlapY = Math.min(nextY + size, rect.bottom) - Math.max(nextY, rect.top);
       if (overlapX <= 0 || overlapY <= 0) continue;
-      if (overlapX < overlapY) {
-        ball.vx *= -1;
-        nextX = ball.x < rect.left ? rect.left - size : rect.right;
+      const wasOverlapping = ball.x < rect.right && ball.x + size > rect.left
+        && ball.y < rect.bottom && ball.y + size > rect.top;
+      const crossedLeft = ball.x + size <= rect.left && nextX + size > rect.left && ball.vx > 0;
+      const crossedRight = ball.x >= rect.right && nextX < rect.right && ball.vx < 0;
+      const crossedTop = ball.y + size <= rect.top && nextY + size > rect.top && ball.vy > 0;
+      const crossedBottom = ball.y >= rect.bottom && nextY < rect.bottom && ball.vy < 0;
+      const enteredFromEdge = !wasOverlapping && (crossedLeft || crossedRight || crossedTop || crossedBottom);
+      let side;
+      if (enteredFromEdge) {
+        side = crossedLeft ? 'left' : crossedRight ? 'right' : crossedTop ? 'top' : 'bottom';
       } else {
-        ball.vy *= -1;
-        nextY = ball.y < rect.top ? rect.top - size : rect.bottom;
+        const pushLeft = nextX + size - rect.left;
+        const pushRight = rect.right - nextX;
+        const pushTop = nextY + size - rect.top;
+        const pushBottom = rect.bottom - nextY;
+        side = [
+          ['left', pushLeft], ['right', pushRight],
+          ['top', pushTop], ['bottom', pushBottom]
+        ].sort((a, b) => a[1] - b[1])[0][0];
       }
-      registerAlphaBallBounce(ball, upgrade.id);
+      if (side === 'left') {
+        nextX = rect.left - size;
+        if (ball.vx > 0) ball.vx *= -1;
+      } else if (side === 'right') {
+        nextX = rect.right;
+        if (ball.vx < 0) ball.vx *= -1;
+      } else if (side === 'top') {
+        nextY = rect.top - size;
+        if (ball.vy > 0) ball.vy *= -1;
+      } else {
+        nextY = rect.bottom;
+        if (ball.vy < 0) ball.vy *= -1;
+      }
+      if (enteredFromEdge) registerAlphaBallBounce(ball, upgrade.id);
       break;
     }
     ball.x = Math.max(0, Math.min(maxX, nextX));
