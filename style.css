@@ -26,6 +26,19 @@
 #ball-customization-options button{border-color:#d76b75;color:#76232a}
 #ball-customization-options button.selected{background:#d94a55;color:#fff}
 .alpha-ball-afterimage{will-change:opacity,transform}
+#alpha-maze{margin:16px 0;padding:14px;border:1px solid #4a6048;background:#090b09;color:#dcebd7}
+#alpha-maze h3{color:#edf8e8;font-size:22px;margin:0 0 6px}
+#alpha-maze-help{color:#b7cbb1}
+.alpha-maze-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.alpha-maze-toolbar button{background:#dce8d8;border-color:#82947d;color:#172115}
+#alpha-maze-stats{color:#d7e7d1;font-size:13px}
+#alpha-maze-canvas{display:block;width:min(620px,100%);height:auto;aspect-ratio:1;background:#050605;border:1px solid #5f735b;image-rendering:pixelated;touch-action:none}
+.alpha-maze-mobile{display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(2,44px);justify-content:center;margin-top:10px}
+.alpha-maze-mobile button{font-size:18px;background:#dce8d8;border:1px solid #82947d;color:#172115}
+.alpha-maze-mobile button[data-maze-direction="up"]{grid-column:2;grid-row:1}
+.alpha-maze-mobile button[data-maze-direction="left"]{grid-column:1;grid-row:2}
+.alpha-maze-mobile button[data-maze-direction="down"]{grid-column:2;grid-row:2}
+.alpha-maze-mobile button[data-maze-direction="right"]{grid-column:3;grid-row:2}
 #automation-upgrades{margin-top:14px}.automation-heading{margin:0 0 9px;font-size:14px;font-weight:600}
 .automation-upgrade{background:#a93a43;border-color:#812a32;color:#fff}.automation-upgrade.locked{background:#8f2e36;border-color:#702129;color:#fff}.automation-upgrade h3{color:#fff}.automation-upgrade p,.automation-upgrade .effect{color:#ffe2e4}.automation-upgrade button{background:#fff0f0;border-color:#f0b4b8;color:#702129}.automation-upgrade button:not(:disabled):hover{background:#ffdadd}
 .data-upgrade{background:#087cf0;border-color:#0058ba;color:#fff}.data-upgrade h3{color:#fff}.data-upgrade p,.data-upgrade .effect{color:#e4f2ff}.data-upgrade button{background:#f2f9ff;border-color:#8dc5ff;color:#064c99}.data-upgrade button:not(:disabled):hover{background:#d7edff}.balance.currency-data{color:#087cf0}.prestige-actions #data-prestige-button{white-space:normal}

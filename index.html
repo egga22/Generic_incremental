@@ -176,6 +176,25 @@ input, textarea, select {
             <div><h3>13α. Bouncy ball</h3><p>Requires 2α. Releases a ball that bounces off the screen edges and upgrade cards. It only appears in the Alpha section.</p><div class="effect">Boing</div></div>
             <button id="buy-alpha-bouncy-ball" type="button" disabled>100 α</button>
           </article>
+          <article class="upgrade alpha-upgrade locked" id="upgrade-alpha-maze">
+            <div><h3>14α. The Back Hallway</h3><p>Requires 13α. Enter a cramped maze that should not exist behind the foundry.</p><div class="effect">A doorway opens · find 1αm, 2αm, and more</div></div>
+            <button id="buy-alpha-maze" type="button" disabled>1000 α</button>
+          </article>
+          <section id="alpha-maze" hidden aria-labelledby="alpha-maze-title">
+            <h3 id="alpha-maze-title">The Back Hallway</h3>
+            <p id="alpha-maze-help">Use WASD or the arrow keys. You are the white dot. The dim outline is a wall.</p>
+            <div class="alpha-maze-toolbar">
+              <button id="alpha-maze-reset" type="button">Return to entrance</button>
+              <span id="alpha-maze-stats"></span>
+            </div>
+            <canvas id="alpha-maze-canvas" width="620" height="620" aria-label="Creepy maze"></canvas>
+            <div id="alpha-maze-mobile" class="alpha-maze-mobile" aria-label="Maze movement">
+              <button type="button" data-maze-direction="up" aria-label="Move up">▲</button>
+              <button type="button" data-maze-direction="left" aria-label="Move left">◀</button>
+              <button type="button" data-maze-direction="down" aria-label="Move down">▼</button>
+              <button type="button" data-maze-direction="right" aria-label="Move right">▶</button>
+            </div>
+          </section>
           <div id="ball-upgrades" hidden>
             <div class="ball-point-summary">
               <strong>Ball Points <span id="ball-point-value">0</span> BP</strong>

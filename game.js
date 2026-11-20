@@ -23,6 +23,8 @@ const minus = (a, b) => D(a).minus(b);
 const initialState = { balance: 0, runEarned: 0, lifetime: 0, printer: false, press: false, multiplierLevel: 0, incomeLevel: 0, powerLevel: 0, clickLevel: 0, logLevel: 0, exponentLevel: 0, exponentCapLevel: 0, capLevel: 0, tokens: 0, totalPrestiges: 0, tokenResetCount: 0, tokenMultiplierLevel: 0, discountLevel: 0, tokenBoostLevel: 0, expansionUnlocked: false, maxBuyUnlocked: false, maxBuyActive: false, tokenCreditLevel: 0, tokenDiscountLevel: 0, credits: 0, totalCreditPrestiges: 0, data: 0, totalDataPrestiges: 0, dataLore: Array(5).fill(false), gainZeroBought: false, gainZeroActive: false, priceOrigins: {}, creditEngine: false, creditExponentLevel: 0, heavyMint: false, cubeUnlocked: false, cubeLevel: 0, cubeClicks: 0, cubeTarget: 'points', freeRunUpgrades: false, passiveTokens: false, alphaUnlocked: false, alpha: 0, alphaGainPurchases: 0, alphaBoostLevel: 0, alphaCapLevel: 0, alphaNeutralBought: false, alphaGeneratorBought: false, alphaButtonNamesBought: false, alphaWobbleBought: false, alphaPowerOneBought: false, alphaBouncyBallBought: false, fishingUnlocked: false, fishPoints: 0, fishGainLevel: 0, redFishLevel: 0, fishAlphaLevel: 0, garbageUnlocked: false, darkMatterUnlocked: false, darkMatter: 0, darkMatter1Bought: false, darkMatter2Bought: false, darkMatter2Level: 0, darkMatter3Bought: false, darkMatter4Bought: false, darkMatterCoinBoost: 1, darkMatterFlipTimer: 0, darkMatterFlipDuration: 1, pyramidUnlocked: false, activeChallenge: '', challengeEndsAt: 0, completedChallenges: [], creditChallengeBoost: false, automationsUnlocked: false, automationBought: Array(12).fill(false), automationActive: Array(12).fill(false), ascendance: 0, totalAscendances: 0, ascCurrencyBoost: false, ascCreditExponent: false, ascCubePowerLevel: 0, ascCubeAutoclicker: false, ascCubeAscendance: false, ascCubeAlpha: false, ascPointDiscountLevel: 0, ascTotalLevelBoost: false, ascAllCurrencyLevel: 0, ascMainlinePowerLevel: 0, scaryModeLevel: 0, scaryModeActive: true, spark: 0, sparkPrestiges: 0, sparkUpgrade1Level: 0, sparkUpgrade2Level: 0, sparkUpgrade3Level: 0, pointUpgrade16Bought: false, pointUpgrade17Bought: false, pointUpgrade18Bought: false, pointUpgrade19Bought: false, pointUpgrade20Bought: false, pointUpgrade21Bought: false, pointUpgrade22Level: 0, pointUpgrade23Level: 0, cyan13Bought: false, cyan14Level: 0, cyan15Bought: false, cyanSquareCounts: [0, 0, 0] };
 Object.assign(initialState, {
   alphaButtonNamesActive: true, alphaWobbleActive: true,
+  alphaMazeUnlocked: false, alphaMazeUpgrades: Array(12).fill(false),
+  alphaMazeX: 1, alphaMazeY: 1, alphaMazeSeen: [],
   ballPoints: 0, ballPointGainBought: false, ballPointGainLevel: 0,
   ballCustomizationBought: false, ballPoisonBought: false, ballHomingBought: false,
   ballTwinsBought: false, ballSpeedyBought: false, ballDualCustomizationBought: false,
@@ -97,6 +99,14 @@ state.alphaButtonNamesBought = typeof savedState.alphaButtonNamesBought === 'boo
 state.alphaWobbleBought = typeof savedState.alphaWobbleBought === 'boolean' ? savedState.alphaWobbleBought : false;
 state.alphaPowerOneBought = typeof savedState.alphaPowerOneBought === 'boolean' ? savedState.alphaPowerOneBought : false;
 state.alphaBouncyBallBought = typeof savedState.alphaBouncyBallBought === 'boolean' ? savedState.alphaBouncyBallBought : false;
+state.alphaMazeUnlocked = typeof savedState.alphaMazeUnlocked === 'boolean' ? savedState.alphaMazeUnlocked : false;
+state.alphaMazeUpgrades = Array.from({ length: 12 }, (_, i) => Boolean(savedState.alphaMazeUpgrades?.[i]));
+state.alphaMazeX = Number.isInteger(savedState.alphaMazeX) && savedState.alphaMazeX >= 0 && savedState.alphaMazeX < 31 ? savedState.alphaMazeX : 1;
+state.alphaMazeY = Number.isInteger(savedState.alphaMazeY) && savedState.alphaMazeY >= 0 && savedState.alphaMazeY < 31 ? savedState.alphaMazeY : 1;
+state.alphaMazeSeen = Array.isArray(savedState.alphaMazeSeen)
+  && savedState.alphaMazeSeen.length <= 961
+  && savedState.alphaMazeSeen.every(item => Number.isInteger(item) && item >= 0 && item < 961)
+  ? [...new Set(savedState.alphaMazeSeen)] : [];
 state.ballCustomizationBought = typeof savedState.ballCustomizationBought === 'boolean' ? savedState.ballCustomizationBought : false;
 state.ballPoisonBought = typeof savedState.ballPoisonBought === 'boolean' ? savedState.ballPoisonBought : false;
 state.ballHomingBought = typeof savedState.ballHomingBought === 'boolean' ? savedState.ballHomingBought : false;
@@ -584,7 +594,11 @@ function fishAlphaMultiplier() {
 }
 function applyAlphaGain(amount) {
   const gain = state.gainZeroActive ? D(0) : D(amount).times(fishAlphaMultiplier());
-  return state.alphaPowerOneBought ? gain.pow(1) : gain;
+  const mazeMultiplier = D(state.alphaMazeUpgrades?.[9] ? 2 : 1)
+    .times(D(state.alphaMazeUpgrades?.[2] ? 1.1 : 1))
+    .times(D(state.alphaMazeUpgrades?.[4] ? 1.25 : 1));
+  const boosted = gain.times(mazeMultiplier);
+  return state.alphaPowerOneBought ? boosted.pow(1) : boosted;
 }
 function pointCost(amount) { return D(amount).div(D(2).pow(state.ascPointDiscountLevel || 0)); }
 function priceLevel(key, level) { return Math.max(0, level - (state.priceOrigins?.[key] || 0)); }
@@ -1042,6 +1056,137 @@ const ALPHA_SILLY_UPGRADES = [
   { id: 'power-one', key: 'alphaPowerOneBought', cost: 50 },
   { id: 'bouncy-ball', key: 'alphaBouncyBallBought', cost: 100 }
 ];
+
+const ALPHA_MAZE_SIZE = 31;
+const ALPHA_MAZE_UPGRADE_POSITIONS = [
+  [3, 3], [27, 27], [3, 27], [27, 3], [15, 3], [15, 27],
+  [3, 15], [27, 15], [9, 9], [21, 21], [9, 21], [21, 9]
+];
+
+function createAlphaMaze() {
+  const maze = Array.from({ length: ALPHA_MAZE_SIZE }, () => Array(ALPHA_MAZE_SIZE).fill(1));
+  let seed = 1985;
+  const random = () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+  const stack = [[1, 1]];
+  maze[1][1] = 0;
+  while (stack.length) {
+    const [x, y] = stack[stack.length - 1];
+    const choices = [[0, -2], [2, 0], [0, 2], [-2, 0]]
+      .map(([dx, dy]) => [x + dx, y + dy])
+      .filter(([nx, ny]) => nx > 0 && ny > 0 && nx < ALPHA_MAZE_SIZE - 1 && ny < ALPHA_MAZE_SIZE - 1 && maze[ny][nx] === 1);
+    if (!choices.length) {
+      stack.pop();
+      continue;
+    }
+    const [nx, ny] = choices[Math.floor(random() * choices.length)];
+    maze[(y + ny) / 2][(x + nx) / 2] = 0;
+    maze[ny][nx] = 0;
+    stack.push([nx, ny]);
+  }
+  return maze;
+}
+
+const ALPHA_MAZE_GRID = createAlphaMaze();
+
+const ALPHA_MAZE_UPGRADE_NAMES = [
+  '1αm · Widened sight', '2αm · Flashlight', '3αm · Pale resolve',
+  '4αm · Alpha cache', '5αm · Long sight', '6αm · Quiet generator',
+  '7αm · Ball cache', '8αm · Red hand', '9αm · Oath of the hall',
+  '10αm · Double echo', '11αm · Heavy breathing', '12αm · The exit'
+];
+
+function mazeVisibleDistance() {
+  let distance = state.alphaMazeUpgrades[0] ? 5 : 3;
+  if (state.alphaMazeUpgrades[4]) distance += 3;
+  if (state.alphaMazeUpgrades[1]) distance += 4;
+  return distance;
+}
+
+function collectAlphaMazeUpgrade(index) {
+  if (!Number.isInteger(index) || index < 0 || index >= 12 || state.alphaMazeUpgrades[index]) return;
+  state.alphaMazeUpgrades[index] = true;
+  if (index === 3) changeAlpha(D(50));
+  if (index === 6) state.ballPoints = D(state.ballPoints).plus(100);
+  if (index === 7) state.ballPoints = D(state.ballPoints).plus(100);
+  if (index === 11) changeAlpha(D(1000));
+  toast(`${ALPHA_MAZE_UPGRADE_NAMES[index]} found`);
+  save();
+  renderMaze();
+}
+
+function moveAlphaMaze(dx, dy) {
+  if (!state.alphaMazeUnlocked || activeTab !== 'alpha') return;
+  const nx = state.alphaMazeX + dx;
+  const ny = state.alphaMazeY + dy;
+  if (nx < 0 || ny < 0 || nx >= ALPHA_MAZE_SIZE || ny >= ALPHA_MAZE_SIZE) return;
+  if (ALPHA_MAZE_GRID[ny][nx]) return;
+  state.alphaMazeX = nx;
+  state.alphaMazeY = ny;
+  const tile = ny * ALPHA_MAZE_SIZE + nx;
+  if (!state.alphaMazeSeen.includes(tile)) state.alphaMazeSeen.push(tile);
+  const upgradeIndex = ALPHA_MAZE_UPGRADE_POSITIONS.findIndex(([x, y]) => x === nx && y === ny);
+  if (upgradeIndex >= 0) collectAlphaMazeUpgrade(upgradeIndex);
+  save();
+  renderMaze();
+}
+
+function renderMaze() {
+  const canvas = document.querySelector('#alpha-maze-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const tile = canvas.width / ALPHA_MAZE_SIZE;
+  ctx.fillStyle = '#020302';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const vision = mazeVisibleDistance();
+  for (let y = 0; y < ALPHA_MAZE_SIZE; y += 1) {
+    for (let x = 0; x < ALPHA_MAZE_SIZE; x += 1) {
+      const distance = Math.hypot(x - state.alphaMazeX, y - state.alphaMazeY);
+      const seen = state.alphaMazeSeen.includes(y * ALPHA_MAZE_SIZE + x);
+      if (distance > vision && seen) {
+        ctx.fillStyle = '#070907';
+      } else if (distance > vision) {
+        continue;
+      } else {
+        ctx.fillStyle = ALPHA_MAZE_GRID[y][x] ? '#263026' : '#101510';
+      }
+      ctx.fillRect(x * tile, y * tile, tile, tile);
+      if (distance <= vision) {
+        ctx.strokeStyle = 'rgba(200,220,194,.12)';
+        ctx.strokeRect(x * tile, y * tile, tile, tile);
+      }
+    }
+  }
+
+  ALPHA_MAZE_UPGRADE_POSITIONS.forEach(([x, y], index) => {
+    if (Math.hypot(x - state.alphaMazeX, y - state.alphaMazeY) > vision) return;
+    if (state.alphaMazeUpgrades[index]) return;
+    ctx.fillStyle = '#dcebd7';
+    ctx.fillRect(x * tile + tile * .28, y * tile + tile * .28, tile * .44, tile * .44);
+    ctx.fillStyle = '#182018';
+    ctx.font = `${Math.floor(tile * .55)}px monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(index + 1), x * tile + tile / 2, y * tile + tile / 2);
+  });
+
+  ctx.fillStyle = '#f7fff2';
+  ctx.beginPath();
+  ctx.arc(state.alphaMazeX * tile + tile / 2, state.alphaMazeY * tile + tile / 2, tile * .34, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#95a190';
+  ctx.font = '12px monospace';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('ENTRANCE', tile * 1.2, tile * 1.25);
+
+  const found = state.alphaMazeUpgrades.filter(Boolean).length;
+  document.querySelector('#alpha-maze-stats').textContent =
+    `${found}/12 found · Sight ${mazeVisibleDistance()} · ${state.alphaMazeUpgrades[1] ? 'Flashlight on' : 'Flashlight off'}`;
+}
 function darkMatterRate() { return !state.gainZeroActive && state.darkMatter1Bought ? D(0.1).times(D(2).pow(state.darkMatter2Level)).times(state.darkMatter3Bought ? state.darkMatterCoinBoost : 1) : D(0); }
 function automationCost(index) { return 1e30 * (index + 1); }
 function automationPrerequisite(index) {
@@ -1698,6 +1843,15 @@ function render() {
     button.disabled = !available || bought || lt(state.alpha, upgrade.cost);
     button.textContent = bought ? 'Bought' : `${fmt(upgrade.cost)} α`;
   }
+  const mazeCard = document.querySelector('#upgrade-alpha-maze');
+  const mazeButton = document.querySelector('#buy-alpha-maze');
+  const mazeAvailable = state.alphaBouncyBallBought;
+  mazeCard.hidden = !mazeAvailable && !state.alphaMazeUnlocked;
+  mazeCard.classList.toggle('locked', !mazeAvailable);
+  mazeButton.disabled = !mazeAvailable || state.alphaMazeUnlocked || lt(state.alpha, 1000);
+  mazeButton.textContent = state.alphaMazeUnlocked ? 'Entered' : '1000 α';
+  document.querySelector('#alpha-maze').hidden = activeTab !== 'alpha' || !state.alphaMazeUnlocked;
+  if (state.alphaMazeUnlocked && activeTab === 'alpha') renderMaze();
   const alphaButtonNamesToggle = document.querySelector('#toggle-alpha-button-names');
   alphaButtonNamesToggle.hidden = !state.alphaButtonNamesBought;
   alphaButtonNamesToggle.textContent = state.alphaButtonNamesActive ? 'Disable renaming' : 'Enable renaming';
@@ -2031,6 +2185,33 @@ document.querySelector('#buy-alpha-generator').addEventListener('click', () => {
 document.querySelector('#buy-alpha-boost').addEventListener('click', () => { const cost = alphaBoostPrice(); if (!state.alphaUnlocked || state.alphaBoostLevel >= 50 || lt(state.alpha, cost)) return; changeAlpha(cost.neg()); state.alphaBoostLevel += 1; toast('Alpha gain increased'); render(); save(); });
 document.querySelector('#buy-alpha-neutral').addEventListener('click', () => { if (!state.alphaUnlocked || state.alphaBoostLevel < 1 || state.alphaNeutralBought) return; const gain = applyAlphaGain(5).times(cubeMultiplier('alpha')); changeAlpha(gain); state.alphaNeutralBought = true; toast(`+${fmt(gain)} α · Neutral multiplier bought`); render(); save(); });
 document.querySelector('#buy-alpha-cap').addEventListener('click', () => { const cost = alphaCapPrice(); if (!state.alphaUnlocked || state.alphaBoostLevel < 1 || lt(state.alpha, cost)) return; changeAlpha(cost.neg()); state.alphaCapLevel += 1; toast('2α max level increased by 2'); render(); save(); });
+document.querySelector('#buy-alpha-maze').addEventListener('click', () => {
+  if (!state.alphaUnlocked || !state.alphaBouncyBallBought || state.alphaMazeUnlocked || lt(state.alpha, 1000)) return;
+  changeAlpha(D(-1000));
+  state.alphaMazeUnlocked = true;
+  state.alphaMazeX = 1;
+  state.alphaMazeY = 1;
+  state.alphaMazeSeen = [32];
+  toast('The hallway is behind you');
+  render(); save();
+});
+document.querySelector('#alpha-maze-reset').addEventListener('click', () => {
+  state.alphaMazeX = 1;
+  state.alphaMazeY = 1;
+  renderMaze();
+  save();
+});
+document.querySelectorAll('[data-maze-direction]').forEach(button => button.addEventListener('click', () => {
+  const direction = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[button.dataset.mazeDirection];
+  moveAlphaMaze(...direction);
+}));
+document.addEventListener('keydown', event => {
+  if (!state.alphaMazeUnlocked || activeTab !== 'alpha') return;
+  const directions = { w: [0, -1], ArrowUp: [0, -1], s: [0, 1], ArrowDown: [0, 1], a: [-1, 0], ArrowLeft: [-1, 0], d: [1, 0], ArrowRight: [1, 0] };
+  if (!directions[event.key]) return;
+  event.preventDefault();
+  moveAlphaMaze(...directions[event.key]);
+});
 for (const upgrade of ALPHA_SILLY_UPGRADES) {
   document.querySelector(`#buy-alpha-${upgrade.id}`).addEventListener('click', () => {
     if (!state.alphaUnlocked || !state.alphaBoostLevel || state[upgrade.key] || lt(state.alpha, upgrade.cost)) return;
@@ -2991,6 +3172,10 @@ setInterval(() => {
   if (state.activeChallenge && state.challengeEndsAt && now >= state.challengeEndsAt) { const name = challengeNames[state.activeChallenge]; state.activeChallenge = ''; state.challengeEndsAt = 0; toast(`${name} failed · Time expired`); }
   const passiveTokensEarned = tokenIncomeRate().times(elapsed);
   if (state.alphaGeneratorBought) changeAlpha(applyAlphaGain(cubeMultiplier('alpha').times(elapsed / 10)));
+  if (state.alphaMazeUnlocked) {
+    const mazeAlphaRate = (state.alphaMazeUpgrades[5] ? 1 : 0) + (state.alphaMazeUpgrades[10] ? 5 : 0);
+    if (mazeAlphaRate) changeAlpha(applyAlphaGain(cubeMultiplier('alpha').times(mazeAlphaRate * elapsed)));
+  }
   if (state.darkMatter3Bought) {
     state.darkMatterFlipTimer += elapsed;
     while (state.darkMatterFlipTimer >= state.darkMatterFlipDuration) {
@@ -3033,6 +3218,9 @@ function isValidSave(snapshot) {
     }
     if (key === 'epsilonOctahedrons') return Array.isArray(value) && value.length <= 3 && value.every(n => Number.isInteger(n) && n >= 1 && n <= 9);
     if (key === 'epsilonOctahedronTimer') return Number.isFinite(value) && value >= 0 && value < 5;
+    if (key === 'alphaMazeUpgrades') return Array.isArray(value) && value.length === 12 && value.every(item => typeof item === 'boolean');
+    if (key === 'alphaMazeX' || key === 'alphaMazeY') return Number.isInteger(value) && value >= 0 && value < 31;
+    if (key === 'alphaMazeSeen') return Array.isArray(value) && value.length <= 961 && value.every(item => Number.isInteger(item) && item >= 0 && item < 961);
     if (key === 'sectionOctahedrons') return Array.isArray(value) && value.length <= 30 && value.every(id => typeof id === 'string' && /^upgrade-[a-z0-9-]{1,80}$/.test(id));
     if (key === 'sectionOctahedronTimer') return Number.isFinite(value) && value >= 0 && value < 5;
     if (key === 'pointUpgrade22Level') return Number.isInteger(value) && value >= 0 && value <= 2;
