@@ -14,6 +14,7 @@ let source = fs.readFileSync('game.js','utf8').replace("import Decimal from './b
 source += `
 globalThis.testAPI = {get state(){return state}, D, rate, saleGain, applyCurrencyGain, applyAlphaGain, epsilonGainRate, tickEpsilon, ascendanceGain, highPointUpgradeCost, highPointUpgradeReady, updateSectionOctahedrons, updateAlphaBouncyBall, ballPointGain, registerAlphaBallBounce, tickAlphaBallPoison, kirbyBonus, feedKirby, tokenReward, creditMultiplier, challengeExponent, challengeDuration, challengeGainMultiplier, resetAscendanceRun, resetCreditRun, runAutomations, runPresetResets, presetAllowsPurchase, isValidSave, serializeState, render, checkAchievements, recordFortuneRitual, spinFortune, bankFortune, fortuneUsed, fortuneCapacity, fortuneSegments, clearFortuneChain, updateFortuneProgress, unbuyUpgrade, refundUpgradeRows};`;
 vm.runInContext(source, context);
+vm.runInContext('Object.assign(testAPI, { skillGainRate, skillUpgradeCost, skillUpgradeReady, buySkillUpgrade, tickSkill, creditPrestigeReward, performSkillPrestige });', context);
 const a = context.testAPI, s = a.state, doc = dom.window.document;
 assert(a.isValidSave(JSON.parse(a.serializeState())), 'fresh save round trip');
 assert(a.isValidSave({balance:0,runEarned:0}), 'old save accepted');
@@ -993,3 +994,58 @@ vm.runInContext('alphaBall.x=100; alphaBall.y=100; alphaBall.vx=210; alphaBall.v
 a.updateAlphaBouncyBall(.25);
 assert(doc.querySelectorAll('.alpha-ball-afterimage').length>0,'Speedy leaves ball afterimages');
 console.log('Ball Point upgrades passed: prerequisites, costs, customization, poison, Twins, edge gains and saves.');
+
+vm.runInContext("state = {...initialState}; for (const key of CURRENCY_KEYS) state[key] = D(initialState[key]); activeTab = 'run';", context);
+const skillState = a.state;
+skillState.credits = a.D('1e1001'); a.render();
+const skillPrestigeButton = doc.getElementById('skill-prestige-button');
+assert(!skillPrestigeButton.disabled, 'Skill reset requires at least 1e1000 Credits');
+skillPrestigeButton.click();
+assert(skillState.credits.eq(0) && skillState.skill.eq(.01), 'Skill reset clears Credits and grants fixed 0.01 Skill');
+skillState.credits = a.D('1e9000'); a.render(); skillPrestigeButton.click();
+assert(skillState.credits.eq(0) && skillState.skill.eq(.02), 'excess Credits still grant only 0.01 Skill');
+assert.equal(skillState.totalSkillPrestiges, 2);
+assert(!doc.getElementById('skill-tab').hidden && !doc.getElementById('skill-upgrades').hidden);
+
+const skillOne = doc.getElementById('buy-skill-1');
+assert.equal(a.skillGainRate().toNumber(), 0);
+skillOne.click();
+assert(skillState.challengePower.eq(.01), '1S first purchase awards 0.01 CP');
+assert(a.skillGainRate().eq(.01), '1S generates 0.01 Skill per second after the debuff');
+a.tickSkill(1); assert(skillState.skill.eq(.03), 'Skill generation ticks at the debuffed rate');
+assert(a.skillUpgradeCost(2).eq(.1), '2S starts at 0.1 Skill');
+skillState.skill = a.D('1e30'); a.render();
+const cpBefore2S = skillState.challengePower;
+doc.getElementById('buy-skill-2').click(); doc.getElementById('buy-skill-2').click();
+assert.equal(skillState.skillUpgradeLevels[1], 2);
+assert(skillState.challengePower.eq(cpBefore2S.plus(.02)), '2S grants CP only once across multiple levels');
+assert(a.skillGainRate().eq(.03), '2S levels add one base Skill per second each');
+const cpBefore3S = skillState.challengePower;
+doc.getElementById('buy-skill-3').click(); doc.getElementById('buy-skill-3').click();
+assert.equal(skillState.skillUpgradeLevels[2], 2);
+assert(skillState.challengePower.eq(cpBefore3S.plus(.03)), '3S grants CP only on its first level');
+assert(a.skillGainRate().eq(.0675), '3S multiplies Skill gain by 1.5 per level');
+skillState.tokens = a.D('1e33'); skillState.skillUpgradeLevels[2] = 0;
+const baseCreditReward = a.creditPrestigeReward(); skillState.skillUpgradeLevels[2] = 2;
+assert(a.creditPrestigeReward().eq(baseCreditReward.times(2.25)), '3S multiplies Credit prestige rewards by 1.5 per level');
+
+skillState.skill = a.D('1e30');
+for (let index = 4; index <= 10; index += 1) {
+  assert(a.skillUpgradeReady(index), `${index}S requires the preceding tier`);
+  const before = skillState.challengePower;
+  const button = doc.getElementById(`buy-skill-${index}`);
+  button.click(); button.click();
+  assert.equal(skillState.skillUpgradeLevels[index - 1], 2, `${index}S is multibuy`);
+  assert(skillState.challengePower.eq(before.plus([0,0,0,0,.04,.035,.03,.025,.02,.015,.01][index])), `${index}S grants its CP only once`);
+}
+const serializedSkillSave = JSON.parse(a.serializeState());
+assert.equal(serializedSkillSave.skill, skillState.skill.toString());
+assert.equal(serializedSkillSave.challengePower, skillState.challengePower.toString());
+const skillSave = {balance: 0, runEarned: 0, skill: serializedSkillSave.skill, challengePower: serializedSkillSave.challengePower, skillUpgradeLevels: [...skillState.skillUpgradeLevels], totalSkillPrestiges: skillState.totalSkillPrestiges, skillUnlocked: skillState.skillUnlocked};
+assert(a.isValidSave(skillSave), 'Skill currencies and upgrade levels save correctly');
+assert(!a.isValidSave({...skillSave, skillUpgradeLevels: Array(10).fill(11)}), 'invalid Skill upgrade levels are rejected');
+skillState.activeChallenge = 'deduction1'; skillState.credits = a.D('1e1000'); a.render();
+assert(skillPrestigeButton.disabled, 'Skill reset is blocked during a challenge');
+const blockedCredits = skillState.credits.toString(); skillPrestigeButton.click();
+assert.equal(skillState.credits.toString(), blockedCredits, 'blocked Skill reset does not consume Credits');
+console.log('Skill passed: fixed prestige reward, Credit reset, passive gain, upgrade tiers, CP first-purchase rewards, and save validation.');

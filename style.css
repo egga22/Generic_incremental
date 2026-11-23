@@ -237,6 +237,23 @@ body[data-achievement-theme="violet"] .expansion-panel { border-color: #a073e8; 
 #fortune-hint[data-notches="3"]::after { content: '◆ ◆ ◆ ◇'; }
 #fortune-wedges select { width: min(100%, 32rem); }
 
+.skill-summary { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 10px; padding: 10px 12px; border: 1px solid #9acda2; background: #f7fff8; }
+.skill-upgrade { --skill-shade: #f7fff8; background: linear-gradient(110deg, #fff, var(--skill-shade)); border-color: #9acda2; }
+.skill-upgrade:nth-of-type(2) { --skill-shade: #f0fff2; }
+.skill-upgrade:nth-of-type(3) { --skill-shade: #e8fbe9; }
+.skill-upgrade:nth-of-type(4) { --skill-shade: #e0f8e3; }
+.skill-upgrade:nth-of-type(5) { --skill-shade: #d7f3dc; }
+.skill-upgrade:nth-of-type(6) { --skill-shade: #cdefd3; }
+.skill-upgrade:nth-of-type(7) { --skill-shade: #c2e9ca; }
+.skill-upgrade:nth-of-type(8) { --skill-shade: #b6e3bf; }
+.skill-upgrade:nth-of-type(9) { --skill-shade: #a9ddb4; }
+.skill-upgrade:nth-of-type(10) { --skill-shade: #9bd6a7; }
+.skill-upgrade:nth-of-type(11) { --skill-shade: #8dce9b; }
+.skill-upgrade :is(h3, p, .effect) { color: #205d31; }
+.skill-upgrade button { border-color: #78b987; color: #205d31; }
+.balance.currency-skill { color: #25813a; }
+.challenge-power { color: transparent; background: linear-gradient(90deg, #090909, #ed19bd); background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700; }
+
 .kirby-panel { margin: 20px 0; padding: 20px; border: 2px solid #d96b98; border-radius: 16px; background: color-mix(in srgb, #ffb4d2 14%, transparent); }
 .kirby-panel[hidden] { display: none; }
 #kirby-face { color: #d94d8d; font-size: 2rem; font-weight: bold; padding: 12px; }

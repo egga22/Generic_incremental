@@ -11,7 +11,7 @@ const MAINLINE_SOFT_CAP = '1e1000';
 const MAINLINE_CURRENCIES = {
   points: 'balance', tokens: 'tokens', credits: 'credits', data: 'data', spark: 'spark', ascendance: 'ascendance'
 };
-const CURRENCY_KEYS = ['balance', 'runEarned', 'lifetime', 'tokens', 'credits', 'data', 'cubeClicks', 'alpha', 'ascendance', 'darkMatter', 'darkMatterCoinBoost', 'spark', 'fishPoints', 'ballPoints', 'fortuneBase', 'blackjackStake', 'epsilon'];
+const CURRENCY_KEYS = ['balance', 'runEarned', 'lifetime', 'tokens', 'credits', 'data', 'cubeClicks', 'alpha', 'ascendance', 'darkMatter', 'darkMatterCoinBoost', 'spark', 'fishPoints', 'ballPoints', 'fortuneBase', 'blackjackStake', 'epsilon', 'skill', 'challengePower'];
 const D = value => value instanceof Decimal ? value : new Decimal(value ?? 0);
 function upgradeLevelMax() { return BASE_MAX_UPGRADE_LEVEL + (state?.cyan15Bought ? 250 : 0); }
 const lt = (a, b) => D(a).lt(b);
@@ -58,7 +58,9 @@ Object.assign(initialState, {
   completedCombos: [], achievements: [], achievementTheme: 'default',
   sparkCharge: 0, sparkBurstUntil: 0, sparkBurstPower: 1,
   automationPresets: ['off', 'off'], automationSeconds: [30, 60],
-  automationReserve: [10, 10], automationLastReset: [0, 0]
+  automationReserve: [10, 10], automationLastReset: [0, 0],
+  skillUnlocked: false, totalSkillPrestiges: 0, skillUpgradeLevels: Array(10).fill(0),
+  skill: 0, challengePower: 0
 });
 const NPCS = [
   { name: 'Mira', role: 'Foundry mechanic', arrival: 'Here from the start', unlocked: () => true,
@@ -135,6 +137,7 @@ state.epsilonOctahedronTimer = Number.isFinite(savedState.epsilonOctahedronTimer
 state.sectionOctahedrons = Array.isArray(savedState.sectionOctahedrons) && savedState.sectionOctahedrons.length <= 30 && savedState.sectionOctahedrons.every(id => typeof id === 'string' && /^upgrade-[a-z0-9-]{1,80}$/.test(id)) ? savedState.sectionOctahedrons : [];
 state.sectionOctahedronTimer = Number.isFinite(savedState.sectionOctahedronTimer) && savedState.sectionOctahedronTimer >= 0 && savedState.sectionOctahedronTimer < 5 ? savedState.sectionOctahedronTimer : 0;
 state.priceOrigins ||= {};
+state.skillUpgradeLevels = Array.from({ length: 10 }, (_, i) => Math.max(0, Math.min([1, 10, 2, 10, 10, 10, 10, 10, 10, 10][i], Math.floor(Number(savedState.skillUpgradeLevels?.[i]) || 0))));
 if (!validExpedition(state.expedition) || (state.activeChallenge === 'expedition') !== Boolean(state.expedition)) {
   state.expedition = null;
   if (state.activeChallenge === 'expedition') { state.activeChallenge = ''; state.challengeEndsAt = 0; }
@@ -184,6 +187,9 @@ function save() {
 }
 function incomeBase() { return (state.printer ? 1 : 0) + (state.press ? 1 : 0) + state.incomeLevel * (state.incomeLevel + 1) / 2; }
 const EPSILON_UPGRADE_MAX = [0, 1, 1, 5, 4, 1, 1, 5, 2, 1];
+const SKILL_UPGRADE_MAX = [1, 10, 2, 10, 10, 10, 10, 10, 10, 10];
+const SKILL_CP_REWARDS = [.01, .02, .03, .04, .035, .03, .025, .02, .015, .01];
+const SKILL_PRESTIGE_COST = D('1e1000');
 function epsilonUpgradeLevel(index) { return index === 1 ? Number(state.epsilonUpgrade1Bought) : index === 9 ? Number(state.epsilonUpgrade9Bought) : state[`epsilonUpgrade${index}Level`]; }
 function epsilonUpgradeCost(index, level = epsilonUpgradeLevel(index)) {
   const base = [0, 0, .15, .3, 1, 7.5, 40, 100, 125, 2000][index];
@@ -210,6 +216,30 @@ function epsilonGainRate() {
     .times(D(.75).pow(state.epsilonUpgrade7Level))
     .times(D(2.5).pow(state.epsilonUpgrade8Level));
 }
+function skillUpgradeCost(index, level = state.skillUpgradeLevels[index - 1]) {
+  if (index === 1) return D(0);
+  const tierCost = index === 2 ? .1 : index === 3 ? .3 : 10 ** (index - 4);
+  return D(tierCost).times(D(2).pow(level));
+}
+function skillUpgradeReady(index) { return index === 1 || state.skillUpgradeLevels[index - 2] > 0; }
+function skillGainRate() {
+  if (!state.skillUpgradeLevels[0]) return D(0);
+  return D(1 + state.skillUpgradeLevels[1]).times(.01).times(D(1.5).pow(state.skillUpgradeLevels[2]));
+}
+function tickSkill(elapsed) {
+  const earned = skillGainRate().times(elapsed);
+  if (gt(earned, 0)) state.skill = plus(state.skill, earned);
+}
+function buySkillUpgrade(index) {
+  if (!Number.isInteger(index) || index < 1 || index > 10 || !state.skillUnlocked || !skillUpgradeReady(index) || state.skillUpgradeLevels[index - 1] >= SKILL_UPGRADE_MAX[index - 1]) return;
+  const cost = skillUpgradeCost(index);
+  if (lt(state.skill, cost)) return;
+  state.skill = minus(state.skill, cost);
+  if (state.skillUpgradeLevels[index - 1] === 0) state.challengePower = plus(state.challengePower, SKILL_CP_REWARDS[index - 1]);
+  state.skillUpgradeLevels[index - 1] += 1;
+  toast(`Upgrade ${index}S bought`);
+  render(); save();
+}
 function epsilonOctahedronCount() { return state.epsilonOctahedrons.length; }
 function syncEpsilonOctahedrons() {
   const created = Number(state.epsilonUpgrade2Level > 0)
@@ -234,7 +264,7 @@ function updateEpsilonOctahedrons(elapsed) {
   }
 }
 function sectionUpgradeTargets() {
-  const sections = ['run-upgrades', 'token-upgrades', 'credit-upgrades', 'data-upgrades', 'spark-upgrades', 'cube-panel', 'alpha-upgrades', 'darkmatter-upgrades', 'ascendance-upgrades', 'epsilon-upgrades'];
+  const sections = ['run-upgrades', 'token-upgrades', 'credit-upgrades', 'skill-upgrades', 'data-upgrades', 'spark-upgrades', 'cube-panel', 'alpha-upgrades', 'darkmatter-upgrades', 'ascendance-upgrades', 'epsilon-upgrades'];
   return sections.flatMap(id => Array.from(document.querySelectorAll(`#${id} .upgrade[id^="upgrade-"]`)))
     .concat(Array.from(document.querySelectorAll('#icosahedron-panel article[id^="upgrade-"]')))
     .filter(card => !card.hidden && card.querySelector('button[id^="buy-"], button[data-die-upgrade]'));
@@ -242,9 +272,10 @@ function sectionUpgradeTargets() {
 function sectionUpgradeCurrency(card) {
   if (card.id.startsWith('upgrade-fish-')) return 'fishPoints';
   if (card.id.startsWith('upgrade-ball-')) return 'ballPoints';
-  const section = card.closest('#run-upgrades, #token-upgrades, #credit-upgrades, #data-upgrades, #spark-upgrades, #cube-panel, #alpha-upgrades, #darkmatter-upgrades, #ascendance-upgrades, #epsilon-upgrades, #icosahedron-panel');
+  if (card.id.startsWith('upgrade-skill-')) return 'skill';
+  const section = card.closest('#run-upgrades, #token-upgrades, #credit-upgrades, #skill-upgrades, #data-upgrades, #spark-upgrades, #cube-panel, #alpha-upgrades, #darkmatter-upgrades, #ascendance-upgrades, #epsilon-upgrades, #icosahedron-panel');
   return ({
-    'run-upgrades': 'balance', 'token-upgrades': 'tokens', 'credit-upgrades': 'credits',
+    'run-upgrades': 'balance', 'token-upgrades': 'tokens', 'credit-upgrades': 'credits', 'skill-upgrades': 'skill',
     'data-upgrades': 'data', 'spark-upgrades': 'spark', 'cube-panel': 'cubeClicks',
     'alpha-upgrades': 'alpha', 'darkmatter-upgrades': 'darkMatter',
     'ascendance-upgrades': 'ascendance', 'epsilon-upgrades': 'epsilon', 'icosahedron-panel': 'dieShards'
@@ -904,7 +935,7 @@ function buyCyanUpgrade(index) {
 function creditPrestigeReward() {
   let reward = state.tokens.div('1e33').floor().times(creditMultiplier());
   if (state.ascCreditExponent) reward = reward.pow(1.5);
-  return softenGain(reward, 'credits').times(expeditionMultiplier(1));
+  return softenGain(reward, 'credits').times(expeditionMultiplier(1)).times(D(1.5).pow(state.skillUpgradeLevels[2]));
 }
 function dataReward(cost) {
   return softenGain(applyCurrencyGain(state.balance.div(cost).floor()), 'data');
@@ -1695,6 +1726,8 @@ function render() {
   const rateLine = document.querySelector('#rate-line');
   const counter = activeTab === 'epsilon'
     ? { label: 'AVAILABLE EPSILON · ε', value: state.epsilon, color: 'epsilon', detail: `${fmt(epsilonGainRate())} ε per second` }
+    : activeTab === 'skill'
+    ? { label: 'AVAILABLE SKILL', value: state.skill, color: 'skill', detail: `${fmt(skillGainRate())} Skill per second · ${fmt(state.challengePower)} CP` }
     : activeTab === 'spark'
     ? { label: 'AVAILABLE SPARK · ⊹', value: state.spark, color: 'spark', detail: `${fmt(rate())} P$ per second` }
     : activeTab === 'darkmatter'
@@ -1760,6 +1793,7 @@ function render() {
   document.querySelector('#token-tab').hidden = state.totalPrestiges < 1 && lt(state.tokens, 1) && !state.garbageUnlocked;
   const hasCredits = state.totalCreditPrestiges > 0 || gt(state.credits, 0) || state.creditEngine || state.cubeUnlocked || state.pyramidUnlocked;
   document.querySelector('#credit-tab').hidden = !hasCredits;
+  document.querySelector('#skill-tab').hidden = !state.skillUnlocked;
   document.querySelector('#data-tab').hidden = state.totalDataPrestiges < 1 && lt(state.data, 1) && !state.dataLore.some(Boolean);
   document.querySelector('#spark-tab').hidden = state.sparkPrestiges < 1 && lt(state.spark, 1);
   document.querySelector('#cube-tab').hidden = !state.cubeUnlocked;
@@ -1889,8 +1923,25 @@ function render() {
   document.querySelector('#cube-panel').hidden = activeTab !== 'cube';
   document.querySelector('#pyramid-panel').hidden = activeTab !== 'pyramid';
   document.querySelector('#epsilon-upgrades').hidden = activeTab !== 'epsilon';
+  document.querySelector('#skill-upgrades').hidden = activeTab !== 'skill';
+  document.querySelector('#skill-balance').textContent = fmt(state.skill);
+  document.querySelector('#skill-cp').textContent = fmt(state.challengePower);
+  for (let index = 1; index <= 10; index += 1) {
+    const level = state.skillUpgradeLevels[index - 1];
+    const cost = skillUpgradeCost(index);
+    const ready = skillUpgradeReady(index);
+    const maxed = level >= SKILL_UPGRADE_MAX[index - 1];
+    const button = document.querySelector(`#buy-skill-${index}`);
+    button.disabled = !state.skillUnlocked || !ready || maxed || lt(state.skill, cost);
+    button.textContent = maxed ? 'MAX LEVEL' : cost.eq(0) ? 'Free' : `${fmt(cost)} Skill`;
+    const card = document.querySelector(`#upgrade-skill-${index}`);
+    card.hidden = !state.skillUnlocked || !ready && level === 0;
+    card.classList.toggle('locked', !ready);
+    document.querySelector(`#skill-level-${index}`).textContent = level;
+  }
   document.querySelector('#epsilon-tab').hidden = !state.epsilonUnlocked;
   document.querySelector('#epsilon-tab').classList.toggle('active', activeTab === 'epsilon');
+  document.querySelector('#skill-tab').classList.toggle('active', activeTab === 'skill');
   document.querySelector('#alpha-upgrades').hidden = activeTab !== 'alpha';
   document.querySelector('#darkmatter-upgrades').hidden = activeTab !== 'darkmatter';
   document.querySelector('#darkmatter-tab').classList.toggle('active', activeTab === 'darkmatter');
@@ -2099,6 +2150,12 @@ function render() {
   const creditsEarned = state.activeChallenge ? D(0) : creditPrestigeReward();
   creditPrestige.disabled = lt(state.tokens, '1e33');
   document.querySelector('#credit-prestige-label').textContent = gte(state.tokens, '1e33') ? (state.activeChallenge ? 'Finish challenge · No credits' : `Credit prestige · +${fmt(creditsEarned)} C$`) : '1De tokens for 1 C$';
+  const skillPrestige = document.querySelector('#skill-prestige-button');
+  const skillPrestigeReady = !state.activeChallenge && gte(state.credits, SKILL_PRESTIGE_COST);
+  skillPrestige.disabled = !skillPrestigeReady;
+  document.querySelector('#skill-prestige-label').textContent = skillPrestigeReady
+    ? 'Skill reset · +0.01 Skill · resets Credits and lower layers'
+    : state.activeChallenge ? 'Finish challenge before Skill reset' : '1e1000 C$ for 0.01 Skill · resets Credits';
   const dataPrestige = document.querySelector('#data-prestige-button');
   const dataCost = pointCost(DATA_PRESTIGE_COST);
   dataPrestige.disabled = lt(state.balance, dataCost);
@@ -2155,7 +2212,7 @@ document.addEventListener('click', event => {
   const currency = sectionOctahedronHits.get(event);
   if (!currency) return;
   state[currency] = CURRENCY_KEYS.includes(currency) ? D(0) : 0;
-  const names = { balance: 'P$', tokens: 'tokens', credits: 'C$', data: '𝔻', spark: '⊹', cubeClicks: 'CC', alpha: 'α', darkMatter: '⊠', ascendance: 'ᛥ', epsilon: 'ε', fishPoints: '🐟', dieShards: 'shards' };
+  const names = { balance: 'P$', tokens: 'tokens', credits: 'C$', data: '𝔻', spark: '⊹', cubeClicks: 'CC', alpha: 'α', darkMatter: '⊠', ascendance: 'ᛥ', epsilon: 'ε', skill: 'Skill', fishPoints: '🐟', dieShards: 'shards' };
   toast(`Octahedron hit · ${names[currency] || currency} reset to 0`);
   render(); save();
 });
@@ -2490,6 +2547,32 @@ document.getElementById('npc-list').addEventListener('click', event => {
   render(); save();
 });
 
+function installSkillInterface() {
+  const skillTab = document.createElement('button');
+  skillTab.type = 'button'; skillTab.className = 'tab'; skillTab.id = 'skill-tab'; skillTab.textContent = 'Skill';
+  document.querySelector('#upgrade-tabs').append(skillTab);
+  const descriptions = [
+    'Starts generating Skill at 1 per second before the ×0.01 debuff.',
+    'Adds 1 Skill per second before the ×0.01 debuff per level. Starts at 0.1 Skill.',
+    'Multiplies Credit and Skill gain by ×1.5 per level. Maximum 2 levels.',
+    ...Array.from({ length: 7 }, (_, index) => `Multibuy. Grants ${SKILL_CP_REWARDS[index + 3]} CP on the first level only.`)
+  ];
+  const skillPanel = document.createElement('section');
+  skillPanel.id = 'skill-upgrades'; skillPanel.hidden = true;
+  skillPanel.innerHTML = `<div class="skill-summary"><strong>Challenge Power <span id="skill-cp" class="challenge-power">0</span> CP</strong><span>Skill <span id="skill-balance">0</span></span></div>${Array.from({ length: 10 }, (_, offset) => {
+    const index = offset + 1;
+    const max = SKILL_UPGRADE_MAX[offset];
+    const reward = SKILL_CP_REWARDS[offset];
+    return `<article class="upgrade skill-upgrade locked" id="upgrade-skill-${index}"><div><h3>${index}S. ${index <= 3 ? ['Skill engine', 'Practice', 'Skill mastery'][offset] : 'Challenge study'}</h3><p>${descriptions[offset]}</p><div class="effect">First level: <span class="challenge-power">+${reward} CP</span> · Level <span id="skill-level-${index}">0</span> / ${max}</div></div><button id="buy-skill-${index}" type="button" disabled></button></article>`;
+  }).join('')}`;
+  document.querySelector('#data-upgrades').before(skillPanel);
+  const prestigeButton = document.createElement('button');
+  prestigeButton.type = 'button'; prestigeButton.id = 'skill-prestige-button'; prestigeButton.disabled = true;
+  prestigeButton.innerHTML = '<span id="skill-prestige-label">1e1000 C$ for 0.01 Skill · resets Credits</span>';
+  document.querySelector('.prestige-actions').append(prestigeButton);
+}
+installSkillInterface();
+
 function chooseTab(tab) {
   if (state.epsilonUnlocked && !state.epsilonEscapeUnlocked && tab !== 'epsilon') return;
   activeTab = tab;
@@ -2519,6 +2602,7 @@ document.querySelector('#traveler-yes').addEventListener('click', () => {
 document.querySelector('#run-tab').addEventListener('click', () => chooseTab('run'));
 document.querySelector('#token-tab').addEventListener('click', () => { if (state.totalPrestiges || gt(state.tokens, 0) || state.garbageUnlocked) chooseTab('token'); });
 document.querySelector('#credit-tab').addEventListener('click', () => { if (state.totalCreditPrestiges || gt(state.credits, 0)) chooseTab('credit'); });
+document.querySelector('#skill-tab').addEventListener('click', () => { if (state.skillUnlocked) chooseTab('skill'); });
 document.querySelector('#data-tab').addEventListener('click', () => { if (state.totalDataPrestiges || gt(state.data, 0) || state.dataLore.some(Boolean)) chooseTab('data'); });
 document.querySelector('#spark-tab').addEventListener('click', () => { if (state.sparkPrestiges || gt(state.spark, 0)) chooseTab('spark'); });
 document.querySelector('#cube-tab').addEventListener('click', () => { if (state.cubeUnlocked) chooseTab('cube'); });
@@ -2528,6 +2612,7 @@ document.querySelector('#alpha-tab').addEventListener('click', () => { if (state
 document.querySelector('#darkmatter-tab').addEventListener('click', () => { if (state.darkMatterUnlocked) chooseTab('darkmatter'); });
 document.querySelector('#epsilon-tab').addEventListener('click', () => { if (state.epsilonUnlocked) chooseTab('epsilon'); });
 document.querySelectorAll('[id^="buy-epsilon-"]').forEach(button => button.addEventListener('click', () => buyEpsilonUpgrade(Number(button.id.at(-1)))));
+document.querySelectorAll('[id^="buy-skill-"]').forEach(button => button.addEventListener('click', () => buySkillUpgrade(Number(button.id.slice('buy-skill-'.length)))));
 document.querySelector('#buy-darkmatter-unlock').addEventListener('click', () => { if (!state.alphaUnlocked || state.darkMatterUnlocked || lt(state.alpha, 1000)) return; changeAlpha(-1000); state.darkMatterUnlocked = true; activeTab = 'darkmatter'; toast(`${matterName()} unlocked`); render(); save(); });
 document.querySelector('#buy-darkmatter-1').addEventListener('click', () => { if (!state.darkMatterUnlocked || state.darkMatter1Bought) return; state.darkMatter1Bought = true; toast(`${matterName()} generation started`); render(); save(); });
 document.querySelector('#buy-darkmatter-2').addEventListener('click', () => { if (!state.darkMatter1Bought || state.darkMatter2Level >= 1000 || lt(state.darkMatter, 2)) return; state.darkMatter = D(0); state.darkMatter2Level += 1; toast(`${matterName()} gain doubled`); render(); save(); });
@@ -2593,6 +2678,18 @@ function performTokenPrestige() {
   render();
 }
 document.querySelector('#credit-prestige-button').addEventListener('click', performCreditPrestige);
+document.querySelector('#skill-prestige-button').addEventListener('click', performSkillPrestige);
+function performSkillPrestige() {
+  if (state.expedition || state.activeChallenge || lt(state.credits, SKILL_PRESTIGE_COST)) return;
+  state.credits = D(0);
+  state.skill = plus(state.skill, .01);
+  state.skillUnlocked = true;
+  state.totalSkillPrestiges += 1;
+  resetCreditRun();
+  activeTab = 'skill';
+  toast('Skill reset · +0.01 Skill');
+  save(); render();
+}
 function performCreditPrestige() {
   if (state.expedition) { finishExpeditionRoom(); return; }
   if (lt(state.tokens, '1e33')) return;
@@ -3261,6 +3358,7 @@ setInterval(() => {
   const elapsed = Math.max(0, (now - lastTick) / 1000);
   lastTick = now;
   tickEpsilon(elapsed);
+  tickSkill(elapsed);
   updateAlphaBouncyBall(elapsed);
   runAutomations();
   if (state.researchBranch === 'automation') for (let i = 0; i < state.researchLevel; i++) runAutomations();
@@ -3322,6 +3420,9 @@ function isValidSave(snapshot) {
       return (typeof value === 'string' && value.trim() !== '' || typeof value === 'number')
         && D(value).isFinite() && D(value).gte(0);
     }
+    if (key === 'skillUpgradeLevels') return Array.isArray(value) && value.length === 10 && value.every((level, index) => Number.isInteger(level) && level >= 0 && level <= SKILL_UPGRADE_MAX[index]);
+    if (key === 'totalSkillPrestiges') return Number.isSafeInteger(value) && value >= 0;
+    if (key === 'skillUnlocked') return typeof value === 'boolean';
     if (key === 'epsilonOctahedrons') return Array.isArray(value) && value.length <= 3 && value.every(n => Number.isInteger(n) && n >= 1 && n <= 9);
     if (key === 'epsilonOctahedronTimer') return Number.isFinite(value) && value >= 0 && value < 5;
     if (key === 'alphaMazeUpgrades') return Array.isArray(value) && value.length === 12 && value.every(item => typeof item === 'boolean');
