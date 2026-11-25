@@ -59,8 +59,8 @@ Object.assign(initialState, {
   sparkCharge: 0, sparkBurstUntil: 0, sparkBurstPower: 1,
   automationPresets: ['off', 'off'], automationSeconds: [30, 60],
   automationReserve: [10, 10], automationLastReset: [0, 0],
-  skillUnlocked: false, totalSkillPrestiges: 0, skillUpgradeLevels: Array(10).fill(0),
-  skill: 0, challengePower: 0
+  skillUnlocked: false, totalSkillPrestiges: 0, skillUpgradeLevels: Array(12).fill(0),
+  skill: 0, challengePower: 0, genTime: 0
 });
 const NPCS = [
   { name: 'Mira', role: 'Foundry mechanic', arrival: 'Here from the start', unlocked: () => true,
@@ -137,7 +137,10 @@ state.epsilonOctahedronTimer = Number.isFinite(savedState.epsilonOctahedronTimer
 state.sectionOctahedrons = Array.isArray(savedState.sectionOctahedrons) && savedState.sectionOctahedrons.length <= 30 && savedState.sectionOctahedrons.every(id => typeof id === 'string' && /^upgrade-[a-z0-9-]{1,80}$/.test(id)) ? savedState.sectionOctahedrons : [];
 state.sectionOctahedronTimer = Number.isFinite(savedState.sectionOctahedronTimer) && savedState.sectionOctahedronTimer >= 0 && savedState.sectionOctahedronTimer < 5 ? savedState.sectionOctahedronTimer : 0;
 state.priceOrigins ||= {};
-state.skillUpgradeLevels = Array.from({ length: 10 }, (_, i) => Math.max(0, Math.min([1, 10, 2, 10, 10, 10, 10, 10, 10, 10][i], Math.floor(Number(savedState.skillUpgradeLevels?.[i]) || 0))));
+state.skillUpgradeLevels = Array.from({ length: 12 }, (_, i) => Math.max(0, Math.min([1, 160, Number.MAX_SAFE_INTEGER, 99, 110, 1, 30, 1, 3, 8, 1, 30][i], Math.floor(Number(savedState.skillUpgradeLevels?.[i]) || 0))));
+state.skillUpgradeLevels[1] = Math.min(state.skillUpgradeLevels[1], 20 + state.skillUpgradeLevels[4] * 2);
+state.skillUpgradeLevels[4] = Math.min(state.skillUpgradeLevels[4], 20 + state.skillUpgradeLevels[11] * 3);
+state.genTime = Number.isFinite(savedState.genTime) && savedState.genTime >= 0 ? savedState.genTime : 0;
 if (!validExpedition(state.expedition) || (state.activeChallenge === 'expedition') !== Boolean(state.expedition)) {
   state.expedition = null;
   if (state.activeChallenge === 'expedition') { state.activeChallenge = ''; state.challengeEndsAt = 0; }
@@ -187,8 +190,7 @@ function save() {
 }
 function incomeBase() { return (state.printer ? 1 : 0) + (state.press ? 1 : 0) + state.incomeLevel * (state.incomeLevel + 1) / 2; }
 const EPSILON_UPGRADE_MAX = [0, 1, 1, 5, 4, 1, 1, 5, 2, 1];
-const SKILL_UPGRADE_MAX = [1, 10, 2, 10, 10, 10, 10, 10, 10, 10];
-const SKILL_CP_REWARDS = [.01, .02, .03, .04, .035, .03, .025, .02, .015, .01];
+const SKILL_UPGRADE_MAX = [1, 20, Number.MAX_SAFE_INTEGER, 99, 20, 1, 30, 1, 3, 8, 1, 30];
 const SKILL_PRESTIGE_COST = D('1e1000');
 function epsilonUpgradeLevel(index) { return index === 1 ? Number(state.epsilonUpgrade1Bought) : index === 9 ? Number(state.epsilonUpgrade9Bought) : state[`epsilonUpgrade${index}Level`]; }
 function epsilonUpgradeCost(index, level = epsilonUpgradeLevel(index)) {
@@ -217,25 +219,70 @@ function epsilonGainRate() {
     .times(D(2.5).pow(state.epsilonUpgrade8Level));
 }
 function skillUpgradeCost(index, level = state.skillUpgradeLevels[index - 1]) {
-  if (index === 1) return D(0);
-  const tierCost = index === 2 ? .1 : index === 3 ? .3 : 10 ** (index - 4);
-  return D(tierCost).times(D(2).pow(level));
+  const baseCost = [0, 0, .1, .5, 5, 1, 15, 30, 0, 0, 0, 40, 100][index];
+  return D(baseCost).times(D(2).pow(level));
 }
-function skillUpgradeReady(index) { return index === 1 || state.skillUpgradeLevels[index - 2] > 0; }
+function skillGenTimeCost(index, level = state.skillUpgradeLevels[index - 1]) {
+  return index === 10 ? D(180).times(D(2).pow(level)) : index === 11 ? D(330) : D(0);
+}
+function skillUpgradeMax(index) {
+  if (index === 2) return 20 + state.skillUpgradeLevels[4] * 2;
+  if (index === 5) return 20 + state.skillUpgradeLevels[11] * 3;
+  return SKILL_UPGRADE_MAX[index - 1];
+}
+function skillUpgradeReady(index) {
+  if (index === 1) return true;
+  const prerequisite = { 2: 1, 3: 2, 4: 3, 5: 3, 6: 4, 7: 6, 8: 7, 9: 8, 10: 8, 11: 10, 12: 11 }[index];
+  return state.skillUpgradeLevels[prerequisite - 1] > 0;
+}
+function skillUpgradeEffect(index) {
+  if (index === 1) return 'Base Skill rate: +1 Skill/sec before debuff';
+  if (index === 2) return 'Base Skill rate: +0.5 Skill/sec per level before debuff';
+  if (index === 3) return `Base Skill rate: +${state.challengePower} Skill/sec per level before debuff`;
+  if (index === 4) return `Skill gain multiplier: ×${(0.01 * (1 + state.skillUpgradeLevels[3])).toFixed(2)}`;
+  if (index === 5) return `2S max level: ${skillUpgradeMax(2)}`;
+  if (index === 6) return state.skillUpgradeLevels[5] > 0 ? 'Hover bonus: ×2 Skill gain' : 'Unlock: hover doubles Skill gain';
+  if (index === 7) return 'Base Skill rate: +5 Skill/sec per level before debuff';
+  if (index === 8) return 'Unlocks +1 GenTime/sec';
+  if (index === 9) return 'Skill gain: ×1.2 per level';
+  if (index === 10) return 'GenTime gain: ×1.05 per level';
+  if (index === 11) return 'Hovered Small Dodecahedron: ×2 GenTime';
+  if (index === 12) return `5S max level: ${skillUpgradeMax(5)}`;
+  return '';
+}
+let smallDodecahedronHovered = false;
+function formatGenTime(seconds) {
+  const total = Math.floor(seconds);
+  const days = Math.floor(total / 86400);
+  const hours = Math.floor(total % 86400 / 3600);
+  const minutes = Math.floor(total % 3600 / 60);
+  const remainder = total % 60;
+  return `${days}d ${hours}h ${minutes}m ${remainder}s`;
+}
 function skillGainRate() {
-  if (!state.skillUpgradeLevels[0]) return D(0);
-  return D(1 + state.skillUpgradeLevels[1]).times(.01).times(D(1.5).pow(state.skillUpgradeLevels[2]));
+  const levels = state.skillUpgradeLevels;
+  const baseRate = D(Number(levels[0] > 0) + levels[1] * .5 + D(state.challengePower).toNumber() * levels[2] + levels[6] * 5);
+  const debuff = .01 * (1 + levels[3]);
+  const dodecahedron = levels[5] > 0 && smallDodecahedronHovered ? 2 : 1;
+  return baseRate.times(debuff).times(D(1.2).pow(levels[8])).times(dodecahedron);
 }
 function tickSkill(elapsed) {
   const earned = skillGainRate().times(elapsed);
   if (gt(earned, 0)) state.skill = plus(state.skill, earned);
+  if (state.skillUpgradeLevels[7] > 0) {
+    const speed = D(1.05).pow(state.skillUpgradeLevels[9]);
+    const dodecahedron = state.skillUpgradeLevels[10] > 0 && smallDodecahedronHovered ? 2 : 1;
+    state.genTime += speed.times(elapsed).times(dodecahedron).toNumber();
+  }
 }
 function buySkillUpgrade(index) {
-  if (!Number.isInteger(index) || index < 1 || index > 10 || !state.skillUnlocked || !skillUpgradeReady(index) || state.skillUpgradeLevels[index - 1] >= SKILL_UPGRADE_MAX[index - 1]) return;
+  if (!Number.isInteger(index) || index < 1 || index > 12 || !state.skillUnlocked || !skillUpgradeReady(index) || state.skillUpgradeLevels[index - 1] >= skillUpgradeMax(index)) return;
   const cost = skillUpgradeCost(index);
-  if (lt(state.skill, cost)) return;
+  const timeCost = skillGenTimeCost(index);
+  if (lt(state.skill, cost) || lt(state.genTime, timeCost)) return;
   state.skill = minus(state.skill, cost);
-  if (state.skillUpgradeLevels[index - 1] === 0) state.challengePower = plus(state.challengePower, SKILL_CP_REWARDS[index - 1]);
+  state.genTime -= timeCost.toNumber();
+  if (state.skillUpgradeLevels[index - 1] === 0) state.challengePower = plus(state.challengePower, 1);
   state.skillUpgradeLevels[index - 1] += 1;
   toast(`Upgrade ${index}S bought`);
   render(); save();
@@ -935,7 +982,7 @@ function buyCyanUpgrade(index) {
 function creditPrestigeReward() {
   let reward = state.tokens.div('1e33').floor().times(creditMultiplier());
   if (state.ascCreditExponent) reward = reward.pow(1.5);
-  return softenGain(reward, 'credits').times(expeditionMultiplier(1)).times(D(1.5).pow(state.skillUpgradeLevels[2]));
+  return softenGain(reward, 'credits').times(expeditionMultiplier(1));
 }
 function dataReward(cost) {
   return softenGain(applyCurrencyGain(state.balance.div(cost).floor()), 'data');
@@ -1727,7 +1774,7 @@ function render() {
   const counter = activeTab === 'epsilon'
     ? { label: 'AVAILABLE EPSILON · ε', value: state.epsilon, color: 'epsilon', detail: `${fmt(epsilonGainRate())} ε per second` }
     : activeTab === 'skill'
-    ? { label: 'AVAILABLE SKILL', value: state.skill, color: 'skill', detail: `${fmt(skillGainRate())} Skill per second · ${fmt(state.challengePower)} CP` }
+    ? { label: 'AVAILABLE SKILL', value: state.skill, color: 'skill', detail: `${fmt(skillGainRate())} Skill per second · ${fmt(state.challengePower)} DP` }
     : activeTab === 'spark'
     ? { label: 'AVAILABLE SPARK · ⊹', value: state.spark, color: 'spark', detail: `${fmt(rate())} P$ per second` }
     : activeTab === 'darkmatter'
@@ -1926,18 +1973,27 @@ function render() {
   document.querySelector('#skill-upgrades').hidden = activeTab !== 'skill';
   document.querySelector('#skill-balance').textContent = fmt(state.skill);
   document.querySelector('#skill-cp').textContent = fmt(state.challengePower);
-  for (let index = 1; index <= 10; index += 1) {
+  document.querySelector('#gen-time-panel').hidden = state.skillUpgradeLevels[7] === 0;
+  document.querySelector('#gen-time').textContent = formatGenTime(state.genTime);
+  const dodecahedron = document.querySelector('#small-dodecahedron');
+  dodecahedron.hidden = state.skillUpgradeLevels[5] === 0;
+  dodecahedron.classList.toggle('hovered', smallDodecahedronHovered);
+  for (let index = 1; index <= 12; index += 1) {
     const level = state.skillUpgradeLevels[index - 1];
+    const max = skillUpgradeMax(index);
     const cost = skillUpgradeCost(index);
+    const timeCost = skillGenTimeCost(index);
     const ready = skillUpgradeReady(index);
-    const maxed = level >= SKILL_UPGRADE_MAX[index - 1];
+    const maxed = level >= max;
     const button = document.querySelector(`#buy-skill-${index}`);
-    button.disabled = !state.skillUnlocked || !ready || maxed || lt(state.skill, cost);
-    button.textContent = maxed ? 'MAX LEVEL' : cost.eq(0) ? 'Free' : `${fmt(cost)} Skill`;
+    button.disabled = !state.skillUnlocked || !ready || maxed || lt(state.skill, cost) || lt(state.genTime, timeCost);
+    button.textContent = maxed ? 'MAX LEVEL' : [cost.gt(0) ? `${fmt(cost)} Skill` : '', timeCost.gt(0) ? `${formatGenTime(timeCost.toNumber())} GenTime` : ''].filter(Boolean).join(' · ') || 'Free';
     const card = document.querySelector(`#upgrade-skill-${index}`);
     card.hidden = !state.skillUnlocked || !ready && level === 0;
     card.classList.toggle('locked', !ready);
     document.querySelector(`#skill-level-${index}`).textContent = level;
+    document.querySelector(`#skill-level-max-${index}`).textContent = Number.isFinite(max) ? max : '∞';
+    document.querySelector(`#skill-effect-${index}`).textContent = skillUpgradeEffect(index);
   }
   document.querySelector('#epsilon-tab').hidden = !state.epsilonUnlocked;
   document.querySelector('#epsilon-tab').classList.toggle('active', activeTab === 'epsilon');
@@ -2154,8 +2210,8 @@ function render() {
   const skillPrestigeReady = !state.activeChallenge && gte(state.credits, SKILL_PRESTIGE_COST);
   skillPrestige.disabled = !skillPrestigeReady;
   document.querySelector('#skill-prestige-label').textContent = skillPrestigeReady
-    ? 'Skill reset · +0.01 Skill · resets Credits and lower layers'
-    : state.activeChallenge ? 'Finish challenge before Skill reset' : '1e1000 C$ for 0.01 Skill · resets Credits';
+    ? 'Unlock Skill · +0.01 Skill · resets Credits and lower layers'
+    : state.activeChallenge ? 'Finish challenge before Skill reset' : '1e1000 C$ to unlock Skill · +0.01 Skill · resets Credits';
   const dataPrestige = document.querySelector('#data-prestige-button');
   const dataCost = pointCost(DATA_PRESTIGE_COST);
   dataPrestige.disabled = lt(state.balance, dataCost);
@@ -2551,21 +2607,36 @@ function installSkillInterface() {
   const skillTab = document.createElement('button');
   skillTab.type = 'button'; skillTab.className = 'tab'; skillTab.id = 'skill-tab'; skillTab.textContent = 'Skill';
   document.querySelector('#upgrade-tabs').append(skillTab);
-  const descriptions = [
-    'Starts generating Skill at 1 per second before the ×0.01 debuff.',
-    'Adds 1 Skill per second before the ×0.01 debuff per level. Starts at 0.1 Skill.',
-    'Multiplies Credit and Skill gain by ×1.5 per level. Maximum 2 levels.',
-    ...Array.from({ length: 7 }, (_, index) => `Multibuy. Grants ${SKILL_CP_REWARDS[index + 3]} CP on the first level only.`)
+  const upgrades = [
+    ['Skill engine', 'Start generating 1 Skill per second before the Skill debuff.', '1'],
+    ['Practice', 'Add 0.5 Skill per second before the Skill debuff per level.', '20'],
+    ['Difficulty study', 'Add your current DP as Skill per second before the Skill debuff.', 'No limit'],
+    ['Debuff tuning', 'Increase the Skill debuff by 0.01 per level, up to 1.00×.', '99'],
+    ['Practice capacity', 'Increase the maximum level of 2S by 2 per level.', '20'],
+    ['Small Dodecahedron', 'Unlock a Small Dodecahedron. Hover over it to double Skill gain.', '1'],
+    ['Focused practice', 'Add 5 Skill per second before the Skill debuff per level.', '30'],
+    ['Generic Stopwatch', 'Unlock the stopwatch. GenTime increases by one second per second.', '1'],
+    ['Skill multiplier', 'Multiply Skill gain by 1.2 per level.', '3'],
+    ['Stopwatch speed', 'Multiply GenTime gain by 1.05 per level.', '8'],
+    ['Dodecahedron timing', 'The Small Dodecahedron also doubles GenTime gain while hovered.', '1'],
+    ['Expanded practice', 'Increase the maximum level of 5S by 3 per level.', '30']
   ];
   const skillPanel = document.createElement('section');
   skillPanel.id = 'skill-upgrades'; skillPanel.hidden = true;
-  skillPanel.innerHTML = `<div class="skill-summary"><strong>Challenge Power <span id="skill-cp" class="challenge-power">0</span> CP</strong><span>Skill <span id="skill-balance">0</span></span></div>${Array.from({ length: 10 }, (_, offset) => {
+  skillPanel.innerHTML = `<div class="skill-summary"><strong>Difficulty Power <span id="skill-cp" class="challenge-power">0</span> DP</strong><span>Skill <span id="skill-balance">0</span></span></div>
+    <div id="gen-time-panel" class="gen-time-panel" hidden><strong>Generic Stopwatch</strong><span id="gen-time">0d 0h 0m 0s</span></div>
+    <div id="small-dodecahedron" class="small-dodecahedron" role="img" tabindex="0" aria-label="Small Dodecahedron. Hover or focus to double Skill gain." hidden><span>Small Dodecahedron</span></div>
+    ${upgrades.map(([name, description, max], offset) => {
     const index = offset + 1;
-    const max = SKILL_UPGRADE_MAX[offset];
-    const reward = SKILL_CP_REWARDS[offset];
-    return `<article class="upgrade skill-upgrade locked" id="upgrade-skill-${index}"><div><h3>${index}S. ${index <= 3 ? ['Skill engine', 'Practice', 'Skill mastery'][offset] : 'Challenge study'}</h3><p>${descriptions[offset]}</p><div class="effect">First level: <span class="challenge-power">+${reward} CP</span> · Level <span id="skill-level-${index}">0</span> / ${max}</div></div><button id="buy-skill-${index}" type="button" disabled></button></article>`;
+    return `<article class="upgrade skill-upgrade locked" id="upgrade-skill-${index}"><div><h3>${index}S. ${name}</h3><p>${description}</p><div class="effect">First level: <span class="challenge-power">+1 DP</span> · <span id="skill-effect-${index}">${skillUpgradeEffect(index)}</span> · Level <span id="skill-level-${index}">0</span> / <span id="skill-level-max-${index}">${max}</span></div></div><button id="buy-skill-${index}" type="button" disabled></button></article>`;
   }).join('')}`;
   document.querySelector('#data-upgrades').before(skillPanel);
+  const dodecahedron = document.querySelector('#small-dodecahedron');
+  const setDodecahedronHovered = hovered => { smallDodecahedronHovered = hovered; };
+  dodecahedron.addEventListener('pointerenter', () => setDodecahedronHovered(true));
+  dodecahedron.addEventListener('pointerleave', () => setDodecahedronHovered(false));
+  dodecahedron.addEventListener('focus', () => setDodecahedronHovered(true));
+  dodecahedron.addEventListener('blur', () => setDodecahedronHovered(false));
   const prestigeButton = document.createElement('button');
   prestigeButton.type = 'button'; prestigeButton.id = 'skill-prestige-button'; prestigeButton.disabled = true;
   prestigeButton.innerHTML = '<span id="skill-prestige-label">1e1000 C$ for 0.01 Skill · resets Credits</span>';
@@ -3420,9 +3491,16 @@ function isValidSave(snapshot) {
       return (typeof value === 'string' && value.trim() !== '' || typeof value === 'number')
         && D(value).isFinite() && D(value).gte(0);
     }
-    if (key === 'skillUpgradeLevels') return Array.isArray(value) && value.length === 10 && value.every((level, index) => Number.isInteger(level) && level >= 0 && level <= SKILL_UPGRADE_MAX[index]);
+    if (key === 'skillUpgradeLevels') {
+      const legacyMax = [1, 10, 2, 10, 10, 10, 10, 10, 10, 10];
+      if (!Array.isArray(value) || ![10, 12].includes(value.length)) return false;
+      const maxLevels = value.length === 10 ? legacyMax : SKILL_UPGRADE_MAX;
+      return value.every((level, index) => Number.isSafeInteger(level) && level >= 0 && level <= maxLevels[index])
+        && (value.length === 10 || value[1] <= 20 + value[4] * 2 && value[4] <= 20 + value[11] * 3);
+    }
     if (key === 'totalSkillPrestiges') return Number.isSafeInteger(value) && value >= 0;
     if (key === 'skillUnlocked') return typeof value === 'boolean';
+    if (key === 'genTime') return Number.isFinite(value) && value >= 0;
     if (key === 'epsilonOctahedrons') return Array.isArray(value) && value.length <= 3 && value.every(n => Number.isInteger(n) && n >= 1 && n <= 9);
     if (key === 'epsilonOctahedronTimer') return Number.isFinite(value) && value >= 0 && value < 5;
     if (key === 'alphaMazeUpgrades') return Array.isArray(value) && value.length === 12 && value.every(item => typeof item === 'boolean');
