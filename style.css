@@ -237,22 +237,15 @@ body[data-achievement-theme="violet"] .expansion-panel { border-color: #a073e8; 
 #fortune-hint[data-notches="3"]::after { content: '◆ ◆ ◆ ◇'; }
 #fortune-wedges select { width: min(100%, 32rem); }
 
-.skill-summary { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 10px; padding: 10px 12px; border: 1px solid #9acda2; background: #f7fff8; }
-.skill-upgrade { --skill-shade: #f7fff8; background: linear-gradient(110deg, #fff, var(--skill-shade)); border-color: #9acda2; }
-.skill-upgrade:nth-of-type(2) { --skill-shade: #f0fff2; }
-.skill-upgrade:nth-of-type(3) { --skill-shade: #e8fbe9; }
-.skill-upgrade:nth-of-type(4) { --skill-shade: #e0f8e3; }
-.skill-upgrade:nth-of-type(5) { --skill-shade: #d7f3dc; }
-.skill-upgrade:nth-of-type(6) { --skill-shade: #cdefd3; }
-.skill-upgrade:nth-of-type(7) { --skill-shade: #c2e9ca; }
-.skill-upgrade:nth-of-type(8) { --skill-shade: #b6e3bf; }
-.skill-upgrade:nth-of-type(9) { --skill-shade: #a9ddb4; }
-.skill-upgrade:nth-of-type(10) { --skill-shade: #9bd6a7; }
-.skill-upgrade:nth-of-type(11) { --skill-shade: #8dce9b; }
-.skill-upgrade :is(h3, p, .effect) { color: #205d31; }
+.skill-summary, .gen-time-panel { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 10px; padding: 10px 12px; border: 1px solid #9acda2; background: #f7fff8; }
+.skill-upgrade { background: linear-gradient(110deg, #fff 0%, #59b96d 55%, #090909 100%); border-color: #28743a; color: #fff; }
+.skill-upgrade :is(h3, p, .effect) { color: #fff; text-shadow: 0 1px 3px #000; }
 .skill-upgrade button { border-color: #78b987; color: #205d31; }
 .balance.currency-skill { color: #25813a; }
-.challenge-power { color: transparent; background: linear-gradient(90deg, #090909, #ed19bd); background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700; }
+.challenge-power { color: transparent; background: linear-gradient(90deg, #090909 0%, #ed19bd 38%, #ff3434 52%, #ffcc32 65%, #3bdb66 76%, #39aaff 88%, #9a55ff 100%); background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700; }
+.gen-time-panel { border-color: #317b47; background: linear-gradient(90deg, #fff, #cef2d3); }
+.small-dodecahedron { display: grid; place-items: center; width: 140px; min-height: 100px; margin: 14px auto; padding: 12px; cursor: default; clip-path: polygon(50% 0, 94% 24%, 100% 68%, 72% 100%, 28% 100%, 0 68%, 6% 24%); color: #fff; text-align: center; text-shadow: 0 1px 3px #000; background: linear-gradient(145deg, #e8fff0, #3caa5b 48%, #101010); transition: filter .15s ease, transform .15s ease; }
+.small-dodecahedron:hover, .small-dodecahedron:focus-visible, .small-dodecahedron.hovered { filter: brightness(1.25); transform: scale(1.04); outline: none; }
 
 .kirby-panel { margin: 20px 0; padding: 20px; border: 2px solid #d96b98; border-radius: 16px; background: color-mix(in srgb, #ffb4d2 14%, transparent); }
 .kirby-panel[hidden] { display: none; }
