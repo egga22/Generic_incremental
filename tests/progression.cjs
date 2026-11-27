@@ -1095,11 +1095,11 @@ const skillMigration = new JSDOM(fs.readFileSync('index.html','utf8'), {url:'htt
 const smc = skillMigration.getInternalVMContext(); smc.setInterval=()=>1; smc.setTimeout=()=>1; smc.clearTimeout=()=>{};
 smc.localStorage.setItem('pocket-foundry-save-v2', JSON.stringify({
   balance: 0, runEarned: 0, skillUnlocked: true, challengePower: '0.3',
-  skillUpgradeLevels: [1, 2, 55, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  skillUpgradeLevels: [1, 2, Number.MAX_SAFE_INTEGER, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 }));
 vm.runInContext('(function(){'+fs.readFileSync('break_eternity.js','utf8').replace(/export \{[\s\S]*?\};/,'globalThis.Decimal = y;')+'})();',smc);
 vm.runInContext(source,smc);
 assert(smc.testAPI.state.challengePower.eq(3), 'loading a legacy save recalculates DP from distinct owned upgrades');
-assert.equal(smc.testAPI.state.skillUpgradeLevels[2], 55, 'legacy 3S levels above the new cap are preserved');
-assert.equal(skillMigration.window.document.getElementById('skill-level-max-3').textContent, '55', 'over-cap legacy 3S progress is grandfathered and locked');
+assert.equal(smc.testAPI.state.skillUpgradeLevels[2], 50, 'legacy 3S levels above the cap are normalized');
+assert.equal(skillMigration.window.document.getElementById('skill-level-max-3').textContent, '50', 'legacy saves show the finite 3S cap');
 console.log('Skill passed: unlock reset, 12 upgrades, DP first-purchase rewards, hover bonus, GenTime, and save validation.');

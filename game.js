@@ -137,7 +137,7 @@ state.epsilonOctahedronTimer = Number.isFinite(savedState.epsilonOctahedronTimer
 state.sectionOctahedrons = Array.isArray(savedState.sectionOctahedrons) && savedState.sectionOctahedrons.length <= 30 && savedState.sectionOctahedrons.every(id => typeof id === 'string' && /^upgrade-[a-z0-9-]{1,80}$/.test(id)) ? savedState.sectionOctahedrons : [];
 state.sectionOctahedronTimer = Number.isFinite(savedState.sectionOctahedronTimer) && savedState.sectionOctahedronTimer >= 0 && savedState.sectionOctahedronTimer < 5 ? savedState.sectionOctahedronTimer : 0;
 state.priceOrigins ||= {};
-state.skillUpgradeLevels = Array.from({ length: 12 }, (_, i) => Math.max(0, Math.min([1, 160, Number.MAX_SAFE_INTEGER, 99, 110, 1, 30, 1, 3, 8, 1, 30][i], Math.floor(Number(savedState.skillUpgradeLevels?.[i]) || 0))));
+state.skillUpgradeLevels = Array.from({ length: 12 }, (_, i) => Math.max(0, Math.min([1, 160, 50, 99, 110, 1, 30, 1, 3, 8, 1, 30][i], Math.floor(Number(savedState.skillUpgradeLevels?.[i]) || 0))));
 state.skillUpgradeLevels[1] = Math.min(state.skillUpgradeLevels[1], 20 + state.skillUpgradeLevels[4] * 2);
 state.skillUpgradeLevels[4] = Math.min(state.skillUpgradeLevels[4], 20 + state.skillUpgradeLevels[11] * 3);
 state.challengePower = D(state.skillUpgradeLevels.filter(level => level > 0).length);
@@ -229,7 +229,6 @@ function skillGenTimeCost(index, level = state.skillUpgradeLevels[index - 1]) {
 function skillUpgradeMax(index) {
   if (index === 2) return 20 + state.skillUpgradeLevels[4] * 2;
   if (index === 5) return 20 + state.skillUpgradeLevels[11] * 3;
-  if (index === 3) return Math.max(SKILL_UPGRADE_MAX[index - 1], state.skillUpgradeLevels[index - 1]);
   return SKILL_UPGRADE_MAX[index - 1];
 }
 function skillUpgradeReady(index) {
