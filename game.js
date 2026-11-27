@@ -148,6 +148,7 @@ if (!validExpedition(state.expedition) || (state.activeChallenge === 'expedition
 }
 let toastTimer;
 let activeTab = state.epsilonUnlocked && !state.epsilonEscapeUnlocked ? 'epsilon' : 'run';
+let activeSectionCategory = '';
 let travelerAppears = false;
 let npcListMarkup = '';
 const sectionOctahedronHits = new WeakMap();
@@ -2017,6 +2018,11 @@ function render() {
   if (epsilonTrapped) document.querySelector('#upgrade-tabs').hidden = true;
   renderNPCs();
   renderCasino();
+  document.querySelectorAll('#upgrade-tabs .tab').forEach(tab => {
+    if (tab.classList.contains('active')) tab.setAttribute('aria-current', 'page');
+    else tab.removeAttribute('aria-current');
+  });
+  renderSectionMenu();
   document.querySelector('#alpha-gain-amount').textContent = fmt(applyAlphaGain(1 + state.alphaBoostLevel).times(cubeMultiplier('alpha')));
   document.querySelector('#alpha-boost-level').textContent = state.alphaBoostLevel;
   const alphaBoostMax = 50 + state.alphaCapLevel * 2;
@@ -2563,7 +2569,9 @@ document.querySelector('#max-buy-toggle').addEventListener('click', () => {
 document.querySelector('#sections-toggle').addEventListener('click', () => {
   if (state.epsilonUnlocked && !state.epsilonEscapeUnlocked) return;
   const tabs = document.querySelector('#upgrade-tabs');
+  activeSectionCategory = '';
   tabs.hidden = !tabs.hidden;
+  renderSectionMenu();
   document.querySelector('#sections-toggle').setAttribute('aria-expanded', String(!tabs.hidden));
 });
 function renderNPCs() {
@@ -2607,7 +2615,7 @@ document.getElementById('npc-list').addEventListener('click', event => {
 function installSkillInterface() {
   const skillTab = document.createElement('button');
   skillTab.type = 'button'; skillTab.className = 'tab'; skillTab.id = 'skill-tab'; skillTab.textContent = 'Skill';
-  document.querySelector('#upgrade-tabs').append(skillTab);
+  document.querySelector('#b-sides-section-tabs').append(skillTab);
   const upgrades = [
     ['Skill engine', 'Start generating 1 Skill per second before the Skill debuff.', '1'],
     ['Practice', 'Add 0.5 Skill per second before the Skill debuff per level.', '20'],
@@ -2648,10 +2656,50 @@ installSkillInterface();
 function chooseTab(tab) {
   if (state.epsilonUnlocked && !state.epsilonEscapeUnlocked && tab !== 'epsilon') return;
   activeTab = tab;
+  activeSectionCategory = '';
   document.querySelector('#upgrade-tabs').hidden = true;
   document.querySelector('#sections-toggle').setAttribute('aria-expanded', 'false');
   render();
 }
+function renderSectionMenu() {
+  const categories = Array.from(document.querySelectorAll('[data-section-category]'));
+  categories.forEach(button => {
+    const category = button.dataset.sectionCategory;
+    const tabs = Array.from(document.querySelectorAll(`[data-category-sections="${category}"] .tab`));
+    const count = tabs.filter(tab => !tab.hidden).length;
+    button.hidden = count === 0;
+    button.querySelector('[data-category-count]').textContent = `${count} section${count === 1 ? '' : 's'}`;
+    button.setAttribute('aria-expanded', String(activeSectionCategory === category));
+  });
+  const directory = document.getElementById('section-directory');
+  const submenu = document.getElementById('section-submenu');
+  directory.hidden = Boolean(activeSectionCategory);
+  submenu.hidden = !activeSectionCategory;
+  document.getElementById('section-submenu-title').textContent = {
+    mainline: 'MAINLINE',
+    bonus: 'BONUS',
+    'b-sides': 'B-SIDES',
+    shapes: 'SHAPES'
+  }[activeSectionCategory] || '';
+  document.querySelectorAll('[data-category-sections]').forEach(sections => {
+    sections.hidden = sections.dataset.categorySections !== activeSectionCategory;
+  });
+  if (activeSectionCategory && document.querySelector(`[data-category-sections="${activeSectionCategory}"]`).querySelectorAll('.tab:not([hidden])').length === 0) {
+    activeSectionCategory = '';
+    renderSectionMenu();
+  }
+}
+document.querySelectorAll('[data-section-category]').forEach(button => button.addEventListener('click', () => {
+  activeSectionCategory = button.dataset.sectionCategory;
+  renderSectionMenu();
+  document.getElementById('sections-back').focus();
+}));
+document.getElementById('sections-back').addEventListener('click', () => {
+  const previousCategory = activeSectionCategory;
+  activeSectionCategory = '';
+  renderSectionMenu();
+  document.querySelector(`[data-section-category="${previousCategory}"]`)?.focus();
+});
 document.querySelector('#npc-tab').addEventListener('click', () => {
   if (state.epsilonUnlocked && !state.epsilonEscapeUnlocked) return;
   travelerAppears = Math.random() < 0.4;
