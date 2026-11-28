@@ -229,7 +229,7 @@ function skillUpgradeCost(index, level = state.skillUpgradeLevels[index - 1]) {
   return D(baseCost).times(D(2).pow(level));
 }
 function skillGenTimeCost(index, level = state.skillUpgradeLevels[index - 1]) {
-  const costs = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 180, 330, 0, 0, 0, 1800000, 3600, 10800, 36000, 86400, 259200];
+  const costs = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 180, 330, 0, 0, 0, 3600, 3600, 10800, 36000, 86400, 259200];
   return index === 10 ? D(costs[index]).times(D(2).pow(level)) : D(costs[index] || 0);
 }
 function skillUpgradeMax(index) {

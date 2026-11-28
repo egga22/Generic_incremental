@@ -1105,7 +1105,7 @@ assert(!a.isValidSave({...skillSave, skillUpgradeLevels: [1, 23, ...skillState.s
 assert(!a.isValidSave({...skillSave, genTime: -1}), 'negative GenTime is rejected');
 assert.equal(a.skillUpgradeCost(13).toNumber(), 1000, '13S starts at 1K Skill');
 assert.equal(a.skillUpgradeCost(14).toNumber(), 1000, '14S starts at 1K Skill');
-assert.equal(a.skillGenTimeCost(15).toNumber(), 1800000, '15S costs 30 minutes of GenTime');
+assert.equal(a.skillGenTimeCost(15).toNumber(), 3600, '15S costs 1 hour of GenTime');
 skillState.skill = a.D('1e30'); skillState.genTime = 0; a.render();
 doc.getElementById('buy-skill-13').click();
 assert(!doc.getElementById('fuel-meter-panel').hidden, '13S unlocks the Fuel Meter');
