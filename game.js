@@ -6,6 +6,7 @@ const BASE_MAX_UPGRADE_LEVEL = 1000;
 const FISHING_COST = 100;
 const FISHING_REEL_WINDOW = 1600;
 const RED_FISH_REEL_WINDOW = 850;
+const DARK_MATTER_2_MAX = 20;
 const GARBAGE_COST = '1e900';
 const MAINLINE_SOFT_CAP = '1e1000';
 const SKILL_UPGRADE_MAX = [1, 20, 50, 99, 20, 1, 30, 1, 3, 8, 1, 30, 1, 1, 1, 1, 1, 1, 1, 1];
@@ -22,8 +23,9 @@ const gt = (a, b) => D(a).gt(b);
 const gte = (a, b) => D(a).gte(b);
 const plus = (a, b) => D(a).plus(b);
 const minus = (a, b) => D(a).minus(b);
-const initialState = { balance: 0, runEarned: 0, lifetime: 0, printer: false, press: false, multiplierLevel: 0, incomeLevel: 0, powerLevel: 0, clickLevel: 0, logLevel: 0, exponentLevel: 0, exponentCapLevel: 0, capLevel: 0, tokens: 0, totalPrestiges: 0, tokenResetCount: 0, tokenMultiplierLevel: 0, discountLevel: 0, tokenBoostLevel: 0, expansionUnlocked: false, maxBuyUnlocked: false, maxBuyActive: false, tokenCreditLevel: 0, tokenDiscountLevel: 0, credits: 0, totalCreditPrestiges: 0, data: 0, totalDataPrestiges: 0, dataLore: Array(5).fill(false), gainZeroBought: false, gainZeroActive: false, priceOrigins: {}, creditEngine: false, creditExponentLevel: 0, heavyMint: false, cubeUnlocked: false, cubeLevel: 0, cubeClicks: 0, cubeTarget: 'points', freeRunUpgrades: false, passiveTokens: false, alphaUnlocked: false, alpha: 0, alphaGainPurchases: 0, alphaBoostLevel: 0, alphaCapLevel: 0, alphaNeutralBought: false, alphaGeneratorBought: false, alphaButtonNamesBought: false, alphaWobbleBought: false, alphaPowerOneBought: false, alphaBouncyBallBought: false, fishingUnlocked: false, fishPoints: 0, fishGainLevel: 0, redFishLevel: 0, fishAlphaLevel: 0, garbageUnlocked: false, darkMatterUnlocked: false, darkMatter: 0, darkMatter1Bought: false, darkMatter2Bought: false, darkMatter2Level: 0, darkMatter3Bought: false, darkMatter4Bought: false, darkMatterCoinBoost: 1, darkMatterFlipTimer: 0, darkMatterFlipDuration: 1, pyramidUnlocked: false, activeChallenge: '', challengeEndsAt: 0, completedChallenges: [], creditChallengeBoost: false, automationsUnlocked: false, automationBought: Array(12).fill(false), automationActive: Array(12).fill(false), ascendance: 0, totalAscendances: 0, ascCurrencyBoost: false, ascCreditExponent: false, ascCubePowerLevel: 0, ascCubeAutoclicker: false, ascCubeAscendance: false, ascCubeAlpha: false, ascPointDiscountLevel: 0, ascTotalLevelBoost: false, ascAllCurrencyLevel: 0, ascMainlinePowerLevel: 0, scaryModeLevel: 0, scaryModeActive: true, spark: 0, sparkPrestiges: 0, sparkUpgrade1Level: 0, sparkUpgrade2Level: 0, sparkUpgrade3Level: 0, pointUpgrade16Bought: false, pointUpgrade17Bought: false, pointUpgrade18Bought: false, pointUpgrade19Bought: false, pointUpgrade20Bought: false, pointUpgrade21Bought: false, pointUpgrade22Level: 0, pointUpgrade23Level: 0, cyan13Bought: false, cyan14Level: 0, cyan15Bought: false, cyanSquareCounts: [0, 0, 0] };
+const initialState = { balance: 0, runEarned: 0, lifetime: 0, printer: false, press: false, multiplierLevel: 0, incomeLevel: 0, powerLevel: 0, clickLevel: 0, logLevel: 0, exponentLevel: 0, exponentCapLevel: 0, capLevel: 0, tokens: 0, totalPrestiges: 0, tokenResetCount: 0, tokenMultiplierLevel: 0, discountLevel: 0, tokenBoostLevel: 0, expansionUnlocked: false, maxBuyUnlocked: false, maxBuyActive: false, tokenCreditLevel: 0, tokenDiscountLevel: 0, credits: 0, totalCreditPrestiges: 0, data: 0, totalDataPrestiges: 0, dataLore: Array(5).fill(false), gainZeroBought: false, gainZeroActive: false, priceOrigins: {}, creditEngine: false, creditExponentLevel: 0, heavyMint: false, cubeUnlocked: false, cubeLevel: 0, cubeClicks: 0, cubeTarget: 'points', freeRunUpgrades: false, passiveTokens: false, alphaUnlocked: false, alpha: 0, alphaGainPurchases: 0, alphaBoostLevel: 0, alphaCapLevel: 0, alphaNeutralBought: false, alphaGeneratorBought: false, alphaButtonNamesBought: false, alphaWobbleBought: false, alphaPowerOneBought: false, alphaBouncyBallBought: false, fishingUnlocked: false, fishPoints: 0, fishGainLevel: 0, redFishLevel: 0, fishAlphaLevel: 0, garbageUnlocked: false, darkMatterUnlocked: false, darkMatter: 0, darkMatter1Bought: false, darkMatter2Bought: false, darkMatter2Level: 0, darkMatter3Bought: false, darkMatter4Bought: false, darkMatter5Bought: false, darkMatterCoinBoost: 1, darkMatterFlipTimer: 0, darkMatterFlipDuration: 1, pyramidUnlocked: false, activeChallenge: '', challengeEndsAt: 0, completedChallenges: [], creditChallengeBoost: false, automationsUnlocked: false, automationBought: Array(12).fill(false), automationActive: Array(12).fill(false), ascendance: 0, totalAscendances: 0, ascCurrencyBoost: false, ascCreditExponent: false, ascCubePowerLevel: 0, ascCubeAutoclicker: false, ascCubeAscendance: false, ascCubeAlpha: false, ascPointDiscountLevel: 0, ascTotalLevelBoost: false, ascAllCurrencyLevel: 0, ascMainlinePowerLevel: 0, scaryModeLevel: 0, scaryModeActive: true, spark: 0, sparkPrestiges: 0, sparkUpgrade1Level: 0, sparkUpgrade2Level: 0, sparkUpgrade3Level: 0, pointUpgrade16Bought: false, pointUpgrade17Bought: false, pointUpgrade18Bought: false, pointUpgrade19Bought: false, pointUpgrade20Bought: false, pointUpgrade21Bought: false, pointUpgrade22Level: 0, pointUpgrade23Level: 0, cyan13Bought: false, cyan14Level: 0, cyan15Bought: false, cyanSquareCounts: [0, 0, 0] };
 Object.assign(initialState, {
+  darkMatter5Level: 0,
   alphaButtonNamesActive: true, alphaWobbleActive: true,
   alphaMazeUnlocked: false, alphaMazeUpgrades: Array(12).fill(false),
   alphaMazeX: 1, alphaMazeY: 1, alphaMazeSeen: [],
@@ -96,7 +98,10 @@ for (const key of CURRENCY_KEYS) state[key] = normalizeSavedCurrency(Object.hasO
 state.automationBought = Array.from({ length: 12 }, (_, i) => Boolean(savedState.automationBought?.[i]));
 state.automationActive = Array.from({ length: 12 }, (_, i) => Boolean(savedState.automationActive?.[i] ?? savedState.automationBought?.[i]));
 state.dataLore = Array.from({ length: 5 }, (_, i) => Boolean(savedState.dataLore?.[i]));
-state.darkMatter2Level = Math.max(0, Math.min(1000, Number(savedState.darkMatter2Level ?? (savedState.darkMatter2Bought ? 1 : 0)) || 0));
+state.darkMatter2Level = Math.max(0, Math.min(DARK_MATTER_2_MAX, Number(savedState.darkMatter2Level ?? (savedState.darkMatter2Bought ? 1 : 0)) || 0));
+state.darkMatter5Level = Number.isSafeInteger(savedState.darkMatter5Level) && savedState.darkMatter5Level >= 0
+  ? savedState.darkMatter5Level : Number(savedState.darkMatter5Bought === true);
+state.darkMatter5Bought = state.darkMatter5Level > 0;
 state.pointUpgrade22Level = Number.isInteger(savedState.pointUpgrade22Level) ? Math.max(0, Math.min(2, savedState.pointUpgrade22Level)) : 0;
 state.pointUpgrade23Level = Number.isInteger(savedState.pointUpgrade23Level) ? Math.max(0, Math.min(30, savedState.pointUpgrade23Level)) : 0;
 state.alphaButtonNamesBought = typeof savedState.alphaButtonNamesBought === 'boolean' ? savedState.alphaButtonNamesBought : false;
@@ -957,7 +962,7 @@ function addCubeClicks(amount) {
   }
 }
 function totalUpgradeLevels() {
-  const levels = [state.multiplierLevel,state.incomeLevel,state.powerLevel,state.clickLevel,state.logLevel,state.exponentLevel,state.exponentCapLevel,state.capLevel,state.tokenMultiplierLevel,state.discountLevel,state.tokenBoostLevel,state.tokenCreditLevel,state.tokenDiscountLevel,state.creditExponentLevel,state.sparkUpgrade1Level,state.sparkUpgrade2Level,state.sparkUpgrade3Level,state.alphaGainPurchases,state.alphaBoostLevel,state.alphaCapLevel,state.ascCubePowerLevel,state.ascPointDiscountLevel,state.cyan14Level,state.darkMatter2Level];
+  const levels = [state.multiplierLevel,state.incomeLevel,state.powerLevel,state.clickLevel,state.logLevel,state.exponentLevel,state.exponentCapLevel,state.capLevel,state.tokenMultiplierLevel,state.discountLevel,state.tokenBoostLevel,state.tokenCreditLevel,state.tokenDiscountLevel,state.creditExponentLevel,state.sparkUpgrade1Level,state.sparkUpgrade2Level,state.sparkUpgrade3Level,state.alphaGainPurchases,state.alphaBoostLevel,state.alphaCapLevel,state.ascCubePowerLevel,state.ascPointDiscountLevel,state.cyan14Level,state.darkMatter2Level,state.darkMatter5Level];
   const bought = [state.printer,state.press,state.expansionUnlocked,state.maxBuyUnlocked,state.creditEngine,state.heavyMint,state.cubeUnlocked,state.freeRunUpgrades,state.passiveTokens,state.alphaUnlocked,state.casinoUnlocked,state.alphaNeutralBought,state.alphaGeneratorBought,state.darkMatterUnlocked,state.darkMatter1Bought,state.darkMatter3Bought,state.darkMatter4Bought,state.pyramidUnlocked,state.creditChallengeBoost,state.automationsUnlocked,state.ascCurrencyBoost,state.ascCreditExponent,state.ascCubeAutoclicker,state.ascCubeAscendance,state.ascCubeAlpha,state.ascTotalLevelBoost,state.pointUpgrade16Bought,state.pointUpgrade17Bought,state.pointUpgrade18Bought,state.pointUpgrade19Bought,state.pointUpgrade20Bought,state.pointUpgrade21Bought,state.cyan13Bought,state.cyan15Bought];
   return levels.reduce((sum, level) => sum + (Number(level) || 0), state.automationBought.filter(Boolean).length + state.dataLore.filter(Boolean).length + bought.filter(Boolean).length + state.ascAllCurrencyLevel + state.ascMainlinePowerLevel);
 }
@@ -1306,7 +1311,7 @@ function renderMaze() {
   document.querySelector('#alpha-maze-stats').textContent =
     `${found}/12 found · Sight ${mazeVisibleDistance()} · ${state.alphaMazeUpgrades[1] ? 'Flashlight on' : 'Flashlight off'}`;
 }
-function darkMatterRate() { return !state.gainZeroActive && state.darkMatter1Bought ? D(0.1).times(D(2).pow(state.darkMatter2Level)).times(state.darkMatter3Bought ? state.darkMatterCoinBoost : 1) : D(0); }
+function darkMatterRate() { return !state.gainZeroActive && state.darkMatter1Bought ? D(0.1).times(D(2).pow(state.darkMatter2Level)).times(state.darkMatter3Bought ? state.darkMatterCoinBoost : 1).times(D(2.5).pow(state.darkMatter5Level)) : D(0); }
 function automationCost(index) { return 1e30 * (index + 1); }
 function automationPrerequisite(index) {
   return [true, state.printer, state.press, state.press, state.multiplierLevel > 0, state.incomeLevel > 0, state.expansionUnlocked, state.expansionUnlocked, state.expansionUnlocked, state.expansionUnlocked && state.creditExponentLevel > 0, true, state.tokenBoostLevel > 0][index];
@@ -1497,7 +1502,7 @@ function clampUpgradeLevels() {
       if (state.priceOrigins[key] > limit) state.priceOrigins[key] = limit;
     }
   }
-  state.darkMatter2Level = Math.min(state.darkMatter2Level, 1000);
+  state.darkMatter2Level = Math.min(state.darkMatter2Level, DARK_MATTER_2_MAX);
   const excessTrialLevels = state.cyan14Level - 2;
   if (excessTrialLevels > 0) {
     state.cyan14Level = 2;
@@ -2128,12 +2133,19 @@ function render() {
   dm1.textContent = state.darkMatter1Bought ? 'Bought' : 'Free';
   document.querySelector('#upgrade-darkmatter-1').classList.toggle('locked', !state.darkMatter1Bought);
   const dm2 = document.querySelector('#buy-darkmatter-2');
-  dm2.disabled = !state.darkMatter1Bought || state.darkMatter2Level >= 1000 || lt(state.darkMatter, 2);
-  dm2.textContent = state.darkMatter2Level >= 1000 ? 'MAX LEVEL' : '2 ⊠';
+  dm2.disabled = !state.darkMatter1Bought || state.darkMatter2Level >= DARK_MATTER_2_MAX || lt(state.darkMatter, 2);
+  dm2.textContent = state.darkMatter2Level >= DARK_MATTER_2_MAX ? 'MAX LEVEL' : '2 ⊠';
   document.querySelector('#darkmatter-2-level').textContent = state.darkMatter2Level;
   document.querySelector('#darkmatter-2-multiplier').textContent = fmt(D(2).pow(state.darkMatter2Level));
   document.querySelector('#upgrade-darkmatter-2').hidden = !state.darkMatter1Bought && state.darkMatter2Level === 0;
   document.querySelector('#upgrade-darkmatter-2').classList.toggle('locked', !state.darkMatter1Bought);
+  const dm5 = document.querySelector('#buy-darkmatter-5');
+  dm5.disabled = state.darkMatter2Level === 0 || lt(state.darkMatter, 100000000);
+  dm5.textContent = '100M ⊠';
+  document.querySelector('#darkmatter-5-level').textContent = state.darkMatter5Level;
+  document.querySelector('#darkmatter-5-multiplier').textContent = fmt(D(2.5).pow(state.darkMatter5Level));
+  document.querySelector('#upgrade-darkmatter-5').hidden = state.darkMatter2Level === 0 && !state.darkMatter5Level;
+  document.querySelector('#upgrade-darkmatter-5').classList.toggle('locked', state.darkMatter2Level === 0);
   const dm3 = document.querySelector('#buy-darkmatter-3');
   dm3.disabled = !state.darkMatter1Bought || state.darkMatter3Bought;
   dm3.textContent = state.darkMatter3Bought ? 'Active' : 'Free';
@@ -2790,7 +2802,16 @@ document.querySelectorAll('[id^="buy-epsilon-"]').forEach(button => button.addEv
 document.querySelectorAll('[id^="buy-skill-"]').forEach(button => button.addEventListener('click', () => buySkillUpgrade(Number(button.id.slice('buy-skill-'.length)))));
 document.querySelector('#buy-darkmatter-unlock').addEventListener('click', () => { if (!state.alphaUnlocked || state.darkMatterUnlocked || lt(state.alpha, 1000)) return; changeAlpha(-1000); state.darkMatterUnlocked = true; activeTab = 'darkmatter'; toast(`${matterName()} unlocked`); render(); save(); });
 document.querySelector('#buy-darkmatter-1').addEventListener('click', () => { if (!state.darkMatterUnlocked || state.darkMatter1Bought) return; state.darkMatter1Bought = true; toast(`${matterName()} generation started`); render(); save(); });
-document.querySelector('#buy-darkmatter-2').addEventListener('click', () => { if (!state.darkMatter1Bought || state.darkMatter2Level >= 1000 || lt(state.darkMatter, 2)) return; state.darkMatter = D(0); state.darkMatter2Level += 1; toast(`${matterName()} gain doubled`); render(); save(); });
+document.querySelector('#buy-darkmatter-2').addEventListener('click', () => { if (!state.darkMatter1Bought || state.darkMatter2Level >= DARK_MATTER_2_MAX || lt(state.darkMatter, 2)) return; state.darkMatter = D(0); state.darkMatter2Level += 1; toast(`${matterName()} gain doubled`); render(); save(); });
+document.querySelector('#buy-darkmatter-5').addEventListener('click', () => {
+  if (!state.darkMatter2Level || lt(state.darkMatter, 100000000)) return;
+  state.darkMatter = D(0);
+  state.darkMatter2Level = 0;
+  state.darkMatter5Level += 1;
+  state.darkMatter5Bought = true;
+  toast(`${matterName()} gain multiplied by ×2.5`);
+  render(); save();
+});
 document.querySelector('#buy-darkmatter-3').addEventListener('click', () => { if (!state.darkMatter1Bought || state.darkMatter3Bought) return; state.darkMatter3Bought = true; state.darkMatterCoinBoost = D(1); state.darkMatterFlipTimer = 0; state.darkMatterFlipDuration = 1; toast('Coin flip activated'); render(); save(); });
 document.querySelector('#buy-darkmatter-4').addEventListener('click', () => { if (!state.darkMatter3Bought || state.darkMatter4Bought) return; state.darkMatter4Bought = true; toast('Heads now last longer'); render(); save(); });
 document.querySelector('#ascendance-tab').addEventListener('click', () => { if (state.totalAscendances || gt(state.ascendance, 0)) chooseTab('ascendance'); });

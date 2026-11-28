@@ -12,7 +12,7 @@ context.clearTimeout = () => {};
 vm.runInContext('(function(){' + fs.readFileSync('break_eternity.js','utf8').replace(/export \{[\s\S]*?\};/, 'globalThis.Decimal = y;') + '})();', context);
 let source = fs.readFileSync('game.js','utf8').replace("import Decimal from './break_eternity.js';",'');
 source += `
-globalThis.testAPI = {get state(){return state}, D, rate, saleGain, applyCurrencyGain, applyAlphaGain, epsilonGainRate, tickEpsilon, ascendanceGain, highPointUpgradeCost, highPointUpgradeReady, updateSectionOctahedrons, updateAlphaBouncyBall, ballPointGain, registerAlphaBallBounce, tickAlphaBallPoison, kirbyBonus, feedKirby, tokenReward, creditMultiplier, challengeExponent, challengeDuration, challengeGainMultiplier, resetAscendanceRun, resetCreditRun, runAutomations, runPresetResets, presetAllowsPurchase, isValidSave, serializeState, render, checkAchievements, recordFortuneRitual, spinFortune, bankFortune, fortuneUsed, fortuneCapacity, fortuneSegments, clearFortuneChain, updateFortuneProgress, unbuyUpgrade, refundUpgradeRows};`;
+globalThis.testAPI = {get state(){return state}, D, rate, saleGain, applyCurrencyGain, applyAlphaGain, epsilonGainRate, darkMatterRate, tickEpsilon, ascendanceGain, highPointUpgradeCost, highPointUpgradeReady, updateSectionOctahedrons, updateAlphaBouncyBall, ballPointGain, registerAlphaBallBounce, tickAlphaBallPoison, kirbyBonus, feedKirby, tokenReward, creditMultiplier, challengeExponent, challengeDuration, challengeGainMultiplier, resetAscendanceRun, resetCreditRun, runAutomations, runPresetResets, presetAllowsPurchase, isValidSave, serializeState, render, checkAchievements, recordFortuneRitual, spinFortune, bankFortune, fortuneUsed, fortuneCapacity, fortuneSegments, clearFortuneChain, updateFortuneProgress, unbuyUpgrade, refundUpgradeRows};`;
 vm.runInContext(source, context);
 vm.runInContext('Object.assign(testAPI, { skillGainRate, genTimeGainRate, skillUpgradeCost, skillGenTimeCost, skillUpgradeReady, buySkillUpgrade, startSkillFuel, tickSkill, creditPrestigeReward, performSkillPrestige });', context);
 const a = context.testAPI, s = a.state, doc = dom.window.document;
@@ -1161,4 +1161,44 @@ vm.runInContext(source,smc);
 assert(smc.testAPI.state.challengePower.eq(3), 'loading a legacy save recalculates DP from distinct owned upgrades');
 assert.equal(smc.testAPI.state.skillUpgradeLevels[2], 50, 'legacy 3S levels above the cap are normalized');
 assert.equal(skillMigration.window.document.getElementById('skill-level-max-3').textContent, '50', 'legacy saves show the finite 3S cap');
-console.log('Skill passed: unlock reset, 20 upgrades, DP rewards, hover bonus, GenTime rate, Fuel, and save validation.');
+const darkMatterMigration = new JSDOM(fs.readFileSync('index.html','utf8'), {url:'https://example.test',runScripts:'outside-only'});
+const dmc = darkMatterMigration.getInternalVMContext(); dmc.setInterval=()=>1; dmc.setTimeout=()=>1; dmc.clearTimeout=()=>{};
+dmc.localStorage.setItem('pocket-foundry-save-v2', JSON.stringify({
+  balance: 0, runEarned: 0, darkMatterUnlocked: true, darkMatter1Bought: true, darkMatter2Level: 100
+}));
+vm.runInContext('(function(){'+fs.readFileSync('break_eternity.js','utf8').replace(/export \{[\s\S]*?\};/,'globalThis.Decimal = y;')+'})();',dmc);
+vm.runInContext(source,dmc);
+const darkMatterAPI = dmc.testAPI, darkMatterState = darkMatterAPI.state;
+const darkMatterDoc = darkMatterMigration.window.document;
+assert.equal(darkMatterState.darkMatter2Level, 20, 'legacy −2 levels are normalized to the new cap');
+assert.equal(darkMatterDoc.getElementById('darkmatter-2-level').textContent, '20', 'legacy saves display the new −2 cap');
+darkMatterState.darkMatter2Level = 0;
+darkMatterAPI.render();
+assert(darkMatterDoc.getElementById('upgrade-darkmatter-5').hidden, '−5 stays hidden until −2 is bought');
+for (let level = 0; level < 20; level += 1) {
+  darkMatterState.darkMatter = darkMatterAPI.D(2);
+  darkMatterAPI.render();
+  darkMatterDoc.getElementById('buy-darkmatter-2').click();
+}
+assert.equal(darkMatterState.darkMatter2Level, 20, '−2 can be bought through level 20');
+assert.equal(darkMatterDoc.getElementById('buy-darkmatter-2').textContent, 'MAX LEVEL', '−2 is capped at level 20');
+assert(darkMatterAPI.darkMatterRate().eq(darkMatterAPI.D(0.1).times(darkMatterAPI.D(2).pow(20))), '−2 continues doubling generation through level 20');
+darkMatterState.darkMatter2Level = 1;
+darkMatterState.darkMatter = darkMatterAPI.D(99999999);
+darkMatterAPI.render();
+assert(darkMatterDoc.getElementById('buy-darkmatter-5').disabled, '−5 requires 100M ⊠');
+darkMatterState.darkMatter = darkMatterAPI.D(100000000);
+darkMatterAPI.render();
+darkMatterDoc.getElementById('buy-darkmatter-5').click();
+assert.equal(darkMatterState.darkMatter2Level, 0, '−5 resets −2');
+assert(darkMatterState.darkMatter.eq(0), '−5 resets Dark Matter');
+assert(darkMatterAPI.darkMatterRate().eq(0.25), '−5 multiplies Dark Matter gain by ×2.5');
+darkMatterState.darkMatter2Level = 1;
+darkMatterState.darkMatter = darkMatterAPI.D(100000000);
+darkMatterAPI.render();
+darkMatterDoc.getElementById('buy-darkmatter-5').click();
+assert.equal(darkMatterState.darkMatter5Level, 2, '−5 can be purchased repeatedly');
+assert(darkMatterAPI.darkMatterRate().eq(0.625), 'repeat purchases stack the ×2.5 multiplier');
+assert.equal(darkMatterDoc.getElementById('darkmatter-5-multiplier').textContent, '6.25', '−5 displays its total stacked multiplier');
+assert(darkMatterAPI.isValidSave(JSON.parse(darkMatterAPI.serializeState())), 'repeat purchases save correctly');
+console.log('Skill and Dark Matter passed: upgrade progression, caps, resets, multipliers, and save validation.');
