@@ -258,6 +258,10 @@ body[data-achievement-theme="violet"] .expansion-panel { border-color: #a073e8; 
 .balance.currency-skill { color: #25813a; }
 .challenge-power { color: transparent; background: linear-gradient(90deg, #090909 0%, #ed19bd 38%, #ff3434 52%, #ffcc32 65%, #3bdb66 76%, #39aaff 88%, #9a55ff 100%); background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700; }
 .gen-time-panel { border-color: #317b47; background: linear-gradient(90deg, #fff, #cef2d3); }
+.gen-time-rate { margin: -4px 0 10px; text-align: right; color: #205d31; font-weight: 700; }
+.fuel-meter-panel { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px 12px; margin-bottom: 10px; padding: 10px 12px; border: 1px solid #c78629; background: linear-gradient(90deg, #fff, #ffe6ae); }
+.fuel-meter-panel progress { grid-column: 1 / -1; width: 100%; }
+.fuel-meter-panel button { grid-column: 1 / -1; }
 .small-dodecahedron { display: grid; place-items: center; width: 140px; min-height: 100px; margin: 14px auto; padding: 12px; cursor: default; clip-path: polygon(50% 0, 94% 24%, 100% 68%, 72% 100%, 28% 100%, 0 68%, 6% 24%); color: #fff; text-align: center; text-shadow: 0 1px 3px #000; background: linear-gradient(145deg, #e8fff0, #3caa5b 48%, #101010); transition: filter .15s ease, transform .15s ease; }
 .small-dodecahedron:hover, .small-dodecahedron:focus-visible, .small-dodecahedron.hovered { filter: brightness(1.25); transform: scale(1.04); outline: none; }
 
